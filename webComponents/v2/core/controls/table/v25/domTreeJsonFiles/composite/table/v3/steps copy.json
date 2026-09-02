@@ -1,5 +1,8 @@
 [
     {
+        "table.thead.tr": "th"
+    },
+    {
         "table.tbody.tr": "td"
     }
 ]

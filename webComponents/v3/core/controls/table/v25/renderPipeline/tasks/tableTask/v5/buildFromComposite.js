@@ -4,7 +4,7 @@ import buildBaseSpecTreeFromComposite, {
     applyThemeClassesToTree,
     applySingleStepToSpecTree,
     applySequentialStepsToSpecTree
-} from "./buildFromComposite/index.js";
+} from "../../../../../../../../buildFromComposite/v2/index.js";
 
 export {
     findTargetNodeByPathParts,

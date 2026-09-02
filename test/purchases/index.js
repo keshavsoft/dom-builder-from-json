@@ -1,4 +1,4 @@
-import { renderTable } from "../../webComponents/v2/core/controls/table/v25/index.js";
+import { renderTable } from "../../webComponents/v3/core/controls/table/v25/index.js";
 
 import purchasesJson from "./purchases.json" with { type: "json" };
 

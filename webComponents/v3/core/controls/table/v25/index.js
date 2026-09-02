@@ -3,7 +3,7 @@ import buildStory from "./story/index.js";
 import domCreationFuncs from "../../../../domCreation/index.js";
 import getActiveDomTreeSpecs from "./getActiveDomTreeSpecs.js";
 
-console.log("25");
+console.log("3-25");
 
 const filterData = ({ inData, inQuery }) => {
     const localData = Array.isArray(inData) ? inData : [];
@@ -103,22 +103,26 @@ export const renderTable = (inOptions = {}) => {
         inPipeline: story.renderPipeline
     });
 
-    const localRootSpec = { ...activeDomTreeSpecs.root };
+    console.log("childrenNodes: ", childrenNodes);
 
-    localRootSpec.children.push(...childrenNodes);
+    // const localRootSpec = { ...activeDomTreeSpecs.root };
 
-    const domElement = domCreationFuncs.versions[domCreationFuncs.maxVersion](localRootSpec);
+    // localRootSpec.children.push(...childrenNodes);
+
+    const domElement = domCreationFuncs.versions[domCreationFuncs.maxVersion](childrenNodes);
+
+    console.log("domElement: ", domElement[0]);
 
     const tableContainer = document.getElementById("tableContainer");
     if (tableContainer) {
-        tableContainer.appendChild(domElement);
+        tableContainer.appendChild(domElement[0]);
     }
 
-    hookSearch({
-        inStory: story,
-        inDomTreeSpecs: activeDomTreeSpecs,
-        inOptions: localOptions
-    });
+    // hookSearch({
+    //     inStory: story,
+    //     inDomTreeSpecs: activeDomTreeSpecs,
+    //     inOptions: localOptions
+    // });
 
     return domElement;
 };

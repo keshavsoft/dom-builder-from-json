@@ -1,5 +1,5 @@
 import createSearchTask from "./tasks/searchTask/v2/searchTask.js";
-import createTableTask from "./tasks/tableTask.js";
+import { createTableTask, buildTableSpecTreeFromColumnsAndData, createTableTaskV4 } from "./tasks/tableTask.js";
 
 /**
  * Builds dynamic array of render component pipeline task functions
@@ -25,14 +25,23 @@ export const buildRenderPipeline = ({
         inShowSearch: localShowSearch,
         domTreeJsonFiles
     }));
+    const data = localStore.store.dataStore.getOriginalData();
+    // console.log("localStore ----: ", data);
 
+    const fromTable = createTableTaskV4({
+        inColumns: [],
+        inData: data
+    });
+
+    pipeline.push(fromTable);
+    // console.log("pipeline ----: ", pipeline);
     // Render Task 2: Table Component Task (Creates & appends <table> element shell, receives inStore)
-    pipeline.push(createTableTask({
-        inShowTable: localShowTable,
-        inDomTreeSpecs: domTreeJsonFiles,
-        inStore: localStore,
-        inTableConfig: localRenderers?.table
-    }));
+    // pipeline.push(createTableTask({
+    //     inShowTable: localShowTable,
+    //     inDomTreeSpecs: domTreeJsonFiles,
+    //     inStore: localStore,
+    //     inTableConfig: localRenderers?.table
+    // }));
 
     // External Custom Render Task Functions (e.g. searchNewTask, paginationTask)
     if (Array.isArray(localCustomTasks) && localCustomTasks.length > 0) {

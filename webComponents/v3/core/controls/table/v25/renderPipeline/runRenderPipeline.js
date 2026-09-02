@@ -9,7 +9,7 @@ export const runRenderPipeline = ({ inPipeline = [] }) => {
         const res = task();
 
         returnArray.push(res);
-    }
+    };
 
     return returnArray;
 };

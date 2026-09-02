@@ -48,19 +48,25 @@ const hookSearch = ({ inStory, inDomTreeSpecs, inOptions }) => {
         const footerConfig = inOptions.renderers.table.footer;
         const localRefreshTable = inStory.refreshTable;
 
-        const tableSpecInput = localRefreshTable.buildConfiguredTableSpecInput({
-            inStore: localStory,
-            inTableConfig: localStory.renderersFromInwardConfig?.table
-        });
+        // const tableSpecInput = localRefreshTable.buildConfiguredTableSpecInput({
+        //     inStore: localStory,
+        //     inTableConfig: localStory.renderersFromInwardConfig?.table
+        // });
 
-        const newBodyAndFooterRowsSpecs = localRefreshTable.getBodyAndFooterRows({
-            inDomTreeSpecs,
-            inColumns: tableSpecInput.inColumns,
-            inData: tableSpecInput.inData, inHasFooterConfig: true, inFooterConfig: footerConfig
-        });
+        // const newBodyAndFooterRowsSpecs = localRefreshTable.getBodyAndFooterRows({
+        //     inDomTreeSpecs,
+        //     inColumns: tableSpecInput.inColumns,
+        //     inData: tableSpecInput.inData, inHasFooterConfig: true, inFooterConfig: footerConfig
+        // });
+        console.log("inStory-- : ", inStory);
+
+        // const data = localStory.dataStore.getOriginalData();
+        // const columns = .renderersStore.table.store.columnsStore.getColumnsConfig();
+
+        // const steps = localRefreshTable.buildRows({ inColumns: columns, inData: data })
 
         tb.innerHTML = "";
-        tfoot.innerHTML = "";
+        // tfoot.innerHTML = "";
 
         // Step 7: Convert spec to DOM Nodes & repaint!
         const newTbodyNodes = domCreationFuncs.versions[domCreationFuncs.maxVersion](newBodyAndFooterRowsSpecs?.bodyRows);
@@ -71,12 +77,12 @@ const hookSearch = ({ inStory, inDomTreeSpecs, inOptions }) => {
             tb.appendChild(newTbodyNodes);
         };
 
-        const newFooterNodes = domCreationFuncs.versions[domCreationFuncs.maxVersion](newBodyAndFooterRowsSpecs?.footerRows);
-        if (Array.isArray(newFooterNodes)) {
-            tfoot.append(...newFooterNodes);
-        } else if (newFooterNodes) {
-            tfoot.appendChild(newFooterNodes);
-        };
+        // const newFooterNodes = domCreationFuncs.versions[domCreationFuncs.maxVersion](newBodyAndFooterRowsSpecs?.footerRows);
+        // if (Array.isArray(newFooterNodes)) {
+        //     tfoot.append(...newFooterNodes);
+        // } else if (newFooterNodes) {
+        //     tfoot.appendChild(newFooterNodes);
+        // };
     });
 };
 

@@ -2,7 +2,7 @@ import startCompositeDefinition from "./start.json" with { type: "json" };
 import specTemplatesDictionary from "./spec.json" with { type: "json" };
 
 import buildBaseSpecTreeFromComposite, { applySequentialStepsToSpecTree } from "./buildFromComposite.js";
-import buildStepsFromColumnsAndData from "./buildStepsFromColumnsAndData.js";
+import { buildStepsFromColumnsAndData } from "./buildStepsFromColumnsAndData.js";
 
 const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
     inCompositeDef: startCompositeDefinition,

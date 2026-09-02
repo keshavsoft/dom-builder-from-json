@@ -1,4 +1,85 @@
-export const buildStepsFromColumnsAndData = ({ inColumns, inData }) => {
+const buildHeader = ({ inColumns }) => {
+    const localColumns = inColumns;
+
+    if (!Array.isArray(localColumns) || localColumns.length === 0) {
+        return [];
+    }
+
+    // Step 1: Build Header TH cells for table.thead.tr
+    const headerThNodes = localColumns.map(colKey => ({
+        tagName: "th",
+        attributes: {
+            class: "px-4 py-2 border border-gray-300 bg-gray-100 text-left font-semibold text-gray-700"
+        },
+        textContent: String(colKey.label)
+    }));
+
+    return {
+        find: "table.thead.tr",
+        target: "children",
+        value: headerThNodes
+    };
+};
+
+const buildRows = ({ inColumns, inData }) => {
+    const localColumns = inColumns;
+    const localData = inData;
+
+    if (!Array.isArray(localColumns) || localColumns.length === 0) {
+        return [];
+    }
+
+    const stepsList = [];
+
+    // Step 2: Build TR rows with TD cells for table.tbody
+    if (Array.isArray(localData)) {
+        localData.forEach((item, rowIndex) => {
+            const rowTdNodes = localColumns.map(colKey => {
+                const val = item[colKey.key];
+                const cellText = (val !== null && val !== undefined) ? String(val) : "";
+                return {
+                    tagName: "td",
+                    attributes: {
+                        class: "px-4 py-2 border border-gray-200 text-sm text-gray-800"
+                    },
+                    textContent: cellText
+                };
+            });
+
+            const rowNode = {
+                tagName: "tr",
+                attributes: {
+                    class: rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
+                },
+                children: rowTdNodes
+            };
+
+            stepsList.push({
+                find: "table.tbody",
+                target: "children",
+                value: rowNode
+            });
+        });
+    };
+
+    return stepsList;
+};
+
+const buildStepsFromColumnsAndData = ({ inColumns, inData }) => {
+    const localColumns = inColumns;
+    const localData = inData;
+
+    const stepsList = [];
+
+    const header = buildHeader({ inColumns: localColumns });
+    stepsList.push(header);
+    const rows = buildRows({ inColumns: localColumns, inData: localData });
+    stepsList.push(...rows);
+
+    return stepsList;
+};
+
+const buildStepsFromColumnsAndData1 = ({ inColumns, inData }) => {
     const localColumns = inColumns;
     const localData = inData;
 
@@ -57,4 +138,4 @@ export const buildStepsFromColumnsAndData = ({ inColumns, inData }) => {
     return stepsList;
 };
 
-export default buildStepsFromColumnsAndData;
+export { buildStepsFromColumnsAndData, buildRows };

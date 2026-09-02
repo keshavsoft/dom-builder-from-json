@@ -25,6 +25,7 @@ export const buildRenderPipeline = ({
         inShowSearch: localShowSearch,
         domTreeJsonFiles
     }));
+
     const data = localStore.store.dataStore.getOriginalData();
     const columns = localStore.renderersStore.table.store.columnsStore.getColumnsConfig();
 

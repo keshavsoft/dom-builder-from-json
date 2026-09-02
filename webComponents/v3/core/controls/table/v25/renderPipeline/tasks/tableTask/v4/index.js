@@ -4,7 +4,7 @@ import stepsDefinitionList from "./steps.json" with { type: "json" };
 import columnsData from "./ui/columns.json" with { type: "json" };
 import rowData from "./ui/data.json" with { type: "json" };
 import buildBaseSpecTreeFromComposite, { applySequentialStepsToSpecTree } from "./buildFromComposite.js";
-import buildStepsFromColumnsAndData from "./buildStepsFromColumnsAndData.js";
+import { buildStepsFromColumnsAndData } from "./buildStepsFromColumnsAndData.js";
 
 const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
     inCompositeDef: startCompositeDefinition,

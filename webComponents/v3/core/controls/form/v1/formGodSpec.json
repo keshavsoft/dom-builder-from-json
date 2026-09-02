@@ -1,0 +1,47 @@
+{
+  "tagName": "form",
+  "attributes": {
+    "class": "max-w-md mx-auto p-6 bg-white rounded-lg shadow-md space-y-4 border border-gray-200"
+  },
+  "children": [
+    {
+      "tagName": "div",
+      "attributes": {
+        "class": "form-header pb-3 border-b border-gray-200"
+      },
+      "children": [
+        {
+          "tagName": "h2",
+          "attributes": {
+            "class": "text-lg font-bold text-gray-800"
+          },
+          "textContent": "User Registration (v7 Skeleton Architecture)"
+        }
+      ]
+    },
+    {
+      "tagName": "div",
+      "attributes": {
+        "slot": "body",
+        "class": "form-body py-3 space-y-4"
+      },
+      "children": []
+    },
+    {
+      "tagName": "div",
+      "attributes": {
+        "class": "form-footer pt-3 border-t border-gray-200 space-y-2"
+      },
+      "children": [
+        {
+          "tagName": "button",
+          "attributes": {
+            "type": "submit",
+            "class": "w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          },
+          "textContent": "Submit Form"
+        }
+      ]
+    }
+  ]
+}

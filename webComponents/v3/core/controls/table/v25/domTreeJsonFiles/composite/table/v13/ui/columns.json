@@ -1,0 +1,7 @@
+[
+    "date",
+    "vouchernumber",
+    "allinventoryentries.stockitemname",
+    "allinventoryentries.amount",
+    "allinventoryentries.actualqty"
+]

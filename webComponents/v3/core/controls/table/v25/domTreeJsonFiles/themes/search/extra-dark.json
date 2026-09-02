@@ -1,0 +1,47 @@
+{
+  "tagName": "div",
+  "attributes": {
+    "class": "table-toolbar flex justify-between items-center bg-slate-900 p-3 rounded-lg border border-slate-800 shadow-sm"
+  },
+  "children": [
+    {
+      "tagName": "div",
+      "attributes": {
+        "class": "flex items-center space-x-2"
+      },
+      "children": [
+        {
+          "tagName": "span",
+          "attributes": {
+            "class": "text-sm font-semibold text-slate-100"
+          },
+          "textContent": "Data Items"
+        }
+      ]
+    },
+    {
+      "tagName": "div",
+      "attributes": {
+        "class": "relative flex items-center"
+      },
+      "children": [
+        {
+          "tagName": "span",
+          "attributes": {
+            "class": "absolute left-2.5 text-slate-500 pointer-events-none text-sm"
+          },
+          "textContent": "🔍"
+        },
+        {
+          "tagName": "input",
+          "attributes": {
+            "type": "text",
+            "id": "tableSearchInput",
+            "placeholder": "Search items...",
+            "class": "border border-slate-700 rounded pl-8 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-950 text-slate-100 placeholder-slate-500"
+          }
+        }
+      ]
+    }
+  ]
+}

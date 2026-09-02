@@ -38,7 +38,8 @@ if (tableContainer) {
                         "attributes": {
                             "style": "text-transform: none;"
                         },
-                        textContent: "Stock Item Name"
+                        textContent: "Stock Item Name",
+                        isSortable: true
                     }
                 },
                 columns: ["vchtype", "vouchernumber", "allinventoryentries.stockitemname",

@@ -1,4 +1,5 @@
 import findTargetNodeByPathParts from "../traversal/findTargetNodeByPathParts.js";
+import targetHandlerMap from "./targetHandlers/index.js";
 
 export const applySingleStepToSpecTree = ({ inSpecTree, inStepDef, inTemplates }) => {
     const localSpecTree = inSpecTree;
@@ -10,6 +11,7 @@ export const applySingleStepToSpecTree = ({ inSpecTree, inStepDef, inTemplates }
     }
 
     const { find: localFindPath, target: localTargetProp, value: localValue } = localStepDef;
+    console.log("localTargetProp : ", localTargetProp, localStepDef);
 
     if (localFindPath && localTargetProp) {
         const pathParts = localFindPath.split(".");
@@ -19,24 +21,15 @@ export const applySingleStepToSpecTree = ({ inSpecTree, inStepDef, inTemplates }
         });
 
         if (targetNode) {
-            if (localTargetProp === "children") {
-                if (!Array.isArray(targetNode.children)) {
-                    targetNode.children = [];
-                }
-                if (typeof localValue === "string" && localTemplates?.[localValue]) {
-                    const clonedChildNode = JSON.parse(JSON.stringify(localTemplates[localValue]));
-                    targetNode.children.push(clonedChildNode);
-                } else if (typeof localValue === "object" && localValue !== null) {
-                    const clonedChildNode = JSON.parse(JSON.stringify(localValue));
-                    targetNode.children.push(clonedChildNode);
-                }
-            } else if (localTargetProp === "textContent") {
-                targetNode.textContent = localValue;
-            } else if (localTargetProp === "attributes") {
-                targetNode.attributes = {
-                    ...(targetNode.attributes || {}),
-                    ...localValue
-                };
+            const handler = targetHandlerMap[localTargetProp];
+            if (typeof handler === "function") {
+                handler({
+                    inTargetNode: targetNode,
+                    inValue: localValue,
+                    inTemplates: localTemplates
+                });
+            } else {
+                console.warn(`[applySingleStepToSpecTree] Unsupported target property: "${localTargetProp}"`);
             }
         }
 

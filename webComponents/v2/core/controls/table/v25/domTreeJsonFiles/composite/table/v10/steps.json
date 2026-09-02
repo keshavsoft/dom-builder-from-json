@@ -6,7 +6,12 @@
     },
     {
         "find": "table.tbody.tr",
-        "target": "children",
-        "value": "td"
+        "target": "attributes",
+        "value": "ppppppppp"
+    },
+    {
+        "find": "table.tfoot.tr",
+        "target": "textContent",
+        "value": "------------"
     }
 ]

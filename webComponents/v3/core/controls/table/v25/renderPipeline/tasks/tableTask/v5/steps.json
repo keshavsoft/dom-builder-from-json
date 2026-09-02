@@ -1,0 +1,14 @@
+[
+    {
+        "name": "header",
+        "find": "table.thead.tr",
+        "target": "children",
+        "builder": "headerCells"
+    },
+    {
+        "name": "rows",
+        "find": "table.tbody",
+        "target": "children",
+        "builder": "dataRows"
+    }
+]

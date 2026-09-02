@@ -28,13 +28,13 @@ export const getThemedSpecJson = ({ inThemeName = "dark", inThemeMap } = {}) => 
         });
     }
 
-    console.log(`[v2] Themed Spec JSON (Theme: ${localThemeName}) :`, clonedSpec);
+    // console.log(`[v2] Themed Spec JSON (Theme: ${localThemeName}) :`, clonedSpec);
 
     return clonedSpec;
 };
 
 const defaultThemedSpec = getThemedSpecJson({ inThemeName: "dark" });
-console.log("defaultThemedSpec : ", defaultThemedSpec);
+// console.log("defaultThemedSpec : ", defaultThemedSpec);
 
 export {
     specJson,

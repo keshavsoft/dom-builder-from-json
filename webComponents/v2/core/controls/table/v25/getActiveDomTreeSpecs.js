@@ -1,19 +1,49 @@
 import domTreeJsonFiles from "./domTreeJsonFiles/index.js";
 import applyThemeToSpec from "./applyThemeToSpec.js";
 
+const processDomTreeSpecs = ({ inDomTreeObject, inThemeName }) => {
+    const localDomTreeObject = inDomTreeObject;
+    const localThemeName = inThemeName;
+
+    if (!localDomTreeObject || typeof localDomTreeObject !== "object") {
+        return localDomTreeObject;
+    }
+
+    const result = {};
+
+    Object.entries(localDomTreeObject).forEach(([key, val]) => {
+        if (!val || typeof val !== "object") {
+            result[key] = val;
+        } else if (val.tagName) {
+            result[key] = applyThemeToSpec({
+                inSpec: val,
+                inThemeName: localThemeName,
+                inThemeSpecKey: key
+            });
+        } else {
+            result[key] = processDomTreeSpecs({
+                inDomTreeObject: val,
+                inThemeName: localThemeName
+            });
+        }
+    });
+
+    return result;
+};
+
 export const getActiveDomTreeSpecs = ({ inThemeName, inDomTreeJsonFiles }) => {
     const localThemeName = inThemeName || "light";
     const localDomTreeJsonFiles = inDomTreeJsonFiles || domTreeJsonFiles;
+    // console.log("localDomTreeJsonFiles-------- : ", localDomTreeJsonFiles);
 
-    return {
-        root: applyThemeToSpec({ inSpec: localDomTreeJsonFiles.root, inThemeName: localThemeName, inThemeSpecKey: "root" }),
-        searchSpec: applyThemeToSpec({ inSpec: localDomTreeJsonFiles.searchSpec, inThemeName: localThemeName, inThemeSpecKey: "search" }),
-        tableSpec: applyThemeToSpec({ inSpec: localDomTreeJsonFiles.tableSpec, inThemeName: localThemeName, inThemeSpecKey: "table" }),
-        trSpec: applyThemeToSpec({ inSpec: localDomTreeJsonFiles.trSpec, inThemeName: localThemeName, inThemeSpecKey: "tr" }),
-        thSpec: applyThemeToSpec({ inSpec: localDomTreeJsonFiles.thSpec, inThemeName: localThemeName, inThemeSpecKey: "th" }),
-        tdSpec: applyThemeToSpec({ inSpec: localDomTreeJsonFiles.tdSpec, inThemeName: localThemeName, inThemeSpecKey: "td" }),
-        inputSpec: applyThemeToSpec({ inSpec: localDomTreeJsonFiles.inputSpec, inThemeName: localThemeName, inThemeSpecKey: "input" })
-    };
+    const activeSpecs = processDomTreeSpecs({
+        inDomTreeObject: localDomTreeJsonFiles,
+        inThemeName: localThemeName
+    });
+
+    // console.log("activeSpecs (recursively processed) : ", activeSpecs);
+
+    return activeSpecs;
 };
 
 export default getActiveDomTreeSpecs;

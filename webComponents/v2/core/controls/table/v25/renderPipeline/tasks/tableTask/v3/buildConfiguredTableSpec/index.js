@@ -8,6 +8,9 @@ import buildFooter from "./footer/v4/index.js";
 export const getHeadRows = ({ inHeaderConfig, inDomTreeSpecs, inColumns }) => {
     const localDomTreeSpecs = inDomTreeSpecs;
     const localColumns = inColumns || [];
+    const localTrSpec = localDomTreeSpecs?.versions?.v2?.table?.trSpec;
+
+    console.log("localDomTreeSpecs---- : ", localTrSpec, localDomTreeSpecs);
 
     const headRows = buildHead({
         inHeaderConfig: inHeaderConfig,

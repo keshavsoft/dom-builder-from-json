@@ -12,13 +12,13 @@ const finalHydratedSpecTree = applySequentialStepsToSpecTree({
     inSpecTree: initialBaseSpecTree,
     inStepsDef: stepsDefinitionList,
     inTemplates: specTemplatesDictionary,
-    inEnableLog: true
+    inEnableLog: false
 });
 
 console.log("\n=====================================================================");
 console.log("[v8 Story-Subfolders Result] Final Children Tree:");
 console.log("=====================================================================");
-console.log(JSON.stringify(finalHydratedSpecTree.children, null, 2));
+console.log(JSON.stringify(finalHydratedSpecTree, null, 2));
 
 export {
     startCompositeDefinition,

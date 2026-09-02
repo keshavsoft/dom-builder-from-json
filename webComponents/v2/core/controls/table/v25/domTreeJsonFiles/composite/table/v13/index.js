@@ -1,23 +1,24 @@
 import startCompositeDefinition from "./start.json" with { type: "json" };
 import specTemplatesDictionary from "./spec.json" with { type: "json" };
 import stepsDefinitionList from "./steps.json" with { type: "json" };
-import data from "./ui/data.json" with { type: "json" };
+import columnsData from "./ui/columns.json" with { type: "json" };
+import rowData from "./ui/data.json" with { type: "json" };
 import buildBaseSpecTreeFromComposite, { applySequentialStepsToSpecTree } from "./buildFromComposite.js";
-import buildStepsFromData from "./buildStepsFromData.js";
+import buildStepsFromColumnsAndData from "./buildStepsFromColumnsAndData.js";
 
 const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
     inCompositeDef: startCompositeDefinition,
     inTemplates: specTemplatesDictionary
 });
 
-const buildTableSpecTreeFromData = ({ inData, inColumns }) => {
-    const localData = inData;
+const buildTableSpecTreeFromColumnsAndData = ({ inColumns, inData }) => {
     const localColumns = inColumns;
+    const localData = inData;
 
     const baseTreeCopy = JSON.parse(JSON.stringify(initialBaseSpecTree));
-    const generatedSteps = buildStepsFromData({
-        inData: localData,
-        inColumns: localColumns
+    const generatedSteps = buildStepsFromColumnsAndData({
+        inColumns: localColumns,
+        inData: localData
     });
 
     return applySequentialStepsToSpecTree({
@@ -28,18 +29,15 @@ const buildTableSpecTreeFromData = ({ inData, inColumns }) => {
     });
 };
 
-const finalHydratedSpecTree = applySequentialStepsToSpecTree({
-    inSpecTree: initialBaseSpecTree,
-    inStepsDef: stepsDefinitionList,
-    inTemplates: specTemplatesDictionary,
-    inEnableLog: false
+const finalHydratedSpecTree = buildTableSpecTreeFromColumnsAndData({
+    inColumns: columnsData,
+    inData: rowData
 });
 
-const dynamicTreeFromData = buildTableSpecTreeFromData({ inData: data });
-const tbodyNode = dynamicTreeFromData.children.find(child => child.tagName === "tbody");
+const tbodyNode = finalHydratedSpecTree.children.find(child => child.tagName === "tbody");
 
 console.log("\n=====================================================================");
-console.log("[v12 Dynamic Step Generation Result] Rows generated from data.json:", tbodyNode?.children?.length);
+console.log("[v13 Columns & Data Step Generation] Rows generated:", tbodyNode?.children?.length);
 console.log("=====================================================================");
 
 export {
@@ -50,8 +48,8 @@ export {
     finalHydratedSpecTree,
     buildBaseSpecTreeFromComposite,
     applySequentialStepsToSpecTree,
-    buildStepsFromData,
-    buildTableSpecTreeFromData
+    buildStepsFromColumnsAndData,
+    buildTableSpecTreeFromColumnsAndData
 };
 
 export default finalHydratedSpecTree;

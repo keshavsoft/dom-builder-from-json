@@ -1,6 +1,12 @@
 [
     {
-        "table.thead.tr": "th"
+        "table.thead.tr": {
+            "tagName": "th",
+            "attributes": {
+                "class": ""
+            },
+            "children": []
+        }
     },
     {
         "table.tbody.tr": "td"

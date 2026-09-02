@@ -26,10 +26,10 @@ export const buildRenderPipeline = ({
         domTreeJsonFiles
     }));
     const data = localStore.store.dataStore.getOriginalData();
-    // console.log("localStore ----: ", data);
+    const columns = localStore.renderersStore.table.store.columnsStore.getColumnsConfig();
 
     const fromTable = createTableTaskV4({
-        inColumns: [],
+        inColumns: columns,
         inData: data
     });
 

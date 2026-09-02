@@ -14,7 +14,7 @@ export const buildStepsFromColumnsAndData = ({ inColumns, inData }) => {
         attributes: {
             class: "px-4 py-2 border border-gray-300 bg-gray-100 text-left font-semibold text-gray-700"
         },
-        textContent: String(colKey.label)
+        textContent: String(colKey)
     }));
 
     stepsList.push({
@@ -27,7 +27,7 @@ export const buildStepsFromColumnsAndData = ({ inColumns, inData }) => {
     if (Array.isArray(localData)) {
         localData.forEach((item, rowIndex) => {
             const rowTdNodes = localColumns.map(colKey => {
-                const val = item[colKey.key];
+                const val = item[colKey];
                 const cellText = (val !== null && val !== undefined) ? String(val) : "";
                 return {
                     tagName: "td",
@@ -52,7 +52,7 @@ export const buildStepsFromColumnsAndData = ({ inColumns, inData }) => {
                 value: rowNode
             });
         });
-    };
+    }
 
     return stepsList;
 };

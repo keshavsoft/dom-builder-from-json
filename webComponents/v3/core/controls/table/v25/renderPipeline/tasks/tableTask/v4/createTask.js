@@ -14,6 +14,7 @@ const buildTableSpecTreeFromColumnsAndData = ({ inColumns, inData }) => {
     const localData = inData;
 
     const baseTreeCopy = JSON.parse(JSON.stringify(initialBaseSpecTree));
+
     const generatedSteps = buildStepsFromColumnsAndData({
         inColumns: localColumns,
         inData: localData

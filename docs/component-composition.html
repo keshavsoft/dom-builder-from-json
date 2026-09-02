@@ -1,0 +1,2479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Component Composition | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Component Composition</h1>
+
+        <div>
+            How JSON specifications, transformations, themes, data and the DOM builder compose into reusable components
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="theme-transformation.html">Theme Transformation</a>
+            <a href="data-transformation.html">Data Transformation</a>
+            <a href="pipeline-execution.html">Pipeline Execution</a>
+            <a href="table-lifecycle.html">Table Lifecycle</a>
+            <a href="spec-transformation-contract.html">Transformation Contract</a>
+            <a href="columns-and-header.html">Columns and Header</a>
+            <a href="column-renderers.html">Column Renderers</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+            <a href="dom-element-builder.html">Element Builder</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                Component composition describes how a complete UI component can
+                be assembled from several independent specifications,
+                configurations and transformations.
+            </p>
+
+            <pre>
+God Spec
+    +
+Configuration
+    +
+Data
+    +
+Columns
+    +
+Renderers
+    +
+Theme
+    |
+    v
+Transformation Pipeline
+    |
+    v
+Final Specification
+    |
+    v
+DOM
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The component is composed before it is rendered.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. Composition Is Different From DOM Construction</h2>
+
+            <p>
+                Composition happens at the specification level.
+            </p>
+
+            <pre>
+Specification A
+       +
+Specification B
+       +
+Data
+       +
+Theme
+       |
+       v
+Combined Specification
+       |
+       v
+DOM Builder
+       |
+       v
+DOM
+        </pre>
+
+            <p>
+                The DOM builder is responsible for materializing the result. It
+                does not need to understand how the component was composed.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. The Component as a System</h2>
+
+            <pre>
+                    TABLE COMPONENT
+                          |
+          +---------------+---------------+
+          |               |               |
+          v               v               v
+       Structure        Content       Presentation
+          |               |               |
+          v               v               v
+       God Spec       Data/Columns      Theme
+          |               |
+          v               v
+       Pipeline + Renderers
+                |
+                v
+          Final Specification
+                |
+                v
+           DOM Builder
+                |
+                v
+               DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>4. Structural Composition</h2>
+
+            <p>
+                The God Spec establishes the structural composition of the
+                component.
+            </p>
+
+            <pre>
+div
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+        </pre>
+
+            <p>
+                This structure exists independently of the actual records.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. Content Composition</h2>
+
+            <p>
+                Runtime data is composed into the structural specification.
+            </p>
+
+            <pre>
+God Spec
+    +
+Rows
+    |
+    v
+tbody
+    |
+    +-- tr
+    +-- tr
+    +-- tr
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>6. Presentation Composition</h2>
+
+            <p>
+                Theme information is composed with the existing specification.
+            </p>
+
+            <pre>
+Current Specification
+        +
+Theme Specification
+        |
+        v
+Themed Specification
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>7. Three Major Layers</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Concern</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Structure</td>
+                        <td>What elements exist and how they are nested.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content</td>
+                        <td>What data and dynamic content appear in those elements.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Presentation</td>
+                        <td>How those elements are visually represented.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>8. God Spec as Structural Contract</h2>
+
+            <p>
+                The God Spec establishes the nodes that other transformations can
+                target.
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+
+    "children": [
+
+        {
+            "tagName": "table",
+
+            "children": [
+
+                {
+                    "tagName": "thead"
+                },
+
+                {
+                    "tagName": "tbody",
+                    "attributes": {
+                        "slot": "body"
+                    }
+                }
+
+            ]
+        }
+
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>9. Named Regions</h2>
+
+            <p>
+                A structural specification can expose regions for later
+                transformation.
+            </p>
+
+            <pre>
+toolbar
+table
+ |
+ +-- thead
+ |
+ +-- tbody
+        </pre>
+
+            <p>
+                The transformation stages can use those regions as stable
+                locations for dynamic content.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>10. Composition Through Placeholders</h2>
+
+            <p>
+                A God Spec can contain empty or placeholder regions.
+            </p>
+
+            <pre>
+tbody
+ |
+ +-- children: []
+        </pre>
+
+            <p>
+                A later transformation fills the region.
+            </p>
+
+            <pre>
+tbody
+ |
+ +-- tr
+ +-- tr
+ +-- tr
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Component Configuration</h2>
+
+            <p>
+                The component can receive configuration independently from its
+                structural specification.
+            </p>
+
+            <pre>
+{
+    columns: [...],
+
+    data: [...],
+
+    theme: "dark"
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>12. Configuration Drives Composition</h2>
+
+            <pre>
+Configuration
+      |
+      +-- columns
+      |
+      +-- data
+      |
+      +-- theme
+      |
+      v
+Pipeline
+      |
+      v
+Final Specification
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>13. Component Factory</h2>
+
+            <p>
+                Conceptually, a component factory coordinates the composition
+                process.
+            </p>
+
+            <pre>
+const createTable = ({
+    columns,
+    data,
+    theme
+}) => {
+
+    const godSpec =
+        getGodSpec();
+
+    const pipeline =
+        createTablePipeline({
+            columns,
+            data,
+            theme
+        });
+
+    const finalSpec =
+        runPipeline({
+            inSpec: godSpec,
+            inTasks: pipeline
+        });
+
+    return buildDom({
+        inSpec: finalSpec
+    });
+
+};
+        </pre>
+
+            <p>
+                The exact implementation can differ; the important point is the
+                separation of responsibilities.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. Composition Starts With the God Spec</h2>
+
+            <pre>
+godSpec
+   |
+   v
+initial component tree
+        </pre>
+
+            <p>
+                The subsequent stages progressively make that tree complete.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>15. Column Composition</h2>
+
+            <pre>
+God Spec
+    +
+Columns
+    |
+    v
+Table Specification
+        </pre>
+
+            <p>
+                Columns can affect both the header and body.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>16. Columns as Shared Configuration</h2>
+
+            <pre>
+                COLUMNS
+                   |
+          +--------+--------+
+          |                 |
+          v                 v
+       HEADER             BODY
+          |                 |
+          v                 v
+        thead             tbody
+        </pre>
+
+            <p>
+                This gives both stages a common understanding of the Table's
+                fields.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>17. Header Composition</h2>
+
+            <pre>
+Columns
+   |
+   v
+Header Task
+   |
+   v
+thead
+   |
+   +-- tr
+        |
+        +-- th
+        +-- th
+        +-- th
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>18. Body Composition</h2>
+
+            <pre>
+Rows + Columns
+      |
+      v
+Body Task
+      |
+      v
+tbody
+      |
+      +-- tr
+      +-- tr
+      +-- tr
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>19. Renderer Composition</h2>
+
+            <p>
+                A renderer can introduce a subtree inside an individual cell.
+            </p>
+
+            <pre>
+Column
+   +
+Value
+   |
+   v
+Renderer
+   |
+   v
+Cell Content
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>20. Renderer as a Component Within a Component</h2>
+
+            <pre>
+Table
+ |
+ +-- Row
+      |
+      +-- Cell
+           |
+           +-- Renderer
+                |
+                +-- span
+                +-- button
+                +-- link
+                +-- custom subtree
+        </pre>
+
+            <p>
+                This allows cell content to become independently composable.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. Theme Composition</h2>
+
+            <pre>
+Structure
+    +
+Theme
+    |
+    v
+Presentation-aware Specification
+        </pre>
+
+            <p>
+                Theme information can therefore be applied without replacing the
+                structural source.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>22. God Spec and Theme Spec</h2>
+
+            <pre>
+God Spec                 Theme Spec
+
+div                      div
+ |                        |
+ +-- toolbar              +-- toolbar
+ |                        |
+ +-- table                +-- table
+      |                        |
+      +-- thead               +-- thead
+      |                        |
+      +-- tbody               +-- tbody
+        </pre>
+
+            <p>
+                The two specifications can be treated as a pair during Theme
+                transformation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Why Keep Them Separate?</h2>
+
+            <p>
+                Structure and presentation have different responsibilities.
+            </p>
+
+            <pre>
+God JSON
+ |
+ +-- structure
+
+
+Theme JSON
+ |
+ +-- presentation
+        </pre>
+
+            <p>
+                Keeping them separate allows one structure to be used with
+                multiple Themes.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. Theme Reuse</h2>
+
+            <pre>
+                God Spec
+                   |
+        +----------+----------+
+        |          |          |
+        v          v          v
+      Dark       Light      Custom
+        |          |          |
+        v          v          v
+       Spec       Spec       Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>25. Composition Does Not Require One Huge JSON</h2>
+
+            <p>
+                A component does not have to store every possible concern inside
+                one enormous JSON object.
+            </p>
+
+            <pre>
+God Spec
+    +
+Theme
+    +
+Columns
+    +
+Data
+    |
+    v
+Pipeline
+        </pre>
+
+            <p>
+                Each source remains focused on its responsibility.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>26. Why Not Put Everything in God JSON?</h2>
+
+            <p>
+                A single JSON containing structure, data, styling, behavior and
+                runtime values would quickly become difficult to manage.
+            </p>
+
+            <pre>
+God JSON
+
+structure
++
+data
++
+theme
++
+runtime state
++
+renderers
++
+behavior
++
+...
+        </pre>
+
+            <p>
+                Separating these concerns makes the system easier to evolve.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>27. Composition Instead of Duplication</h2>
+
+            <p>
+                Separate sources can be combined at runtime instead of duplicating
+                complete specifications.
+            </p>
+
+            <pre>
+One God Spec
+     +
+Many Themes
+     |
+     v
+Many possible presentations
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>28. Table Instance Composition</h2>
+
+            <pre>
+Table Instance
+ |
+ +-- God Spec
+ |
+ +-- Columns
+ |
+ +-- Data
+ |
+ +-- Theme
+ |
+ +-- Pipeline
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>29. Multiple Table Instances</h2>
+
+            <pre>
+Table A
+ |
+ +-- same God Spec
+ +-- columns A
+ +-- data A
+ +-- dark theme
+
+
+Table B
+ |
+ +-- same God Spec
+ +-- columns B
+ +-- data B
+ +-- light theme
+        </pre>
+
+            <p>
+                The structural specification can be reused while the instance
+                configuration differs.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>30. Composition and Reusability</h2>
+
+            <pre>
+Reusable Structure
+        |
+        +-- Table Instance 1
+        |
+        +-- Table Instance 2
+        |
+        +-- Table Instance 3
+        </pre>
+
+            <p>
+                Reusability becomes a natural consequence of specification-driven
+                construction.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>31. Composition of Nested Components</h2>
+
+            <p>
+                A specification can contain another specification as a child.
+            </p>
+
+            <pre>
+Page
+ |
+ +-- Panel
+      |
+      +-- Table
+           |
+           +-- Toolbar
+           +-- Header
+           +-- Body
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>32. Component as a Specification Subtree</h2>
+
+            <pre>
+Parent Spec
+ |
+ +-- child component spec
+        </pre>
+
+            <p>
+                The parent does not need to know how the child eventually becomes
+                DOM.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>33. Nested Table Example</h2>
+
+            <pre>
+div
+ |
+ +-- section
+      |
+      +-- table
+           |
+           +-- thead
+           +-- tbody
+        </pre>
+
+            <p>
+                The Table can be composed into a larger component tree.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>34. Form Composition</h2>
+
+            <p>
+                The same principle applies to a Form.
+            </p>
+
+            <pre>
+Form
+ |
+ +-- label
+ +-- input
+ +-- select
+ +-- button
+        </pre>
+
+            <p>
+                Each element can be represented using the same specification
+                language.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>35. Table and Form Using the Same Builder</h2>
+
+            <pre>
+Table Spec ----+
+               |
+Form Spec -----+----> Recursive DOM Builder
+               |
+Card Spec ------+
+        </pre>
+
+            <p>
+                The DOM builder can remain generic because the specification
+                describes the actual structure.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>36. Component-Specific Pipelines</h2>
+
+            <pre>
+Table
+ |
+ +-- Column Task
+ +-- Header Task
+ +-- Data Task
+ +-- Theme Task
+
+
+Form
+ |
+ +-- Field Task
+ +-- Validation Task
+ +-- Theme Task
+        </pre>
+
+            <p>
+                The pipeline engine can remain common while the task lists differ.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>37. Generic Infrastructure</h2>
+
+            <pre>
+                 GENERIC
+                   |
+        +----------+----------+
+        |                     |
+        v                     v
+ Pipeline Runner       DOM Builder
+        |
+        +-----------------------------+
+                                      |
+                                      v
+                         Component-specific tasks
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>38. Table-Specific Infrastructure</h2>
+
+            <pre>
+Table
+ |
+ +-- God Spec
+ +-- Columns
+ +-- Data Transformation
+ +-- Header Transformation
+ +-- Cell Renderers
+ +-- Theme
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>39. Separation Between Generic and Specific</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Generic</th>
+                        <th>Table Specific</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Recursive DOM builder</td>
+                        <td>Column resolution</td>
+                    </tr>
+
+                    <tr>
+                        <td>Pipeline runner</td>
+                        <td>Header generation</td>
+                    </tr>
+
+                    <tr>
+                        <td>Specification model</td>
+                        <td>Row generation</td>
+                    </tr>
+
+                    <tr>
+                        <td>Element builder</td>
+                        <td>Cell renderers</td>
+                    </tr>
+
+                    <tr>
+                        <td></td>
+                        <td>Table Themes</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>40. Composition Boundary</h2>
+
+            <pre>
+TABLE-SPECIFIC
+      |
+      v
+Final Table Specification
+      |
+      v
+GENERIC
+      |
+      v
+DOM
+        </pre>
+
+            <p>
+                This boundary allows Table-specific logic to evolve independently
+                from the generic DOM engine.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>41. Composition and Extensibility</h2>
+
+            <p>
+                New functionality can be added as another composable stage.
+            </p>
+
+            <pre>
+Existing:
+
+Columns
+Header
+Data
+Theme
+
+
+Extended:
+
+Columns
+Header
+Data
+Selection
+Actions
+Theme
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>42. Selection Composition</h2>
+
+            <pre>
+Rows
+ |
+ v
+Selection Task
+ |
+ v
+Rows with selection information
+ |
+ v
+Body Task
+ |
+ v
+tbody
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>43. Action Composition</h2>
+
+            <pre>
+Columns
+ |
+ v
+Action Column
+ |
+ v
+Renderer
+ |
+ v
+Button Specification
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>44. Filtering Composition</h2>
+
+            <pre>
+All Data
+   |
+   v
+Filter Transformation
+   |
+   v
+Visible Data
+   |
+   v
+Body Transformation
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>45. Sorting Composition</h2>
+
+            <pre>
+Data
+ |
+ v
+Sort Transformation
+ |
+ v
+Ordered Data
+ |
+ v
+Body Transformation
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>46. Pagination Composition</h2>
+
+            <pre>
+Data
+ |
+ v
+Pagination Transformation
+ |
+ v
+Current Page
+ |
+ v
+Body Transformation
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>47. Feature Composition</h2>
+
+            <pre>
+God Spec
+   |
+   v
+Columns
+   |
+   v
+Filtering
+   |
+   v
+Sorting
+   |
+   v
+Pagination
+   |
+   v
+Body
+   |
+   v
+Selection
+   |
+   v
+Theme
+   |
+   v
+Final Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>48. Feature Order</h2>
+
+            <p>
+                Features should be ordered according to their dependencies.
+            </p>
+
+            <pre>
+Filter
+  |
+  v
+Sort
+  |
+  v
+Paginate
+  |
+  v
+Render
+        </pre>
+
+            <p>
+                For example, pagination normally operates on the already filtered
+                and sorted collection if that is the intended behavior.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>49. Composition Does Not Mean Every Feature Must Be Present</h2>
+
+            <pre>
+Basic Table:
+
+Columns
+Header
+Data
+Theme
+
+
+Advanced Table:
+
+Columns
+Header
+Filter
+Sort
+Pagination
+Data
+Selection
+Theme
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>50. Optional Pipeline Stages</h2>
+
+            <pre>
+const tasks = [
+
+    columnTask,
+
+    headerTask,
+
+    filterEnabled
+        ? filterTask
+        : null,
+
+    sortEnabled
+        ? sortTask
+        : null,
+
+    dataTask,
+
+    themeTask
+
+].filter(Boolean);
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>51. Composition and Custom Behavior</h2>
+
+            <p>
+                Consumers can potentially introduce custom transformations if
+                the pipeline contract is exposed.
+            </p>
+
+            <pre>
+customTask
+    |
+    v
+Spec -> Spec
+        </pre>
+
+            <p>
+                The generic pipeline runner can execute it without knowing its
+                internal purpose.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>52. Custom Transformation</h2>
+
+            <pre>
+const customTask = ({
+    inSpec
+}) => {
+
+    // custom transformation
+
+    return inSpec;
+};
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>53. Custom Task in Pipeline</h2>
+
+            <pre>
+const pipeline = [
+
+    columnTask,
+
+    headerTask,
+
+    dataTask,
+
+    customTask,
+
+    themeTask
+
+];
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>54. Composition Contract</h2>
+
+            <p>
+                For a custom transformation to participate safely, it should
+                respect the same specification contract.
+            </p>
+
+            <pre>
+Input:
+    Specification
+
+Output:
+    Compatible Specification
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>55. Composition and Isolation</h2>
+
+            <p>
+                A task should avoid modifying unrelated regions unless that is
+                explicitly part of its responsibility.
+            </p>
+
+            <pre>
+Task owns:
+
+tbody
+
+Task should not accidentally modify:
+
+toolbar
+thead
+wrapper
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>56. Composition and Deep Trees</h2>
+
+            <p>
+                The specification may be deeply nested, but each transformation
+                can still focus on a specific subtree.
+            </p>
+
+            <pre>
+root
+ |
+ +-- layout
+      |
+      +-- panel
+           |
+           +-- content
+                |
+                +-- table
+                     |
+                     +-- tbody
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>57. Stable Structural Anchors</h2>
+
+            <p>
+                Attributes such as slots, identifiers or other agreed structural
+                markers can provide stable transformation targets.
+            </p>
+
+            <pre>
+{
+    "tagName": "tbody",
+
+    "attributes": {
+        "slot": "body"
+    }
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>58. Composition Through Slots</h2>
+
+            <pre>
+God Spec
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody[slot=body]
+        </pre>
+
+            <p>
+                A transformation can target the body region without knowing the
+                complete path from the root.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>59. Component Composition and Slots</h2>
+
+            <p>
+                The same concept can be used for other dynamic component regions.
+            </p>
+
+            <pre>
+Component
+ |
+ +-- header
+ +-- content
+ +-- footer
+        </pre>
+
+            <p>
+                Each region can become a target for a separate transformation.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>60. Composition of Child Specifications</h2>
+
+            <pre>
+Parent Spec
+ |
+ +-- childSpec
+ |
+ +-- childSpec
+ |
+ +-- childSpec
+        </pre>
+
+            <p>
+                Child specifications can be generated independently and inserted
+                into the parent specification.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>61. Child Component Factory</h2>
+
+            <pre>
+const childSpec =
+    createChildSpec({
+        ...
+    });
+
+parentSpec.children.push(
+    childSpec
+);
+        </pre>
+
+            <p>
+                The parent remains a specification tree.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>62. Composition Before DOM</h2>
+
+            <pre>
+Child Spec
+      |
+      v
+Parent Spec
+      |
+      v
+Final Spec
+      |
+      v
+DOM
+        </pre>
+
+            <p>
+                This keeps child and parent composition independent of browser
+                APIs.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>63. Composition of Renderers</h2>
+
+            <p>
+                Renderers can themselves return specification trees containing
+                multiple nodes.
+            </p>
+
+            <pre>
+Renderer
+ |
+ v
+span
+ |
+ +-- icon
+ |
+ +-- text
+ |
+ +-- badge
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>64. Rich Cell Composition</h2>
+
+            <pre>
+td
+ |
+ +-- div
+      |
+      +-- icon
+      |
+      +-- span
+      |
+      +-- button
+        </pre>
+
+            <p>
+                The Table does not need special DOM-building logic for this
+                structure.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>65. Specification Composition Is Recursive</h2>
+
+            <pre>
+Spec
+ |
+ +-- Spec
+ |    |
+ |    +-- Spec
+ |
+ +-- Spec
+      |
+      +-- Spec
+        </pre>
+
+            <p>
+                Because the specification itself is recursive, composition can
+                happen at arbitrary depth.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>66. Composition and the Recursive Builder</h2>
+
+            <pre>
+Composed Specification
+          |
+          v
+Recursive Builder
+          |
+          +-- node
+          |    |
+          |    +-- child
+          |         |
+          |         +-- child
+          |
+          v
+          DOM
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>67. Generic Builder Advantage</h2>
+
+            <p>
+                The builder only needs to understand the specification contract.
+            </p>
+
+            <pre>
+tagName
+attributes
+children
+        </pre>
+
+            <p>
+                It does not need separate knowledge about every component that
+                produced those nodes.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>68. Composition and DOM Independence</h2>
+
+            <pre>
+Component Logic
+      |
+      v
+Specification Composition
+      |
+      v
+Final Specification
+      |
+      v
+Generic DOM Builder
+        </pre>
+
+            <p>
+                The same final specification can therefore be inspected before
+                it becomes DOM.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>69. Inspectable Composition</h2>
+
+            <pre>
+console.log(
+    finalSpec
+);
+        </pre>
+
+            <p>
+                This makes the complete composed structure visible as data.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>70. Composition and Serialization</h2>
+
+            <pre>
+const json =
+    JSON.stringify(
+        finalSpec,
+        null,
+        4
+    );
+        </pre>
+
+            <p>
+                The specification can therefore be inspected, stored or compared
+                independently of the DOM.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>71. Composition and Testing</h2>
+
+            <pre>
+Input Configuration
+       |
+       v
+Pipeline
+       |
+       v
+Expected Final Spec
+       |
+       v
+Assertion
+        </pre>
+
+            <p>
+                This provides a convenient test boundary.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>72. Component Composition Test</h2>
+
+            <pre>
+const finalSpec =
+    buildTableSpec({
+        columns,
+        data,
+        theme
+    });
+
+assert.deepEqual(
+    finalSpec,
+    expectedSpec
+);
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>73. DOM Test After Composition</h2>
+
+            <pre>
+const finalSpec =
+    buildTableSpec(...);
+
+const element =
+    buildDom({
+        inSpec: finalSpec
+    });
+
+assert.equal(
+    element.tagName,
+    "DIV"
+);
+        </pre>
+
+            <p>
+                Specification tests and DOM tests can remain separate.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>74. Composition and Debugging</h2>
+
+            <pre>
+God Spec
+   |
+   v
+After Columns
+   |
+   v
+After Header
+   |
+   v
+After Data
+   |
+   v
+After Renderers
+   |
+   v
+After Theme
+   |
+   v
+Final Spec
+        </pre>
+
+            <p>
+                Each stage provides a useful debugging boundary.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>75. Composition and Reuse of Themes</h2>
+
+            <pre>
+Table Structure
+      |
+      +-- Dark Theme
+      |
+      +-- Light Theme
+      |
+      +-- Custom Theme
+        </pre>
+
+            <p>
+                Presentation can be swapped without duplicating the structural
+                specification.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>76. Composition and Reuse of Data Logic</h2>
+
+            <pre>
+Table A
+ |
+ +-- Data Task
+ |
+Table B
+ |
+ +-- Same Data Task
+        </pre>
+
+            <p>
+                Generic data transformation behavior can be reused when the
+                specification contracts are compatible.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>77. Composition and Reuse of Renderers</h2>
+
+            <pre>
+Currency Renderer
+       |
+       +-- Price Column
+       |
+       +-- Total Column
+       |
+       +-- Summary Column
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>78. Composition and Reuse of Pipeline Tasks</h2>
+
+            <pre>
+Shared Tasks
+     |
+     +-- filtering
+     +-- sorting
+     +-- theming
+     |
+     v
+Component Pipelines
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>79. Composition Does Not Mean Global Coupling</h2>
+
+            <p>
+                Reusable pieces should communicate through clear contracts rather
+                than shared knowledge of implementation details.
+            </p>
+
+            <pre>
+Task A
+ |
+ | Spec contract
+ v
+Task B
+ |
+ | Spec contract
+ v
+Task C
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>80. Composition Through the Specification Contract</h2>
+
+            <pre>
+Component A
+     |
+     v
+Specification
+     |
+     v
+Component B
+     |
+     v
+Specification
+        </pre>
+
+            <p>
+                The specification is the boundary through which pieces compose.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>81. Composition and Responsibility</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Piece</th>
+                        <th>Should Know</th>
+                        <th>Should Not Need to Know</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>God Spec</td>
+                        <td>Structure</td>
+                        <td>Runtime data</td>
+                    </tr>
+
+                    <tr>
+                        <td>Data Task</td>
+                        <td>Rows and columns</td>
+                        <td>DOM APIs</td>
+                    </tr>
+
+                    <tr>
+                        <td>Theme Task</td>
+                        <td>Theme and specification</td>
+                        <td>Data source</td>
+                    </tr>
+
+                    <tr>
+                        <td>Renderer</td>
+                        <td>Cell context</td>
+                        <td>Whole Table lifecycle</td>
+                    </tr>
+
+                    <tr>
+                        <td>Pipeline Runner</td>
+                        <td>Task order</td>
+                        <td>Task-specific behavior</td>
+                    </tr>
+
+                    <tr>
+                        <td>DOM Builder</td>
+                        <td>Specification structure</td>
+                        <td>Table business rules</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>82. Composition and Independence</h2>
+
+            <pre>
+God Spec
+   |
+   | independent
+   v
+Data
+   |
+   | independent
+   v
+Theme
+   |
+   | independent
+   v
+Pipeline
+        </pre>
+
+            <p>
+                Independence does not mean the pieces never interact. It means
+                their interaction happens through defined boundaries.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>83. Composition and Boundaries</h2>
+
+            <pre>
+God Spec
+   |
+   | specification
+   v
+Transformation
+   |
+   | specification
+   v
+Transformation
+   |
+   | specification
+   v
+DOM Builder
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>84. Composition as Assembly</h2>
+
+            <p>
+                The complete component can be viewed as an assembly process.
+            </p>
+
+            <pre>
+        STRUCTURE
+            |
+            v
+        +---------+
+        | God Spec|
+        +---------+
+             |
+             v
+        +---------+
+        | Columns |
+        +---------+
+             |
+             v
+        +---------+
+        |  Data   |
+        +---------+
+             |
+             v
+        +---------+
+        |Renderer |
+        +---------+
+             |
+             v
+        +---------+
+        |  Theme  |
+        +---------+
+             |
+             v
+        +---------+
+        | Final   |
+        |  Spec   |
+        +---------+
+             |
+             v
+           DOM
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>85. Composition as Transformation</h2>
+
+            <p>
+                Another useful mental model is:
+            </p>
+
+            <pre>
+Initial Spec
+    |
+    +-- add columns
+    |
+    +-- add header
+    |
+    +-- add rows
+    |
+    +-- add rendered cells
+    |
+    +-- apply theme
+    |
+    v
+Complete Spec
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>86. Composition Does Not Destroy the Original Concept</h2>
+
+            <p>
+                The final specification is still the same specification model.
+            </p>
+
+            <pre>
+Before:
+
+{
+    tagName,
+    attributes,
+    children
+}
+
+
+After:
+
+{
+    tagName,
+    attributes,
+    children
+}
+        </pre>
+
+            <p>
+                The contents have become richer, but the fundamental model remains
+                the same.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>87. Progressive Completion</h2>
+
+            <pre>
+Incomplete
+    |
+    v
+More Complete
+    |
+    v
+More Complete
+    |
+    v
+Complete
+        </pre>
+
+            <p>
+                Pipeline stages progressively complete the specification.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>88. Composition and Progressive Completion</h2>
+
+            <pre>
+God Spec
+ |
+ +-- static structure
+ |
+ v
++ Columns
+ |
+ +-- logical fields
+ |
+ v
++ Data
+ |
+ +-- rows
+ |
+ v
++ Renderers
+ |
+ +-- cell subtrees
+ |
+ v
++ Theme
+ |
+ +-- presentation
+ |
+ v
+Final Spec
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>89. Composition of Static and Dynamic Information</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Information</th>
+                        <th>Typical Source</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Static structure</td>
+                        <td>God Spec</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runtime records</td>
+                        <td>Data</td>
+                    </tr>
+
+                    <tr>
+                        <td>Field mapping</td>
+                        <td>Columns</td>
+                    </tr>
+
+                    <tr>
+                        <td>Cell representation</td>
+                        <td>Renderers</td>
+                    </tr>
+
+                    <tr>
+                        <td>Visual presentation</td>
+                        <td>Theme</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+        </section>
+
+        <section>
+
+            <h2>90. Final Composition Model</h2>
+
+            <pre>
+                 GOD JSON
+                     |
+                     |
+             STRUCTURAL TREE
+                     |
+                     v
+              +--------------+
+              |   COLUMNS    |
+              +--------------+
+                     |
+                     v
+              +--------------+
+              |    HEADER    |
+              +--------------+
+                     |
+                     v
+              +--------------+
+              |     DATA     |
+              +--------------+
+                     |
+                     v
+              +--------------+
+              |   RENDERERS  |
+              +--------------+
+                     |
+                     v
+              +--------------+
+              |    THEME     |
+              +--------------+
+                     |
+                     v
+              +--------------+
+              | FINAL SPEC   |
+              +--------------+
+                     |
+                     v
+             RECURSIVE BUILDER
+                     |
+                     v
+                    DOM
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>91. The Component Is the Composition</h2>
+
+            <p>
+                The component should not be thought of as only the final DOM
+                element.
+            </p>
+
+            <pre>
+Component
+    =
+Structure
++
+Configuration
++
+Transformations
++
+Presentation
++
+Final Specification
++
+DOM Materialization
+        </pre>
+
+            <p>
+                The DOM is the final materialized result of that composition.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>92. The Important Architectural Boundary</h2>
+
+            <pre>
+                 COMPONENT LOGIC
+                       |
+                       v
+              SPECIFICATION LAYER
+                       |
+          +------------+------------+
+          |            |            |
+          v            v            v
+       Structure     Data         Theme
+          |            |            |
+          +------------+------------+
+                       |
+                       v
+                   Pipeline
+                       |
+                       v
+                FINAL SPECIFICATION
+                       |
+                       v
+                 GENERIC BUILDER
+                       |
+                       v
+                      DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        Component composition is the process of assembling one
+                        complete specification from independent sources.
+                    </strong>
+                </p>
+
+                <p>
+                    The God JSON supplies the structural foundation. Columns
+                    describe how data maps into the structure. Runtime data
+                    supplies the records. Renderers describe how individual
+                    values become cell content. Theme specifications provide
+                    presentation information. Middleware transforms the
+                    specification in an intentional order.
+                </p>
+
+                <p>
+                    The result is one final specification tree. The generic
+                    recursive DOM builder then materializes that tree into DOM.
+                </p>
+
+                <p>
+                    This keeps the component-specific composition logic separate
+                    from the generic mechanism that turns a specification into
+                    browser elements.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

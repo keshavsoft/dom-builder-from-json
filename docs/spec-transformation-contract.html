@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Specification Transformation Contract | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Specification Transformation Contract</h1>
+
+        <div>
+            The contract followed by transformations operating on the component specification
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="theme-transformation.html">Theme Transformation</a>
+            <a href="data-transformation.html">Data Transformation</a>
+            <a href="pipeline-execution.html">Pipeline Execution</a>
+            <a href="table-lifecycle.html">Table Lifecycle</a>
+            <a href="columns-and-header.html">Columns and Header</a>
+            <a href="column-renderers.html">Column Renderers</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                This document defines the conceptual contract between the
+                different transformation stages used to build a component from
+                JSON specification.
+            </p>
+
+            <pre>
+Input Specification
+        |
+        v
+Transformation
+        |
+        v
+Output Specification
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The specification is the common language shared by the
+                    transformation stages.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. The Central Contract</h2>
+
+            <p>
+                A transformation receives a specification and produces a
+                specification.
+            </p>
+
+            <pre>
+Spec
+ |
+ v
+transform()
+ |
+ v
+Spec
+        </pre>
+
+            <p>
+                The next transformation can therefore consume the result without
+                needing to know how the previous transformation implemented its
+                work.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. Basic Function Shape</h2>
+
+            <pre>
+const transform = ({
+    inSpec
+}) => {
+
+    // transform specification
+
+    return inSpec;
+};
+        </pre>
+
+            <p>
+                This is the simplest representation of the contract.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Input and Output</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Part</th>
+                        <th>Meaning</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td><code>inSpec</code></td>
+                        <td>The current specification entering the stage.</td>
+                    </tr>
+
+                    <tr>
+                        <td>return value</td>
+                        <td>The specification passed to the next stage.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>5. The Specification Model</h2>
+
+            <p>
+                A specification node generally describes an element and its
+                properties.
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+
+    "attributes": {
+        "class": "example"
+    },
+
+    "children": []
+}
+        </pre>
+
+            <p>
+                Nested nodes form the complete specification tree.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>6. Specification Tree</h2>
+
+            <pre>
+div
+ |
+ +-- div
+ |    |
+ |    +-- span
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+            |
+            +-- tr
+                 |
+                 +-- td
+        </pre>
+
+            <p>
+                A transformation operates on this tree rather than directly on
+                the browser DOM.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>7. The God Spec</h2>
+
+            <p>
+                The God Spec is the initial specification tree from which the
+                component is assembled.
+            </p>
+
+            <pre>
+God Spec
+ |
+ +-- wrapper
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+        </pre>
+
+            <p>
+                Transformations work against this existing structural foundation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>8. Transformation Does Not Mean Complete Reconstruction</h2>
+
+            <p>
+                A transformation does not necessarily rebuild the complete
+                specification.
+            </p>
+
+            <pre>
+Original Spec
+ |
+ +-- toolbar       unchanged
+ |
+ +-- table
+      |
+      +-- thead    unchanged
+      |
+      +-- tbody    modified
+        </pre>
+
+            <p>
+                A transformation may change only the portion for which it is
+                responsible.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Targeted Transformation</h2>
+
+            <pre>
+Entire Specification
+        |
+        v
+Locate Target
+        |
+        v
+Transform Target
+        |
+        v
+Return Entire Specification
+        </pre>
+
+            <p>
+                This pattern is particularly important for deeply nested
+                specifications.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>10. Deeply Nested Specification</h2>
+
+            <pre>
+div
+ |
+ +-- section
+      |
+      +-- article
+           |
+           +-- panel
+                |
+                +-- table
+                     |
+                     +-- tbody
+        </pre>
+
+            <p>
+                The Data Transformation should not need to know every ancestor
+                merely to populate the body.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>11. Target Identification</h2>
+
+            <p>
+                A transformation needs a reliable way to identify the subtree it
+                owns.
+            </p>
+
+            <pre>
+{
+    "tagName": "tbody",
+
+    "attributes": {
+        "slot": "body"
+    }
+}
+        </pre>
+
+            <p>
+                Here <code>slot="body"</code> can act as an explicit contract
+                identifying the dynamic body region.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>12. Structural Contract</h2>
+
+            <p>
+                A transformation should know what part of the specification it
+                is responsible for.
+            </p>
+
+            <pre>
+Data Task
+    |
+    +-- owns tbody content
+
+
+Header Task
+    |
+    +-- owns thead content
+
+
+Theme Task
+    |
+    +-- owns presentation information
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>13. Responsibility Boundaries</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Transformation</th>
+                        <th>Primary Responsibility</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Column</td>
+                        <td>Resolve column definitions.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Header</td>
+                        <td>Create header structure.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Data</td>
+                        <td>Create body rows.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Renderer</td>
+                        <td>Create cell content.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Theme</td>
+                        <td>Apply presentation information.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>14. Do Not Cross Responsibilities Unnecessarily</h2>
+
+            <p>
+                A Data Transformation should not need to contain Theme selection
+                logic.
+            </p>
+
+            <pre>
+Data Task
+
+    rows
+    columns
+    cells
+
+        NOT
+
+    dark theme
+    light theme
+    medium theme
+        </pre>
+
+            <p>
+                Theme behavior belongs to the Theme layer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>15. Specification Preservation</h2>
+
+            <p>
+                A transformation should preserve information that belongs to
+                other parts of the specification unless it intentionally owns
+                that information.
+            </p>
+
+            <pre>
+Before:
+
+{
+    tagName: "table",
+
+    attributes: {
+        class: "table"
+    },
+
+    children: [...]
+}
+        </pre>
+
+            <p>
+                A Data Task should not accidentally remove the existing
+                <code>attributes</code>.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>16. Preserve Unrelated Properties</h2>
+
+            <pre>
+const tableSpec = {
+    tagName: "table",
+
+    attributes: {
+        class: "table"
+    },
+
+    children: [...]
+};
+        </pre>
+
+            <p>
+                If a transformation only needs to modify children, it should
+                preserve the other properties.
+            </p>
+
+            <pre>
+tableSpec.children = newChildren;
+
+return tableSpec;
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>17. Transformation as a Local Operation</h2>
+
+            <pre>
+Whole Tree
+    |
+    +--------------------+
+    |                    |
+    |     Local Change   |
+    |          |         |
+    |          v         |
+    |       Target       |
+    |                    |
+    +--------------------+
+        </pre>
+
+            <p>
+                The transformation can therefore remain focused even when the
+                overall tree is large.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>18. Mutation Contract</h2>
+
+            <p>
+                One implementation style is to mutate the incoming specification.
+            </p>
+
+            <pre>
+const transform = ({
+    inSpec
+}) => {
+
+    inSpec.children = newChildren;
+
+    return inSpec;
+};
+        </pre>
+
+            <p>
+                The same object continues through the pipeline.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>19. Mutation Flow</h2>
+
+            <pre>
+God Spec
+   |
+   v
+Task 1
+   |
+   v
+Same Spec Object
+   |
+   v
+Task 2
+   |
+   v
+Same Spec Object
+   |
+   v
+Task 3
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>20. Replacement Contract</h2>
+
+            <p>
+                Another implementation style is to return a new specification.
+            </p>
+
+            <pre>
+const transform = ({
+    inSpec
+}) => {
+
+    return {
+        ...inSpec,
+
+        children: newChildren
+    };
+};
+        </pre>
+
+            <p>
+                The next stage receives the returned object.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. Replacement Flow</h2>
+
+            <pre>
+Spec A
+  |
+  v
+Task
+  |
+  v
+Spec B
+  |
+  v
+Task
+  |
+  v
+Spec C
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>22. Both Models Satisfy the Contract</h2>
+
+            <pre>
+Mutation:
+
+Spec -> modify -> same Spec
+
+
+Replacement:
+
+Spec -> transform -> new Spec
+        </pre>
+
+            <p>
+                The important requirement is that the output remains compatible
+                with the next stage.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Pipeline Compatibility</h2>
+
+            <pre>
+Task A
+  |
+  v
+Valid Specification
+  |
+  v
+Task B
+  |
+  v
+Valid Specification
+  |
+  v
+Task C
+        </pre>
+
+            <p>
+                This compatibility is the foundation of the pipeline.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. Invalid Pipeline Contract</h2>
+
+            <pre>
+Task A
+  |
+  v
+Unrelated Object
+  |
+  v
+Task B
+  |
+  X
+Cannot process
+        </pre>
+
+            <p>
+                A task should not unexpectedly replace the specification with an
+                incompatible representation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. The Specification Is the Shared Language</h2>
+
+            <pre>
+Column Task
+     |
+     v
+   SPEC
+     |
+     v
+Header Task
+     |
+     v
+   SPEC
+     |
+     v
+Data Task
+     |
+     v
+   SPEC
+     |
+     v
+Theme Task
+     |
+     v
+   SPEC
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>26. Configuration Is Separate From the Spec</h2>
+
+            <p>
+                A transformation can receive external configuration while the
+                specification remains the object being transformed.
+            </p>
+
+            <pre>
+Configuration
+     |
+     v
+Task Factory
+     |
+     v
+Configured Task
+     |
+     v
+Spec
+     |
+     v
+Transformed Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>27. Example: Data Configuration</h2>
+
+            <pre>
+const createDataTask = ({
+    inRows,
+    inColumns
+}) => {
+
+    return ({ inSpec }) => {
+
+        // use rows and columns
+
+        return inSpec;
+    };
+
+};
+        </pre>
+
+            <p>
+                Rows and columns are configuration/runtime inputs. The
+                specification remains the transformation target.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>28. Example: Theme Configuration</h2>
+
+            <pre>
+const createThemeTask = ({
+    inThemeSpec
+}) => {
+
+    return ({ inSpec }) => {
+
+        // apply theme
+
+        return inSpec;
+    };
+
+};
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>29. Task Factory vs Task Execution</h2>
+
+            <pre>
+createTask(config)
+       |
+       v
+task
+       |
+       v
+task({ inSpec })
+       |
+       v
+transformedSpec
+        </pre>
+
+            <p>
+                This separation allows configuration to be established before
+                the pipeline runs.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>30. The Contract at Runtime</h2>
+
+            <pre>
+{
+    inSpec: currentSpecification
+}
+        </pre>
+
+            <p>
+                A task performs its transformation and returns:
+            </p>
+
+            <pre>
+currentSpecification
+        </pre>
+
+            <p>
+                or another compatible specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>31. Data Transformation Contract</h2>
+
+            <pre>
+Input:
+
+inSpec
+inRows
+inColumns
+
+        |
+
+        v
+
+Data Transformation
+
+        |
+
+        v
+
+Output:
+
+updated inSpec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>32. Header Transformation Contract</h2>
+
+            <pre>
+Input:
+
+inSpec
+inColumns
+
+        |
+
+        v
+
+Header Transformation
+
+        |
+
+        v
+
+Output:
+
+updated inSpec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>33. Theme Transformation Contract</h2>
+
+            <pre>
+Input:
+
+inSpec
+inThemeSpec
+
+        |
+
+        v
+
+Theme Transformation
+
+        |
+
+        v
+
+Output:
+
+updated inSpec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>34. Renderer Contract</h2>
+
+            <p>
+                A renderer is slightly different because it generally produces
+                cell content rather than the entire component specification.
+            </p>
+
+            <pre>
+value + row + column
+          |
+          v
+       renderer
+          |
+          v
+   cell content spec
+        </pre>
+
+            <p>
+                The resulting cell specification is then incorporated into the
+                larger Table specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>35. Renderer as a Nested Contract</h2>
+
+            <pre>
+Data Task
+    |
+    +-- Renderer
+    |     |
+    |     v
+    |  Cell Spec
+    |
+    v
+Row Spec
+        </pre>
+
+            <p>
+                The renderer participates inside the Data Transformation rather
+                than necessarily being a top-level pipeline stage.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>36. Target Ownership</h2>
+
+            <p>
+                Every transformation should have a clear answer to:
+            </p>
+
+            <pre>
+"What part of the specification am I changing?"
+        </pre>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Target</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Header</td>
+                        <td><code>thead</code></td>
+                    </tr>
+
+                    <tr>
+                        <td>Data</td>
+                        <td><code>tbody</code></td>
+                    </tr>
+
+                    <tr>
+                        <td>Theme</td>
+                        <td>Presentation attributes across the tree.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>37. Ownership Prevents Accidental Coupling</h2>
+
+            <pre>
+Data Task
+   |
+   X ---> toolbar styling
+   X ---> theme selection
+   X ---> DOM creation
+
+Data Task
+   |
+   +---> tbody
+   +---> rows
+   +---> cells
+        </pre>
+
+            <p>
+                Clear ownership keeps the pipeline understandable.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>38. Preserve the Structural Skeleton</h2>
+
+            <pre>
+God Spec
+
+wrapper
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+        </pre>
+
+            <p>
+                A transformation should normally preserve this skeleton unless
+                structural modification is explicitly its responsibility.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>39. Dynamic Region</h2>
+
+            <pre>
+tbody
+ |
+ +-- children: []
+        </pre>
+
+            <p>
+                The Data Transformation fills the dynamic region.
+            </p>
+
+            <pre>
+tbody
+ |
+ +-- tr
+ +-- tr
+ +-- tr
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>40. Static Region</h2>
+
+            <pre>
+toolbar
+ |
+ +-- search input
+ |
+ +-- controls
+        </pre>
+
+            <p>
+                Unless a specific middleware owns the toolbar, Data Transformation
+                should leave it untouched.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>41. Theme Transformation Is Different</h2>
+
+            <p>
+                Theme transformation may intentionally affect many nodes.
+            </p>
+
+            <pre>
+God Spec
+ |
+ +-- wrapper       <-- theme
+ |
+ +-- toolbar       <-- theme
+ |
+ +-- table         <-- theme
+      |
+      +-- thead    <-- theme
+      |
+      +-- tbody    <-- theme
+        </pre>
+
+            <p>
+                Its broader scope is part of its responsibility.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>42. Transformations Can Be Recursive</h2>
+
+            <p>
+                A transformation may recursively traverse the specification
+                tree.
+            </p>
+
+            <pre>
+transform(node)
+    |
+    +-- transform node
+    |
+    +-- transform children
+        </pre>
+
+            <p>
+                This is especially useful for Theme processing.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>43. Recursive Transformation</h2>
+
+            <pre>
+div
+ |
+ +-- table
+      |
+      +-- thead
+      |    |
+      |    +-- tr
+      |
+      +-- tbody
+           |
+           +-- tr
+                |
+                +-- td
+        </pre>
+
+            <p>
+                A recursive transformer can visit every node without knowing the
+                maximum tree depth beforehand.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>44. Generic Recursive Transformation</h2>
+
+            <pre>
+const transformNode = node => {
+
+    if (!node || typeof node !== "object") {
+        return node;
+    }
+
+    // transform current node
+
+    if (Array.isArray(node.children)) {
+
+        node.children =
+            node.children.map(transformNode);
+
+    }
+
+    return node;
+};
+        </pre>
+
+            <p>
+                The exact transformation logic depends on the task.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>45. Recursive Transformation vs Recursive DOM Building</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Recursive Transformation</th>
+                        <th>Recursive DOM Building</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Changes specification.</td>
+                        <td>Creates DOM.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runs before rendering.</td>
+                        <td>Runs during rendering.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Works with JSON objects.</td>
+                        <td>Works with browser APIs.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>46. No DOM in the Transformation Contract</h2>
+
+            <p>
+                A specification transformation should not need:
+            </p>
+
+            <pre>
+document
+window
+HTMLElement
+appendChild
+        </pre>
+
+            <p>
+                Its input and output can remain JSON-like structures.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>47. The DOM Boundary</h2>
+
+            <pre>
+TRANSFORMATION SIDE
+
+God Spec
+   |
+   v
+Pipeline
+   |
+   v
+Final Spec
+
+
+          |
+          | DOM boundary
+          v
+
+
+DOM SIDE
+
+Recursive Builder
+   |
+   v
+HTMLElement
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>48. Specification Validity</h2>
+
+            <p>
+                Every transformation should ideally leave the specification in a
+                form that downstream transformations can understand.
+            </p>
+
+            <pre>
+Valid Spec
+    |
+    v
+Transformation
+    |
+    v
+Valid Spec
+    |
+    v
+Transformation
+    |
+    v
+Valid Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>49. Do Not Destroy Required Fields</h2>
+
+            <p>
+                If a downstream stage requires <code>children</code>, an earlier
+                stage should not unexpectedly remove it.
+            </p>
+
+            <pre>
+{
+    tagName: "table",
+    attributes: {...},
+    children: [...]
+}
+        </pre>
+
+            <p>
+                should remain structurally compatible after transformation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>50. Attributes Are Part of the Contract</h2>
+
+            <pre>
+{
+    "tagName": "tbody",
+
+    "attributes": {
+        "slot": "body",
+        "class": "divide-y"
+    },
+
+    "children": [...]
+}
+        </pre>
+
+            <p>
+                A transformation changing the children should normally preserve
+                the existing attributes.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>51. Children Are Part of the Contract</h2>
+
+            <p>
+                Dynamic regions are usually represented through the
+                <code>children</code> property.
+            </p>
+
+            <pre>
+{
+    "tagName": "tbody",
+
+    "children": [
+        ...
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>52. Attributes and Children Together</h2>
+
+            <pre>
+Node
+ |
+ +-- tagName
+ |
+ +-- attributes
+ |
+ +-- children
+        </pre>
+
+            <p>
+                These properties form the basic structural language used by the
+                DOM builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>53. Transformation Should Respect the Node Model</h2>
+
+            <pre>
+{
+    tagName,
+    attributes,
+    children
+}
+        </pre>
+
+            <p>
+                A transformation can enrich the object, but should preserve the
+                conventions expected by the next stage.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>54. Example: Adding a Class</h2>
+
+            <pre>
+node.attributes.class =
+    "table-body";
+        </pre>
+
+            <p>
+                The node remains the same specification node.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>55. Example: Replacing Children</h2>
+
+            <pre>
+node.children =
+    generatedRows;
+        </pre>
+
+            <p>
+                The node's structural identity remains intact.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>56. Example: Adding a Child</h2>
+
+            <pre>
+node.children.push(
+    newChild
+);
+        </pre>
+
+            <p>
+                This extends the specification rather than creating DOM.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>57. Example: Removing a Child</h2>
+
+            <pre>
+node.children =
+    node.children.filter(...);
+        </pre>
+
+            <p>
+                Again, the operation remains entirely within the specification
+                layer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>58. Transformation Ordering</h2>
+
+            <p>
+                The contract also depends on execution order.
+            </p>
+
+            <pre>
+Column Resolution
+       |
+       v
+Header / Body
+       |
+       v
+Theme
+       |
+       v
+Final Spec
+        </pre>
+
+            <p>
+                A transformation should receive the information it requires
+                before it executes.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>59. Dependency Contract</h2>
+
+            <pre>
+Task B requires output of Task A
+
+Task A
+  |
+  v
+Required Information
+  |
+  v
+Task B
+        </pre>
+
+            <p>
+                This creates a dependency that should be represented by pipeline
+                ordering.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>60. Example: Body Depends on Columns</h2>
+
+            <pre>
+Resolve Columns
+       |
+       v
+Resolved Columns
+       |
+       v
+Data Transformation
+       |
+       v
+tbody
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>61. Example: Header Depends on Columns</h2>
+
+            <pre>
+Resolve Columns
+       |
+       v
+Resolved Columns
+       |
+       v
+Header Transformation
+       |
+       v
+thead
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>62. Pipeline Contract</h2>
+
+            <pre>
+Task 1:
+    Spec -> Spec
+
+Task 2:
+    Spec -> Spec
+
+Task 3:
+    Spec -> Spec
+
+Task 4:
+    Spec -> Spec
+        </pre>
+
+            <p>
+                This simple contract makes the tasks composable.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>63. Pipeline as Function Composition</h2>
+
+            <pre>
+S0
+ |
+ v
+f1
+ |
+ v
+S1
+ |
+ v
+f2
+ |
+ v
+S2
+ |
+ v
+f3
+ |
+ v
+S3
+        </pre>
+
+            <p>
+                Conceptually:
+            </p>
+
+            <pre>
+S3 = f3(f2(f1(S0)))
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>64. The God Spec Is S0</h2>
+
+            <pre>
+S0 = God Spec
+        </pre>
+
+            <p>
+                Every subsequent stage transforms the current state.
+            </p>
+
+            <pre>
+S0
+ |
+ v
+S1
+ |
+ v
+S2
+ |
+ v
+S3
+ |
+ v
+Sn
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>65. Final Spec Is Sn</h2>
+
+            <pre>
+Sn = Final Specification
+        </pre>
+
+            <p>
+                The recursive DOM builder consumes this final state.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>66. No Transformation Needs to Know the Entire Pipeline</h2>
+
+            <p>
+                A task generally needs to know:
+            </p>
+
+            <pre>
+What I receive
+What I need
+What I change
+What I return
+        </pre>
+
+            <p>
+                It does not need to know every other task.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>67. Local Knowledge</h2>
+
+            <pre>
+Data Task knows:
+
+rows
+columns
+tbody
+cells
+
+
+Theme Task knows:
+
+theme
+spec
+presentation
+        </pre>
+
+            <p>
+                This limits coupling between components.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>68. Pipeline Runner Has Minimal Knowledge</h2>
+
+            <pre>
+Pipeline Runner knows:
+
+1. current specification
+2. list of tasks
+3. execution order
+4. returned specification
+        </pre>
+
+            <p>
+                It does not need Table-specific rules.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>69. Generic Pipeline Runner</h2>
+
+            <pre>
+const runPipeline = ({
+    inSpec,
+    inTasks
+}) => {
+
+    return inTasks.reduce(
+        (spec, task) => {
+
+            return task({
+                inSpec: spec
+            });
+
+        },
+        inSpec
+    );
+
+};
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>70. Contract of runPipeline</h2>
+
+            <pre>
+runPipeline({
+
+    inSpec: initialSpec,
+
+    inTasks: [
+        task1,
+        task2,
+        task3
+    ]
+
+})
+
+        |
+
+        v
+
+finalSpec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>71. Pipeline Does Not Need to Know Task Meaning</h2>
+
+            <pre>
+[
+    columnTask,
+    headerTask,
+    dataTask,
+    themeTask
+]
+        </pre>
+
+            <p>
+                The runner only executes them in order.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>72. Adding a New Task</h2>
+
+            <pre>
+Existing:
+
+Column
+Header
+Data
+Theme
+
+
+New:
+
+Column
+Header
+Data
+Selection
+Theme
+        </pre>
+
+            <p>
+                The runner can remain unchanged.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>73. Removing a Task</h2>
+
+            <pre>
+Column
+Header
+Data
+Theme
+        </pre>
+
+            <p>
+                Removing a task changes the pipeline composition rather than the
+                underlying runner.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>74. Optional Task</h2>
+
+            <pre>
+const pipeline = [
+
+    columnTask,
+
+    headerTask,
+
+    dataTask,
+
+    selectionEnabled
+        ? selectionTask
+        : null,
+
+    themeTask
+
+].filter(Boolean);
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>75. Task Composition</h2>
+
+            <pre>
+Structure Tasks
+      +
+Data Tasks
+      +
+Presentation Tasks
+      |
+      v
+Complete Pipeline
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>76. Component-Level Composition</h2>
+
+            <pre>
+createTablePipeline({
+    columns,
+    rows,
+    theme
+})
+        |
+        v
+[
+    columnTask,
+    headerTask,
+    dataTask,
+    themeTask
+]
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>77. Specification Transformation and Themes</h2>
+
+            <p>
+                The Theme system can therefore be viewed as another specification
+                transformation layer.
+            </p>
+
+            <pre>
+God Spec
+   +
+Theme Spec
+   |
+   v
+Theme Transformation
+   |
+   v
+Themed Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>78. Specification Transformation and Data</h2>
+
+            <pre>
+God Spec
+   +
+Rows
+   +
+Columns
+   |
+   v
+Data Transformation
+   |
+   v
+Table Body Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>79. Specification Transformation and Renderers</h2>
+
+            <pre>
+Row
+ +
+Column
+ +
+Value
+ |
+ v
+Renderer
+ |
+ v
+Cell Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>80. Specification Transformation and Header</h2>
+
+            <pre>
+Columns
+   |
+   v
+Header Transformation
+   |
+   v
+thead Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>81. The Same Model Everywhere</h2>
+
+            <pre>
+Input
+ |
+ v
+Transform
+ |
+ v
+Specification
+ |
+ v
+Transform
+ |
+ v
+Specification
+ |
+ v
+Transform
+ |
+ v
+Specification
+        </pre>
+
+            <p>
+                This common model is what allows the different concerns to
+                cooperate.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>82. Specification as Intermediate Representation</h2>
+
+            <pre>
+Application Configuration
+          |
+          v
+      Specification
+          |
+          v
+       DOM Builder
+          |
+          v
+          DOM
+        </pre>
+
+            <p>
+                The specification acts as the intermediate representation between
+                high-level component configuration and actual browser elements.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>83. Benefits of the Contract</h2>
+
+            <ul>
+                <li>Transformations remain composable.</li>
+                <li>Responsibilities remain separated.</li>
+                <li>Intermediate specifications can be inspected.</li>
+                <li>DOM construction remains independent.</li>
+                <li>Deep specification trees can be transformed locally.</li>
+                <li>New middleware can be introduced without rewriting the DOM builder.</li>
+            </ul>
+
+        </section>
+
+        <section>
+
+            <h2>84. Debugging Through the Contract</h2>
+
+            <pre>
+God Spec
+   |
+   | inspect
+   v
+After Columns
+   |
+   | inspect
+   v
+After Header
+   |
+   | inspect
+   v
+After Data
+   |
+   | inspect
+   v
+After Theme
+   |
+   v
+Final Spec
+        </pre>
+
+            <p>
+                If the final DOM is incorrect, the intermediate states can reveal
+                which transformation introduced the problem.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>85. Testing Through the Contract</h2>
+
+            <pre>
+Input Spec
+    |
+    v
+Task
+    |
+    v
+Expected Spec
+        </pre>
+
+            <p>
+                Individual transformations can therefore be tested without
+                constructing the entire Table DOM.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>86. Data Task Test</h2>
+
+            <pre>
+Input:
+
+rows = [
+    {
+        name: "John",
+        age: 30
+    }
+]
+
+
+Expected:
+
+tbody
+ |
+ +-- tr
+      |
+      +-- td "John"
+      +-- td "30"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>87. Theme Task Test</h2>
+
+            <pre>
+Input:
+
+table specification
++
+dark Theme specification
+
+
+Expected:
+
+table specification
+with dark classes
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>88. Header Task Test</h2>
+
+            <pre>
+Input:
+
+[
+    Name,
+    Age,
+    City
+]
+
+
+Expected:
+
+thead
+ |
+ +-- th
+ +-- th
+ +-- th
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>89. Contract Violation Example</h2>
+
+            <pre>
+const badTask = () => {
+
+    return document
+        .createElement("table");
+
+};
+        </pre>
+
+            <p>
+                This breaks the specification pipeline because the task no longer
+                returns a specification.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>90. Correct Boundary</h2>
+
+            <pre>
+Transformation
+
+    Spec
+     |
+     v
+    Spec
+
+
+DOM Builder
+
+    Spec
+     |
+     v
+    DOM
+        </pre>
+
+            <p>
+                The transformation pipeline ends at the final specification.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>91. Final Contract</h2>
+
+            <pre>
+              GOD SPEC
+                  |
+                  v
+          +---------------+
+          | Transformation|
+          +---------------+
+                  |
+                  v
+             VALID SPEC
+                  |
+                  v
+          +---------------+
+          | Transformation|
+          +---------------+
+                  |
+                  v
+             VALID SPEC
+                  |
+                  v
+          +---------------+
+          | Transformation|
+          +---------------+
+                  |
+                  v
+             FINAL SPEC
+                  |
+                  v
+          +---------------+
+          | DOM BUILDER   |
+          +---------------+
+                  |
+                  v
+                 DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The core contract is simple:
+                    </strong>
+                </p>
+
+                <p>
+                    A transformation receives a specification, changes only what
+                    it is responsible for, preserves the specification model,
+                    and returns a specification that the next stage can consume.
+                </p>
+
+                <p>
+                    The God JSON is therefore not merely a static template. It is
+                    the structural specification that travels through the
+                    transformation pipeline. Columns, data, renderers, themes,
+                    and other middleware progressively enrich or modify that
+                    specification. Only after those transformations are complete
+                    does the generic recursive DOM builder materialize the
+                    resulting tree.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

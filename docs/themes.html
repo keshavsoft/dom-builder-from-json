@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Themes | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        .important {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Themes</h1>
+
+        <div>
+            Theme resolution and specification transformation
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Theme Architecture</h2>
+
+            <p>
+                Themes are deliberately kept separate from the main structural
+                specification.
+            </p>
+
+            <pre>
+God Spec
+    |
+    | structure
+    |
+    +------------------+
+                       |
+                       v
+                  Theme Spec
+                       |
+                       | appearance
+                       v
+                  Transformed Spec
+        </pre>
+
+            <p>
+                The God Spec describes what elements exist.
+                The Theme Spec describes how those elements should look.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>2. Why Themes Are Separate</h2>
+
+            <p>
+                A component should not need a completely different structural
+                JSON specification simply because its appearance changes.
+            </p>
+
+            <pre>
+                 Same God Spec
+                       |
+          +------------+------------+
+          |            |            |
+          v            v            v
+        Light        Dark        Medium
+        Theme        Theme        Theme
+          |            |            |
+          +------------+------------+
+                       |
+                       v
+                  Final Spec
+        </pre>
+
+            <p>
+                The structure remains the same while presentation can vary.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. Theme Files</h2>
+
+            <p>
+                Themes can be maintained as separate JSON specifications.
+            </p>
+
+            <pre>
+themes/
+    |
+    +-- dark.json
+    |
+    +-- extra-dark.json
+    |
+    +-- medium.json
+    |
+    +-- light.json
+    |
+    +-- extra-light.json
+    |
+    +-- index.js
+        </pre>
+
+            <p>
+                The JavaScript index acts as the theme registry and resolver.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Theme Registry</h2>
+
+            <p>
+                The theme registry associates a theme name with its JSON
+                specification.
+            </p>
+
+            <pre>
+const themes = {
+    "extra-dark": extraDarkSpec,
+    "dark": darkSpec,
+    "medium": mediumSpec,
+    "light": lightSpec,
+    "extra-light": extraLightSpec,
+    "default": lightSpec
+};
+        </pre>
+
+            <p>
+                This allows application code to refer to a theme by a simple
+                name.
+            </p>
+
+            <pre>
+{
+    inTheme: "dark"
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>5. Theme Resolution</h2>
+
+            <p>
+                Theme resolution determines which theme specification should
+                actually be used.
+            </p>
+
+            <pre>
+inThemeSpec
+     |
+     | if supplied
+     v
+Use supplied Theme Spec
+
+otherwise
+
+inTheme object
+     |
+     v
+Use object directly
+
+otherwise
+
+inTheme / inThemeName
+     |
+     v
+Theme Registry
+     |
+     v
+Named Theme
+
+otherwise
+
+Default Theme
+        </pre>
+
+            <p>
+                This provides flexibility without requiring the rest of the
+                rendering system to know how the theme was selected.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>6. Theme Resolution Contract</h2>
+
+            <p>
+                Conceptually:
+            </p>
+
+            <pre>
+resolveThemeSpec({
+    inTheme,
+    inThemeName,
+    inThemeSpec
+})
+        </pre>
+
+            <p>
+                The resolver returns a Theme Spec object.
+            </p>
+
+            <p>
+                From that point onward, the pipeline does not need to care
+                whether the theme originated from a name, object, or default.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>7. Theme Task</h2>
+
+            <p>
+                Theme application is exposed to the Table pipeline through a
+                transformation task.
+            </p>
+
+            <pre>
+createApplyThemeTask({
+    inThemeSpec
+})
+        </pre>
+
+            <p>
+                The task returns a function that accepts the current specification.
+            </p>
+
+            <pre>
+currentSpec
+     |
+     v
+Theme Task
+     |
+     v
+themedSpec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>8. Theme Transformation</h2>
+
+            <p>
+                The Theme Task delegates the actual recursive transformation to
+                <code>applyTheme()</code>.
+            </p>
+
+            <pre>
+applyTheme({
+    inSpec,
+    inThemeSpec
+})
+        </pre>
+
+            <p>
+                The function walks the specification tree and applies the
+                corresponding theme information.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Recursive Theme Application</h2>
+
+            <p>
+                The Theme Spec follows the structure of the main specification.
+            </p>
+
+            <pre>
+God Spec                    Theme Spec
+
+div                         div
+ |                           |
+ +-- toolbar                 +-- toolbar
+ |                           |
+ +-- table                   +-- table
+      |                            |
+      +-- thead                   +-- thead
+      |
+      +-- tbody                   +-- tbody
+      |
+      +-- tfoot                   +-- tfoot
+        </pre>
+
+            <p>
+                Corresponding nodes can therefore be processed recursively.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>10. Applying Classes</h2>
+
+            <p>
+                One of the primary purposes of the Theme Spec is supplying class
+                attributes.
+            </p>
+
+            <pre>
+{
+    "tagName": "table",
+    "attributes": {
+        "class": "w-full bg-gray-900 text-gray-200"
+    }
+}
+        </pre>
+
+            <p>
+                The theme transformation places the theme class information
+                into the resulting specification.
+            </p>
+
+            <pre>
+God Spec
+    +
+Theme Spec
+    |
+    v
+Resolved Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Theme Application Does Not Create DOM</h2>
+
+            <p class="important">
+                Theme application happens entirely before DOM creation.
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+applyTheme()
+    |
+    v
+Themed JSON Spec
+    |
+    v
+buildSpecElement()
+    |
+    v
+DOM
+        </pre>
+
+            <p>
+                This is a critical architectural boundary.
+            </p>
+
+            <p>
+                <code>applyTheme()</code> works with JSON objects.
+                <code>buildSpecElement()</code> works toward DOM objects.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>12. Example: Table Wrapper</h2>
+
+            <p>
+                Suppose the God Spec contains:
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+    "attributes": {
+        "class": "table-wrapper"
+    }
+}
+        </pre>
+
+            <p>
+                The dark theme can provide:
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+    "attributes": {
+        "class": "table-wrapper space-y-3"
+    }
+}
+        </pre>
+
+            <p>
+                The resulting specification can then be passed to the generic
+                DOM builder.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>13. Example: Dark Table</h2>
+
+            <p>
+                A dark theme specification may contain classes such as:
+            </p>
+
+            <pre>
+table:
+    bg-gray-900
+    border-gray-700
+    text-gray-200
+
+thead:
+    bg-gray-800
+    border-gray-700
+
+tbody:
+    divide-gray-700
+    text-gray-200
+
+input:
+    bg-gray-900
+    border-gray-700
+    text-gray-200
+        </pre>
+
+            <p>
+                These are presentation decisions.
+                The Table renderer does not need to embed them directly into its
+                structural logic.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. Theme and Pipeline</h2>
+
+            <p>
+                Theme is simply one transformation in the larger pipeline.
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+Theme Transformation
+    |
+    v
+Header Transformation
+    |
+    v
+Body Transformation
+    |
+    v
+Footer Transformation
+    |
+    v
+Serial Transformation
+    |
+    v
+Resolved Spec
+        </pre>
+
+            <p>
+                This is why theme handling fits naturally into the middleware
+                model.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>15. Theme Does Not Own Structure</h2>
+
+            <p>
+                The theme should not become the source of structural decisions.
+            </p>
+
+            <p>
+                For example, a theme should not decide:
+            </p>
+
+            <pre>
+Should the table have a footer?
+Should serial numbers exist?
+How many rows exist?
+Which records are displayed?
+        </pre>
+
+            <p>
+                Those decisions belong to other transformations or component
+                logic.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>16. Theme vs Data</h2>
+
+            <pre>
+Theme
+    |
+    +--> appearance
+    +--> classes
+    +--> visual presentation
+
+Data
+    |
+    +--> records
+    +--> values
+    +--> state
+    +--> UI-derived data
+        </pre>
+
+            <p>
+                These concerns should remain independent.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>17. Theme vs Columns</h2>
+
+            <pre>
+Theme
+    |
+    +--> how the column looks
+
+Columns
+    |
+    +--> what the column represents
+    +--> what control it renders
+    +--> where it belongs
+        </pre>
+
+            <p>
+                A theme can style a column without determining the column's
+                business meaning.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>18. Theme and Forms</h2>
+
+            <p>
+                The same concept applies to Forms.
+            </p>
+
+            <pre>
+Form God Spec
+      +
+Form Theme
+      |
+      v
+Form Resolved Spec
+      |
+      v
+Recursive DOM Builder
+      |
+      v
+Form DOM
+        </pre>
+
+            <p>
+                The generic theme mechanism can therefore be reused for another
+                component as long as its structural specification can be mapped
+                to the theme specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>19. Theme Structure Must Be Understandable</h2>
+
+            <p>
+                Because the current theme mechanism recursively processes
+                corresponding nodes, the Theme Spec should remain understandable
+                relative to the God Spec.
+            </p>
+
+            <pre>
+God Spec
+ |
+ +-- div
+ |
+ +-- table
+      |
+      +-- thead
+      +-- tbody
+      +-- tfoot
+
+Theme Spec
+ |
+ +-- div
+ |
+ +-- table
+      |
+      +-- thead
+      +-- tbody
+      +-- tfoot
+        </pre>
+
+            <p>
+                Keeping the structures aligned makes the transformation easier
+                to reason about.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>20. Structural Drift</h2>
+
+            <p>
+                A mirrored tree introduces one important maintenance concern:
+                structural drift.
+            </p>
+
+            <p>
+                If the God Spec changes substantially while the Theme Spec is
+                not updated accordingly, corresponding nodes may no longer
+                represent the same UI element.
+            </p>
+
+            <pre>
+God Spec
+    |
+    +-- toolbar
+    +-- table
+         |
+         +-- thead
+         +-- tbody
+
+Theme Spec
+    |
+    +-- toolbar
+    +-- table
+         |
+         +-- tbody
+         +-- thead
+        </pre>
+
+            <p>
+                This is why the God Spec should be treated as a structural
+                contract.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. Why Keep the Current Model?</h2>
+
+            <p>
+                A mirrored Theme Spec is simple to understand.
+            </p>
+
+            <p>
+                The developer can visually compare:
+            </p>
+
+            <pre>
+God JSON
+Theme JSON
+        </pre>
+
+            <p>
+                and see which structural node receives which classes.
+            </p>
+
+            <p>
+                A more abstract selector-based theme system could be introduced
+                later if maintaining mirrored trees becomes difficult.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>22. Possible Future Theme Strategies</h2>
+
+            <p>
+                If the current positional tree mapping eventually becomes
+                difficult to maintain, alternative strategies could include:
+            </p>
+
+            <ul>
+                <li>semantic node names</li>
+                <li>stable identifiers</li>
+                <li>selectors</li>
+                <li>named slots</li>
+                <li>path-based mappings</li>
+                <li>component-specific theme tokens</li>
+            </ul>
+
+            <p>
+                These should be considered only when there is a concrete
+                maintenance problem.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Theme Lifecycle</h2>
+
+            <pre>
+Theme Name / Object
+        |
+        v
+resolveThemeSpec()
+        |
+        v
+Theme Spec
+        |
+        v
+createApplyThemeTask()
+        |
+        v
+applyTheme()
+        |
+        v
+Themed Spec
+        |
+        v
+Remaining Pipeline Tasks
+        |
+        v
+Resolved Spec
+        |
+        v
+DOM Builder
+        |
+        v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>24. Theme Is Middleware</h2>
+
+            <p>
+                The most useful mental model is:
+            </p>
+
+            <pre>
+Theme
+   =
+Specification Middleware
+        </pre>
+
+            <p>
+                It receives a specification, modifies it, and returns another
+                specification.
+            </p>
+
+            <pre>
+Spec
+ |
+ v
+Theme
+ |
+ v
+Spec
+        </pre>
+
+            <p>
+                This is the same fundamental contract used by the other
+                transformation tasks.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. Final Theme Mental Model</h2>
+
+            <pre>
+                 GOD SPEC
+                    |
+                    | structure
+                    v
+                THEME SPEC
+                    |
+                    | appearance
+                    v
+             THEME TRANSFORM
+                    |
+                    v
+              RESOLVED SPEC
+                    |
+                    v
+            RECURSIVE BUILDER
+                    |
+                    v
+                   DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        A theme does not build the UI.
+                        It transforms the UI specification so that the final
+                        DOM builder can build the UI with the desired appearance.
+                    </strong>
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

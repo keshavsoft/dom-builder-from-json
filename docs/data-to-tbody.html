@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Data to Tbody | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        .important {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Data to Tbody</h1>
+
+        <div>
+            Transforming application data into the Table body specification
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+            <a href="pipeline-tasks.html">Tasks</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+            <a href="dom-element-builder.html">Element Builder</a>
+            <a href="table-renderer.html">Table Renderer</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                A Table has two fundamentally different kinds of information:
+                its structural definition and its application data.
+            </p>
+
+            <pre>
+Table Structure
+      |
+      v
+God Spec
+
+Application Data
+      |
+      v
+Row / Cell Transformation
+      |
+      v
+tbody Specification
+        </pre>
+
+            <p>
+                The purpose of this layer is to transform data into the
+                specification required for the Table body.
+            </p>
+
+            <div class="note">
+                <strong>
+                    Data is transformed into specification first. The
+                    specification is transformed into DOM later.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. The Core Idea</h2>
+
+            <pre>
+Data
+ |
+ v
+Rows
+ |
+ v
+Cells
+ |
+ v
+tbody.children
+ |
+ v
+Resolved Table Spec
+ |
+ v
+DOM
+        </pre>
+
+            <p>
+                The data layer does not need to directly create
+                <code>tr</code> and <code>td</code> DOM elements.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. Example Data</h2>
+
+            <pre>
+[
+    {
+        "name": "John",
+        "age": 30,
+        "city": "London"
+    },
+    {
+        "name": "Mary",
+        "age": 25,
+        "city": "Paris"
+    }
+]
+        </pre>
+
+            <p>
+                This is application data, not DOM structure.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Column Definition</h2>
+
+            <p>
+                The column configuration describes how data should be represented
+                in the Table.
+            </p>
+
+            <pre>
+[
+    {
+        "key": "name",
+        "label": "Name"
+    },
+    {
+        "key": "age",
+        "label": "Age"
+    },
+    {
+        "key": "city",
+        "label": "City"
+    }
+]
+        </pre>
+
+            <p>
+                Columns therefore provide the mapping between application data
+                and Table cells.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. Data + Columns</h2>
+
+            <pre>
+Data
+  +
+Columns
+  |
+  v
+Row Specification
+        </pre>
+
+            <p>
+                For each data object, the column definitions determine which
+                values become cells and in which order.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>6. First Row</h2>
+
+            <p>
+                Given:
+            </p>
+
+            <pre>
+{
+    "name": "John",
+    "age": 30,
+    "city": "London"
+}
+        </pre>
+
+            <p>
+                And:
+            </p>
+
+            <pre>
+[
+    { "key": "name" },
+    { "key": "age" },
+    { "key": "city" }
+]
+        </pre>
+
+            <p>
+                The resulting row specification is conceptually:
+            </p>
+
+            <pre>
+{
+    "tagName": "tr",
+    "children": [
+        {
+            "tagName": "td",
+            "textContent": "John"
+        },
+        {
+            "tagName": "td",
+            "textContent": "30"
+        },
+        {
+            "tagName": "td",
+            "textContent": "London"
+        }
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>7. Multiple Rows</h2>
+
+            <p>
+                Each data object produces one row specification.
+            </p>
+
+            <pre>
+Data
+ |
+ +-- Row 1
+ |
+ +-- Row 2
+ |
+ +-- Row 3
+        </pre>
+
+            <p>
+                These row specifications become the children of the
+                <code>tbody</code>.
+            </p>
+
+            <pre>
+{
+    "tagName": "tbody",
+    "children": [
+        RowSpec1,
+        RowSpec2,
+        RowSpec3
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>8. Complete Transformation</h2>
+
+            <pre>
+Application Data
+       |
+       v
+Column Mapping
+       |
+       v
+Row Specifications
+       |
+       v
+tbody Specification
+       |
+       v
+Table Specification
+       |
+       v
+Recursive DOM Builder
+       |
+       v
+tbody DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>9. The Existing God Spec</h2>
+
+            <p>
+                The structural Table specification can contain an empty body:
+            </p>
+
+            <pre>
+{
+    "tagName": "tbody",
+    "attributes": {
+        "slot": "body"
+    },
+    "children": []
+}
+        </pre>
+
+            <p>
+                The data transformation populates that part of the specification.
+            </p>
+
+            <pre>
+Empty tbody
+    |
+    v
+Data Transformation
+    |
+    v
+tbody with row specifications
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>10. Why Keep tbody in the God Spec?</h2>
+
+            <p>
+                The God Spec describes the structural skeleton.
+            </p>
+
+            <pre>
+table
+ |
+ +-- thead
+ |
+ +-- tbody
+ |
+ +-- tfoot
+        </pre>
+
+            <p>
+                Data processing should not need to create the entire Table
+                structure.
+            </p>
+
+            <p>
+                It only needs to supply the dynamic body content.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>11. Row Factory</h2>
+
+            <p>
+                A row can be produced by a dedicated function.
+            </p>
+
+            <pre>
+createRowSpec({
+    inRow,
+    inColumns
+})
+        </pre>
+
+            <p>
+                Its responsibility is to transform one data object into one
+                <code>tr</code> specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>12. Cell Factory</h2>
+
+            <p>
+                A row factory can delegate individual cell creation.
+            </p>
+
+            <pre>
+createCellSpec({
+    inValue,
+    inColumn
+})
+        </pre>
+
+            <p>
+                The cell factory converts a value and its column definition into
+                a cell specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>13. Row → Cell Mapping</h2>
+
+            <pre>
+Row
+ |
+ +-- Column 1 -> Cell 1
+ |
+ +-- Column 2 -> Cell 2
+ |
+ +-- Column 3 -> Cell 3
+ |
+ +-- Column 4 -> Cell 4
+        </pre>
+
+            <p>
+                This mapping guarantees that the body follows the same column
+                order defined for the Table.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. Header and Body Must Agree</h2>
+
+            <p>
+                If the header contains:
+            </p>
+
+            <pre>
+Name | Age | City
+        </pre>
+
+            <p>
+                the body should produce:
+            </p>
+
+            <pre>
+John | 30 | London
+Mary | 25 | Paris
+        </pre>
+
+            <p>
+                Therefore the same column definition is an important source of
+                truth for both header and body generation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>15. Column as the Mapping Contract</h2>
+
+            <pre>
+Column Definition
+       |
+       +-- key
+       +-- label
+       +-- renderer
+       +-- attributes
+       +-- options
+       |
+       v
+Header + Body
+        </pre>
+
+            <p>
+                The column definition can describe both how the column is
+                presented and how its values are obtained.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>16. Simple Value Extraction</h2>
+
+            <p>
+                For a simple column:
+            </p>
+
+            <pre>
+{
+    "key": "name"
+}
+        </pre>
+
+            <p>
+                the corresponding value can be obtained from:
+            </p>
+
+            <pre>
+row[column.key]
+        </pre>
+
+            <p>
+                For the row:
+            </p>
+
+            <pre>
+{
+    "name": "John"
+}
+        </pre>
+
+            <p>
+                the value is:
+            </p>
+
+            <pre>
+"John"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>17. Nested Data</h2>
+
+            <p>
+                Applications may contain nested objects.
+            </p>
+
+            <pre>
+{
+    "customer": {
+        "name": "John"
+    }
+}
+        </pre>
+
+            <p>
+                A column can use a suitable value-access strategy rather than
+                forcing the generic Table renderer to understand the data model.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>18. Value Transformation</h2>
+
+            <p>
+                A column may need to transform a raw value before creating its
+                cell specification.
+            </p>
+
+            <pre>
+Raw Value
+    |
+    v
+Column Value Transformation
+    |
+    v
+Display Value
+    |
+    v
+Cell Spec
+        </pre>
+
+            <p>
+                For example, a numeric value could be converted to a formatted
+                string.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>19. Custom Cell Rendering</h2>
+
+            <p>
+                A column can also produce more than plain text.
+            </p>
+
+            <pre>
+Column
+  |
+  v
+Cell Renderer
+  |
+  v
+Cell Specification
+        </pre>
+
+            <p>
+                The cell could contain:
+            </p>
+
+            <pre>
+span
+button
+input
+link
+icon
+custom element
+        </pre>
+
+            <p>
+                The resulting structure remains a specification tree.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>20. Example: Button Cell</h2>
+
+            <pre>
+{
+    "tagName": "td",
+    "children": [
+        {
+            "tagName": "button",
+            "attributes": {
+                "type": "button"
+            },
+            "textContent": "Edit"
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                The body-generation layer creates this specification.
+                The DOM builder later materializes it.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. Example: Input Cell</h2>
+
+            <pre>
+{
+    "tagName": "td",
+    "children": [
+        {
+            "tagName": "input",
+            "attributes": {
+                "type": "text"
+            }
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                Again, the data-to-body layer does not need to directly create
+                the DOM element.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>22. Empty Data</h2>
+
+            <p>
+                If there is no data:
+            </p>
+
+            <pre>
+[]
+        </pre>
+
+            <p>
+                the body can simply remain:
+            </p>
+
+            <pre>
+{
+    "tagName": "tbody",
+    "children": []
+}
+        </pre>
+
+            <p>
+                Empty-state behavior can be introduced separately if required.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Empty-State Row</h2>
+
+            <p>
+                An optional empty-state transformation can produce:
+            </p>
+
+            <pre>
+{
+    "tagName": "tr",
+    "children": [
+        {
+            "tagName": "td",
+            "attributes": {
+                "colspan": "3"
+            },
+            "textContent": "No data"
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                This remains a normal specification transformation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. Filtering Before Row Creation</h2>
+
+            <pre>
+Original Data
+      |
+      v
+Filter
+      |
+      v
+Filtered Data
+      |
+      v
+Row Generation
+      |
+      v
+tbody
+        </pre>
+
+            <p>
+                Filtering should happen before generating the displayed rows.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. Sorting Before Row Creation</h2>
+
+            <pre>
+Original Data
+      |
+      v
+Sort
+      |
+      v
+Sorted Data
+      |
+      v
+Row Generation
+      |
+      v
+tbody
+        </pre>
+
+            <p>
+                Sorting determines the order in which row specifications are
+                produced.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>26. Pagination</h2>
+
+            <pre>
+Original Data
+      |
+      v
+Pagination
+      |
+      v
+Current Page Data
+      |
+      v
+Row Generation
+      |
+      v
+tbody
+        </pre>
+
+            <p>
+                The body specification therefore represents only the rows
+                currently intended for display.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>27. Serial Column</h2>
+
+            <p>
+                If a serial column is enabled, the row transformation can
+                prepend an additional cell.
+            </p>
+
+            <pre>
+Data Row
+   |
+   v
+Serial Cell
+   +
+Data Cells
+   |
+   v
+Row Spec
+        </pre>
+
+            <p>
+                For example:
+            </p>
+
+            <pre>
+1 | John | 30 | London
+2 | Mary | 25 | Paris
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>28. Serial Number Is UI Data</h2>
+
+            <p>
+                The serial number does not necessarily have to exist in the
+                original application object.
+            </p>
+
+            <pre>
+Application Object
+{
+    "name": "John",
+    "age": 30
+}
+        </pre>
+
+            <p>
+                can become:
+            </p>
+
+            <pre>
+Row
+{
+    serial: 1,
+    name: "John",
+    age: 30
+}
+        </pre>
+
+            <p>
+                or the serial value can be injected directly into the generated
+                cell specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>29. Body Generation as a Middleware</h2>
+
+            <p>
+                The data-to-body operation fits naturally into the pipeline model.
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+Theme
+    |
+    v
+Header
+    |
+    v
+Body/Data Task
+    |
+    v
+Footer
+    |
+    v
+Serial / Other Tasks
+    |
+    v
+Resolved Spec
+        </pre>
+
+            <p>
+                The task modifies the specification and passes it to the next
+                stage.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>30. Middleware Contract</h2>
+
+            <pre>
+const createBodyTask = ({
+    inData,
+    inColumns
+}) => {
+
+    return ({ inSpec }) => {
+
+        // Generate body specification.
+
+        return inSpec;
+    };
+};
+        </pre>
+
+            <p>
+                The factory captures the configuration while the returned
+                function participates in the generic pipeline.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>31. Body Task Input</h2>
+
+            <pre>
+{
+    inData,
+    inColumns,
+    inSpec
+}
+        </pre>
+
+            <p>
+                The important distinction is:
+            </p>
+
+            <pre>
+inData
+    |
+    +-- application information
+
+inColumns
+    |
+    +-- display/mapping information
+
+inSpec
+    |
+    +-- Table structure
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>32. Body Task Output</h2>
+
+            <p>
+                The result is still the complete Table specification.
+            </p>
+
+            <pre>
+inSpec
+   |
+   v
+Body Transformation
+   |
+   v
+updated Table Spec
+        </pre>
+
+            <p>
+                This is important because the next middleware does not need a
+                separate object type.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>33. Same Object Shape Through the Pipeline</h2>
+
+            <pre>
+Spec
+ |
+ v
+Theme Task
+ |
+ v
+Spec
+ |
+ v
+Header Task
+ |
+ v
+Spec
+ |
+ v
+Body Task
+ |
+ v
+Spec
+ |
+ v
+Footer Task
+ |
+ v
+Spec
+        </pre>
+
+            <p>
+                The pipeline therefore has a simple and consistent contract.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>34. Body Task Should Not Build DOM</h2>
+
+            <p>
+                The body task should not do:
+            </p>
+
+            <pre>
+document.createElement("tbody")
+document.createElement("tr")
+document.createElement("td")
+        </pre>
+
+            <p>
+                Instead it creates specification objects.
+            </p>
+
+            <pre>
+{
+    "tagName": "tr",
+    "children": [...]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>35. Why This Matters</h2>
+
+            <p>
+                Once data generation is separated from DOM creation, the same
+                data transformation can be inspected, tested, logged, or
+                transformed further before rendering.
+            </p>
+
+            <pre>
+Data
+ |
+ v
+Spec
+ |
+ +-- inspect
+ +-- transform
+ +-- theme
+ +-- validate
+ |
+ v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>36. Body Specification Is Declarative</h2>
+
+            <p>
+                A generated row does not say:
+            </p>
+
+            <pre>
+"Create a tr now."
+        </pre>
+
+            <p>
+                It says:
+            </p>
+
+            <pre>
+{
+    "tagName": "tr",
+    "children": [...]
+}
+        </pre>
+
+            <p>
+                The actual creation happens later.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>37. Complete Example</h2>
+
+            <pre>
+const data = [
+    {
+        name: "John",
+        age: 30
+    },
+    {
+        name: "Mary",
+        age: 25
+    }
+];
+
+const columns = [
+    {
+        key: "name"
+    },
+    {
+        key: "age"
+    }
+];
+        </pre>
+
+            <p>
+                The generated body specification can conceptually be:
+            </p>
+
+            <pre>
+{
+    "tagName": "tbody",
+
+    "children": [
+
+        {
+            "tagName": "tr",
+
+            "children": [
+                {
+                    "tagName": "td",
+                    "textContent": "John"
+                },
+                {
+                    "tagName": "td",
+                    "textContent": "30"
+                }
+            ]
+        },
+
+        {
+            "tagName": "tr",
+
+            "children": [
+                {
+                    "tagName": "td",
+                    "textContent": "Mary"
+                },
+                {
+                    "tagName": "td",
+                    "textContent": "25"
+                }
+            ]
+        }
+
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>38. The God Spec Remains the Skeleton</h2>
+
+            <pre>
+                GOD SPEC
+                   |
+       +-----------+-----------+
+       |           |           |
+       v           v           v
+    toolbar      table       footer
+                   |
+                   +-- thead
+                   |
+                   +-- tbody
+                         |
+                         v
+                    DATA TASK
+                         |
+                         v
+                    rows added
+        </pre>
+
+            <p>
+                This is the important distinction between the static skeleton
+                and dynamic content.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>39. Dynamic Body Does Not Require a Second God Spec</h2>
+
+            <p>
+                The original Table God Spec can remain the structural source.
+            </p>
+
+            <pre>
+God Spec
+   |
+   +-- wrapper
+   +-- toolbar
+   +-- table
+        |
+        +-- thead
+        +-- tbody
+        |
+        +-- footer
+        </pre>
+
+            <p>
+                The body task fills the dynamic portion.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>40. Data Transformation and Theme Transformation</h2>
+
+            <p>
+                Both are specification transformations, but they solve
+                different problems.
+            </p>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Transformation</th>
+                        <th>Concern</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Theme</td>
+                        <td>Presentation/classes.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Column</td>
+                        <td>Column structure.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Body/Data</td>
+                        <td>Dynamic rows and cells.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Header</td>
+                        <td>Header structure.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Footer</td>
+                        <td>Footer structure.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>41. Order of Transformations</h2>
+
+            <p>
+                The exact order depends on the component implementation, but
+                dependencies should determine ordering.
+            </p>
+
+            <pre>
+Columns
+   |
+   v
+Header / Body
+   |
+   v
+Theme / Other Presentation
+   |
+   v
+Resolved Spec
+        </pre>
+
+            <p>
+                If one task requires the output of another task, the dependency
+                must be reflected in the pipeline order.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>42. Row Renderer</h2>
+
+            <p>
+                A row renderer can be treated as a specification factory.
+            </p>
+
+            <pre>
+createRowSpec(row, columns)
+        |
+        v
+{
+    tagName: "tr",
+    children: [...]
+}
+        </pre>
+
+            <p>
+                This makes row generation independent from DOM creation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>43. Cell Renderer</h2>
+
+            <p>
+                A cell renderer can similarly produce a specification.
+            </p>
+
+            <pre>
+createCellSpec(value, column)
+        |
+        v
+{
+    tagName: "td",
+    children: [...]
+}
+        </pre>
+
+            <p>
+                The cell can therefore contain any supported specification
+                structure.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>44. Custom Column Renderer</h2>
+
+            <pre>
+{
+    "key": "actions",
+
+    "render": ({ row }) => {
+
+        return {
+            "tagName": "button",
+            "textContent": "Edit"
+        };
+
+    }
+}
+        </pre>
+
+            <p>
+                The renderer can return a specification rather than directly
+                manipulating the DOM.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>45. Body as a Tree Generator</h2>
+
+            <pre>
+Data
+ |
+ +-- object
+ |    |
+ |    +-- column
+ |         |
+ |         +-- cell spec
+ |
+ +-- object
+ |    |
+ |    +-- column
+ |         |
+ |         +-- cell spec
+ |
+ +-- object
+      |
+      +-- column
+           |
+           +-- cell spec
+        </pre>
+
+            <p>
+                The final result is a specification subtree.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>46. Body Generation Does Not Care About DOM Depth</h2>
+
+            <p>
+                A cell can be simple:
+            </p>
+
+            <pre>
+td
+ |
+ +-- text
+        </pre>
+
+            <p>
+                or complex:
+            </p>
+
+            <pre>
+td
+ |
+ +-- div
+      |
+      +-- button
+      |
+      +-- button
+      |
+      +-- span
+        </pre>
+
+            <p>
+                Both are valid specification subtrees.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>47. Complex Cell Example</h2>
+
+            <pre>
+{
+    "tagName": "td",
+
+    "children": [
+        {
+            "tagName": "div",
+
+            "attributes": {
+                "class": "actions"
+            },
+
+            "children": [
+                {
+                    "tagName": "button",
+                    "textContent": "Edit"
+                },
+                {
+                    "tagName": "button",
+                    "textContent": "Delete"
+                }
+            ]
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                The recursive builder can handle the entire subtree without
+                special Table logic.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>48. Data Transformation Is Reusable</h2>
+
+            <p>
+                Because the output is a specification, the same transformation
+                model can potentially be used by:
+            </p>
+
+            <pre>
+Table
+ |
+ +-- tbody
+
+List
+ |
+ +-- items
+
+Cards
+ |
+ +-- cards
+
+Grid
+ |
+ +-- rows/cells
+        </pre>
+
+            <p>
+                The exact tasks differ, but the specification-first approach
+                remains the same.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>49. Testing Data-to-Tbody</h2>
+
+            <p>
+                The body transformation can be tested without creating browser
+                elements.
+            </p>
+
+            <pre>
+Input Data
+     +
+Columns
+     |
+     v
+Body Transformation
+     |
+     v
+Expected tbody Spec
+        </pre>
+
+            <p>
+                This makes the transformation layer straightforward to verify.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>50. Testing a Single Row</h2>
+
+            <pre>
+Input:
+
+{
+    name: "John",
+    age: 30
+}
+
+Columns:
+
+[
+    { key: "name" },
+    { key: "age" }
+]
+        </pre>
+
+            <p>
+                Expected:
+            </p>
+
+            <pre>
+{
+    "tagName": "tr",
+
+    "children": [
+        {
+            "tagName": "td",
+            "textContent": "John"
+        },
+        {
+            "tagName": "td",
+            "textContent": "30"
+        }
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>51. Testing Multiple Rows</h2>
+
+            <pre>
+Input:
+[
+    { name: "John", age: 30 },
+    { name: "Mary", age: 25 }
+]
+        </pre>
+
+            <p>
+                Expected:
+            </p>
+
+            <pre>
+tbody.children.length === 2
+        </pre>
+
+            <p>
+                Additional tests can verify the generated cell ordering and
+                values.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>52. Debugging</h2>
+
+            <p>
+                Since the body is represented as JSON, it can be inspected before
+                it becomes DOM.
+            </p>
+
+            <pre>
+console.log(
+    JSON.stringify(
+        resolvedSpec,
+        null,
+        4
+    )
+);
+        </pre>
+
+            <p>
+                This makes it possible to see exactly what the renderer is about
+                to build.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>53. Debugging the Pipeline</h2>
+
+            <pre>
+God Spec
+   |
+   v
+Theme
+   |
+   v
+Header
+   |
+   v
+Body
+   |
+   v
+Footer
+   |
+   v
+Resolved Spec
+        </pre>
+
+            <p>
+                If the body is incorrect, the intermediate specification can
+                identify which transformation introduced the problem.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>54. Dynamic Body Is Still Declarative</h2>
+
+            <p>
+                Even though the rows originate from runtime data, their final
+                representation remains declarative.
+            </p>
+
+            <pre>
+Runtime Data
+     |
+     v
+Generated JSON
+     |
+     v
+Declarative Body Spec
+     |
+     v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>55. The Complete Table Flow</h2>
+
+            <pre>
+                 CONFIGURATION
+                       |
+                       v
+                    GOD SPEC
+                       |
+                       v
+                THEME RESOLUTION
+                       |
+                       v
+                 COLUMN SETUP
+                       |
+                       v
+                DATA TRANSFORM
+                       |
+                       v
+                HEADER / BODY
+                       |
+                       v
+                OTHER TASKS
+                       |
+                       v
+                 FINAL SPEC
+                       |
+                       v
+             RECURSIVE DOM BUILDER
+                       |
+                       v
+                      DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>56. Final Mental Model</h2>
+
+            <pre>
+               GOD SPEC
+                   |
+                   |
+          "This is the skeleton."
+                   |
+                   v
+          +----------------+
+          |   PIPELINE     |
+          |----------------|
+          | Theme          |
+          | Columns        |
+          | Data / Body    |
+          | Header         |
+          | Footer         |
+          | Custom         |
+          +----------------+
+                   |
+                   |
+          "Now the skeleton
+           is fully resolved."
+                   |
+                   v
+             FINAL SPEC
+                   |
+                   v
+          RECURSIVE BUILDER
+                   |
+                   v
+                  DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        Data-to-tbody is therefore not a separate DOM-rendering
+                        mechanism. It is a specification transformation that
+                        converts application data into the body subtree of the
+                        existing Table specification.
+                    </strong>
+                </p>
+
+                <p>
+                    The God Spec remains the structural skeleton, the pipeline
+                    fills and transforms that skeleton, and the recursive DOM
+                    builder finally materializes the resulting tree.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

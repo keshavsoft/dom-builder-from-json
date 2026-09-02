@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Recursive DOM Builder | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        .important {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Recursive DOM Builder</h1>
+
+        <div>
+            Converting the JSON specification tree into DOM
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+            <a href="pipeline-tasks.html">Pipeline Tasks</a>
+            <a href="dom-element-builder.html">DOM Element Builder</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                The recursive DOM builder is the final stage that converts the
+                resolved JSON specification into actual browser DOM elements.
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+Transformation Pipeline
+    |
+    v
+Resolved JSON Spec
+    |
+    v
+Recursive DOM Builder
+    |
+    v
+DOM
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The recursive builder does not decide what the UI should be.
+                    It materializes what the specification says.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. Why Recursion?</h2>
+
+            <p>
+                The specification itself is a tree.
+            </p>
+
+            <pre>
+div
+ |
+ +-- div
+ |    |
+ |    +-- span
+ |
+ +-- table
+      |
+      +-- thead
+      |    |
+      |    +-- tr
+      |         |
+      |         +-- th
+      |
+      +-- tbody
+        </pre>
+
+            <p>
+                Since every node can contain more children, the same operation
+                can be applied repeatedly to every level of the tree.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. Specification Tree</h2>
+
+            <p>
+                A specification can be viewed as a recursive structure:
+            </p>
+
+            <pre>
+Spec
+ |
+ +-- tagName
+ |
+ +-- attributes
+ |
+ +-- properties
+ |
+ +-- textContent
+ |
+ +-- children
+       |
+       +-- Spec
+       +-- Spec
+       +-- Spec
+        </pre>
+
+            <p>
+                The <code>children</code> property is what creates the recursive
+                relationship.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Basic Algorithm</h2>
+
+            <pre>
+buildSpecElement(spec):
+
+    if spec is invalid:
+        return nothing
+
+    create current DOM element
+
+    apply current specification
+
+    for every child:
+        recursively build child
+
+        append child
+
+    return current DOM element
+        </pre>
+
+            <p>
+                This algorithm works regardless of how deeply nested the
+                specification becomes.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. Simple Example</h2>
+
+            <pre>
+{
+    "tagName": "div",
+    "children": [
+        {
+            "tagName": "span",
+            "textContent": "Hello"
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                The builder first creates the <code>div</code>.
+                Then it recursively processes the <code>span</code>.
+            </p>
+
+            <pre>
+div
+ |
+ +-- span
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>6. First Recursive Call</h2>
+
+            <pre>
+buildSpecElement(divSpec)
+        |
+        v
+create div
+        |
+        v
+children[]
+        |
+        v
+buildSpecElement(spanSpec)
+        |
+        v
+create span
+        |
+        v
+return span
+        |
+        v
+append span to div
+        |
+        v
+return div
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>7. Deep Recursion</h2>
+
+            <p>
+                Consider a deeply nested structure:
+            </p>
+
+            <pre>
+div
+ |
+ +-- section
+      |
+      +-- div
+           |
+           +-- form
+                |
+                +-- div
+                     |
+                     +-- label
+                          |
+                          +-- span
+        </pre>
+
+            <p>
+                The same recursive operation handles every level.
+            </p>
+
+            <pre>
+build(div)
+  |
+  +-- build(section)
+        |
+        +-- build(div)
+              |
+              +-- build(form)
+                    |
+                    +-- build(div)
+                          |
+                          +-- build(label)
+                                |
+                                +-- build(span)
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>8. The Current Node</h2>
+
+            <p>
+                Every recursive invocation operates on one current specification
+                node.
+            </p>
+
+            <pre>
+inSpec
+  |
+  v
+current node
+        </pre>
+
+            <p>
+                The builder first handles that node and then processes its
+                children.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Creating the Current Element</h2>
+
+            <p>
+                Once the node is validated, the builder can create the
+                corresponding DOM element.
+            </p>
+
+            <pre>
+const element = document.createElement(
+    inSpec.tagName
+);
+        </pre>
+
+            <p>
+                The exact DOM creation logic can be delegated to
+                <code>domElementBuilder()</code>.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>10. Applying Attributes</h2>
+
+            <p>
+                If the specification contains attributes, those attributes are
+                applied to the newly created element.
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+    "attributes": {
+        "class": "table-wrapper",
+        "id": "orders"
+    }
+}
+        </pre>
+
+            <p>
+                Conceptually:
+            </p>
+
+            <pre>
+div
+ |
+ +-- class="table-wrapper"
+ +-- id="orders"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Applying Properties</h2>
+
+            <p>
+                Properties can be applied separately from HTML attributes.
+            </p>
+
+            <pre>
+{
+    "tagName": "input",
+    "properties": {
+        "value": "Keshav"
+    }
+}
+        </pre>
+
+            <p>
+                The resulting DOM element receives the corresponding JavaScript
+                property.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>12. Applying Text</h2>
+
+            <pre>
+{
+    "tagName": "span",
+    "textContent": "Hello"
+}
+        </pre>
+
+            <p>
+                The element receives its text content before it is returned to
+                its parent.
+            </p>
+
+            <pre>
+span
+ |
+ +-- "Hello"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>13. Processing Children</h2>
+
+            <p>
+                Children are processed after the current node has been
+                established.
+            </p>
+
+            <pre>
+const children = Array.isArray(inSpec.children)
+    ? inSpec.children
+    : [];
+
+children.forEach(childSpec => {
+
+    const childElement =
+        buildSpecElement(childSpec);
+
+    // append child
+
+});
+        </pre>
+
+            <p>
+                Each child invokes the same builder again.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. Parent-Child Relationship</h2>
+
+            <pre>
+Parent Spec
+    |
+    v
+Create Parent Element
+    |
+    v
+Child Spec
+    |
+    v
+Create Child Element
+    |
+    v
+Append Child
+    |
+    v
+Parent Element
+        </pre>
+
+            <p>
+                Recursion naturally preserves the parent-child relationship.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>15. Complete Example</h2>
+
+            <pre>
+{
+    "tagName": "div",
+    "attributes": {
+        "class": "wrapper"
+    },
+    "children": [
+        {
+            "tagName": "h1",
+            "textContent": "Orders"
+        },
+        {
+            "tagName": "button",
+            "textContent": "Add"
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                The resulting DOM is conceptually:
+            </p>
+
+            <pre>
+div.wrapper
+ |
+ +-- h1
+ |    |
+ |    +-- "Orders"
+ |
+ +-- button
+      |
+      +-- "Add"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>16. Recursive Processing Order</h2>
+
+            <p>
+                The builder generally follows this sequence:
+            </p>
+
+            <pre>
+1. Validate specification
+2. Create current element
+3. Apply attributes
+4. Apply properties
+5. Apply text
+6. Process children recursively
+7. Append children
+8. Return current element
+        </pre>
+
+            <p>
+                The exact internal ordering can vary according to the project's
+                DOM builder implementation, but the important concept is that
+                child specifications are recursively materialized.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>17. Recursion Terminates at Leaf Nodes</h2>
+
+            <p>
+                A leaf node has no children.
+            </p>
+
+            <pre>
+{
+    "tagName": "span",
+    "textContent": "Hello",
+    "children": []
+}
+        </pre>
+
+            <p>
+                The recursive process stops at this node.
+            </p>
+
+            <pre>
+span
+ |
+ +-- "Hello"
+
+No children
+    |
+    v
+Return
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>18. Empty Children</h2>
+
+            <p>
+                A specification may omit <code>children</code> or provide an
+                empty array.
+            </p>
+
+            <pre>
+{
+    "tagName": "div"
+}
+        </pre>
+
+            <p>
+                Conceptually this is equivalent to:
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+    "children": []
+}
+        </pre>
+
+            <p>
+                The builder can therefore normalize missing children to an
+                empty array.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>19. Invalid Children</h2>
+
+            <p>
+                A robust recursive builder should not assume every child is
+                valid.
+            </p>
+
+            <pre>
+children
+   |
+   +-- valid Spec
+   |
+   +-- null
+   |
+   +-- invalid value
+   |
+   +-- valid Spec
+        </pre>
+
+            <p>
+                Invalid entries can be ignored or handled according to the
+                component's validation rules.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>20. Recursive Builder Is Generic</h2>
+
+            <p>
+                The builder does not need to understand Table-specific concepts.
+            </p>
+
+            <p>
+                It only needs to understand the specification format.
+            </p>
+
+            <pre>
+tagName
+attributes
+properties
+textContent
+children
+        </pre>
+
+            <p>
+                Therefore it can build:
+            </p>
+
+            <pre>
+Tables
+Forms
+Cards
+Toolbars
+Dialogs
+Lists
+Sections
+Custom Components
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>21. Table Example</h2>
+
+            <pre>
+div
+ |
+ +-- table
+      |
+      +-- thead
+      |    |
+      |    +-- tr
+      |         |
+      |         +-- th
+      |         +-- th
+      |
+      +-- tbody
+           |
+           +-- tr
+                |
+                +-- td
+                +-- td
+        </pre>
+
+            <p>
+                The recursive builder does not need special Table logic to create
+                this structure.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>22. Form Example</h2>
+
+            <pre>
+form
+ |
+ +-- div
+ |    |
+ |    +-- label
+ |    +-- input
+ |
+ +-- div
+      |
+      +-- label
+      +-- input
+        </pre>
+
+            <p>
+                The same recursive mechanism builds the Form.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Theme Integration</h2>
+
+            <p>
+                Themes should already have been applied before the recursive
+                builder starts.
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+Theme Transformation
+    |
+    v
+Spec with Classes
+    |
+    v
+Recursive Builder
+    |
+    v
+DOM with Classes
+        </pre>
+
+            <p>
+                Therefore the recursive builder does not need to know anything
+                about theme resolution.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. Pipeline Integration</h2>
+
+            <pre>
+God Spec
+    |
+    v
+Pipeline
+    |
+    +-- Theme
+    +-- Header
+    +-- Body
+    +-- Footer
+    +-- Serial
+    +-- Custom
+    |
+    v
+Resolved Spec
+    |
+    v
+Recursive DOM Builder
+    |
+    v
+DOM
+        </pre>
+
+            <p>
+                The recursive builder is therefore downstream of the entire
+                specification transformation pipeline.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. Important Architectural Boundary</h2>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        Once the specification reaches the recursive DOM
+                        builder, structural decisions should already have been
+                        resolved.
+                    </strong>
+                </p>
+
+            </div>
+
+            <p>
+                The builder's responsibility is primarily materialization.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>26. Builder Does Not Decide Header Visibility</h2>
+
+            <p>
+                The builder should not contain logic such as:
+            </p>
+
+            <pre>
+if (showHeader) {
+    create thead
+}
+        </pre>
+
+            <p>
+                Instead, the Header Task should have already transformed the
+                specification.
+            </p>
+
+            <pre>
+Header Task
+    |
+    v
+Resolved Spec
+    |
+    v
+Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>27. Builder Does Not Decide Theme</h2>
+
+            <p>
+                Similarly, the builder should not decide which theme to apply.
+            </p>
+
+            <pre>
+Theme Resolution
+      |
+      v
+Theme Transformation
+      |
+      v
+Resolved Classes
+      |
+      v
+DOM Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>28. Builder Does Not Decide Columns</h2>
+
+            <p>
+                Column transformations should happen before materialization.
+            </p>
+
+            <pre>
+Column Configuration
+       |
+       v
+Column Transformation
+       |
+       v
+Resolved Table Spec
+       |
+       v
+Recursive Builder
+        </pre>
+
+            <p>
+                The builder simply creates whatever column specification it
+                receives.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>29. Recursive Builder as a Compiler Backend</h2>
+
+            <p>
+                The architecture can be understood in compiler-like terms.
+            </p>
+
+            <pre>
+Declarative Input
+      |
+      v
+Intermediate Specification
+      |
+      v
+Transformations
+      |
+      v
+Final Specification
+      |
+      v
+DOM Materialization
+        </pre>
+
+            <p>
+                The recursive builder is effectively the final materialization
+                stage.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>30. DOM Builder and Separation of Concerns</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Responsibility</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>God Spec</td>
+                        <td>Initial structure.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Theme</td>
+                        <td>Presentation transformation.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Pipeline Tasks</td>
+                        <td>Component-specific transformations.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Resolved Spec</td>
+                        <td>Final declarative representation.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Recursive Builder</td>
+                        <td>Recursive materialization.</td>
+                    </tr>
+
+                    <tr>
+                        <td>DOM Element Builder</td>
+                        <td>Low-level element construction.</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>31. Recursive Builder vs DOM Element Builder</h2>
+
+            <p>
+                These two concepts can be separated.
+            </p>
+
+            <pre>
+Recursive Builder
+       |
+       | understands the tree
+       v
+DOM Element Builder
+       |
+       | creates/configures one element
+       v
+DOM Element
+        </pre>
+
+            <p>
+                The recursive layer handles hierarchy.
+                The element-builder layer handles individual element creation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>32. One Node vs Entire Tree</h2>
+
+            <pre>
+DOM Element Builder
+
+Spec Node
+   |
+   v
+One DOM Element
+        </pre>
+
+            <pre>
+Recursive Builder
+
+Spec Tree
+   |
+   v
+Complete DOM Tree
+        </pre>
+
+            <p>
+                This distinction makes both pieces easier to understand.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>33. Recursive Builder Pseudocode</h2>
+
+            <pre>
+function buildSpecElement({ inSpec }) {
+
+    if (!inSpec || typeof inSpec !== "object") {
+        return null;
+    }
+
+    const element =
+        domElementBuilder({
+            inSpec
+        });
+
+    const children =
+        Array.isArray(inSpec.children)
+            ? inSpec.children
+            : [];
+
+    children.forEach(childSpec => {
+
+        const childElement =
+            buildSpecElement({
+                inSpec: childSpec
+            });
+
+        if (childElement) {
+            element.appendChild(childElement);
+        }
+
+    });
+
+    return element;
+}
+        </pre>
+
+            <p>
+                This illustrates the central recursive pattern.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>34. Complexity</h2>
+
+            <p>
+                If the specification contains <code>N</code> nodes, the builder
+                generally visits each node once.
+            </p>
+
+            <pre>
+Node 1
+  |
+Node 2
+  |
+Node 3
+  |
+...
+  |
+Node N
+        </pre>
+
+            <p>
+                The fundamental traversal is therefore proportional to the
+                number of nodes in the specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>35. Deep Trees</h2>
+
+            <p>
+                A deeply nested specification naturally produces deeper
+                recursion.
+            </p>
+
+            <pre>
+Level 1
+  |
+  +-- Level 2
+       |
+       +-- Level 3
+            |
+            +-- Level 4
+                 |
+                 +-- Level 5
+        </pre>
+
+            <p>
+                Normal UI trees are generally well suited to this recursive
+                representation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>36. Specification Validation</h2>
+
+            <p>
+                Before creating an element, the builder can validate the basic
+                specification shape.
+            </p>
+
+            <pre>
+if (!inSpec) return null;
+
+if (typeof inSpec !== "object") {
+    return null;
+}
+        </pre>
+
+            <p>
+                More detailed validation can be introduced separately if the
+                framework requires it.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>37. Why Not Hard-Code the Table?</h2>
+
+            <p>
+                Without a specification-driven builder, the Table renderer could
+                become filled with direct DOM operations.
+            </p>
+
+            <pre>
+create div
+create table
+create thead
+create tr
+create th
+create tbody
+create tr
+create td
+...
+        </pre>
+
+            <p>
+                The specification model moves those structural details into
+                data and leaves the builder generic.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>38. Dynamic Table Rows</h2>
+
+            <p>
+                Dynamic rows can be generated as specification nodes.
+            </p>
+
+            <pre>
+Data
+ |
+ v
+Row Transformation
+ |
+ v
+Row Specs
+ |
+ v
+tbody Spec
+ |
+ v
+Recursive Builder
+ |
+ v
+tbody DOM
+        </pre>
+
+            <p>
+                The same principle applies: generate the specification first,
+                then materialize it.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>39. Dynamic Form Fields</h2>
+
+            <p>
+                Forms can use the same mechanism.
+            </p>
+
+            <pre>
+Field Configuration
+      |
+      v
+Field Spec
+      |
+      v
+Form Spec
+      |
+      v
+Recursive Builder
+      |
+      v
+Form DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>40. Reusability</h2>
+
+            <p>
+                Because recursion is independent of the business meaning of the
+                component, the same builder can support many UI structures.
+            </p>
+
+            <pre>
+Table
+Form
+Card
+Toolbar
+Dialog
+List
+Panel
+        |
+        v
+Same Recursive Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>41. Final Rendering Flow</h2>
+
+            <pre>
+                    GOD SPEC
+                       |
+                       v
+               THEME RESOLUTION
+                       |
+                       v
+             TRANSFORMATION PIPELINE
+                       |
+                       v
+                RESOLVED SPEC
+                       |
+                       v
+             RECURSIVE DOM BUILDER
+                       |
+                       v
+              DOM ELEMENT BUILDER
+                       |
+                       v
+                    DOM TREE
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>42. Final Mental Model</h2>
+
+            <pre>
+              SPECIFICATION TREE
+                       |
+                       v
+                visit root node
+                       |
+                       v
+                create element
+                       |
+                       v
+              process properties
+                       |
+                       v
+               process children
+                       |
+                       v
+              recursively repeat
+                       |
+                       v
+                 complete DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The recursive DOM builder is intentionally simple:
+                        it walks the specification tree and materializes that
+                        tree as DOM.
+                    </strong>
+                </p>
+
+                <p>
+                    The intelligence about themes, columns, visibility,
+                    dynamic UI, and other component behavior should happen
+                    before this stage through specification transformations.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

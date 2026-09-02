@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>God Spec | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        .important {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>God Spec</h1>
+
+        <div>
+            The declarative structural specification
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="themes.html">Themes</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+            <a href="recursive-dom-builder.html">DOM Builder</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. What Is the God Spec?</h2>
+
+            <p>
+                The God Spec is the main declarative JSON specification from
+                which the component structure is produced.
+            </p>
+
+            <p>
+                It represents the complete UI tree before the specification
+                passes through the transformation pipeline.
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+Transformation Pipeline
+    |
+    v
+Resolved Spec
+    |
+    v
+DOM
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The God Spec describes the UI. It does not create the UI.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. Why Use a JSON Specification?</h2>
+
+            <p>
+                A traditional renderer can directly create DOM elements:
+            </p>
+
+            <pre>
+const wrapper = document.createElement("div");
+const table = document.createElement("table");
+const thead = document.createElement("thead");
+const tbody = document.createElement("tbody");
+        </pre>
+
+            <p>
+                This approach mixes the description of the UI with the mechanics
+                of creating the DOM.
+            </p>
+
+            <p>
+                The JSON-driven approach separates those responsibilities:
+            </p>
+
+            <pre>
+JSON
+ |
+ | describes
+ v
+UI
+ |
+ | later materialized by
+ v
+DOM Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>3. God Spec as a Tree</h2>
+
+            <p>
+                A UI is naturally hierarchical.
+                A parent contains children, and those children can contain
+                further children.
+            </p>
+
+            <pre>
+Root
+ |
+ +-- Child
+ |    |
+ |    +-- Child
+ |
+ +-- Child
+      |
+      +-- Child
+           |
+           +-- Child
+        </pre>
+
+            <p>
+                The God Spec represents exactly this relationship.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Example God Spec</h2>
+
+            <pre>
+{
+    "tagName": "div",
+    "attributes": {
+        "class": "table-wrapper"
+    },
+    "children": [
+        {
+            "tagName": "div",
+            "attributes": {
+                "class": "table-toolbar"
+            },
+            "children": []
+        },
+        {
+            "tagName": "table",
+            "children": [
+                {
+                    "tagName": "thead",
+                    "children": []
+                },
+                {
+                    "tagName": "tbody",
+                    "children": []
+                },
+                {
+                    "tagName": "tfoot",
+                    "children": []
+                }
+            ]
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                This specification represents:
+            </p>
+
+            <pre>
+div
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+      |
+      +-- tfoot
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>5. A Spec Node</h2>
+
+            <p>
+                A specification node can contain several kinds of information.
+            </p>
+
+            <pre>
+{
+    "tagName": "...",
+    "attributes": {},
+    "properties": {},
+    "textContent": "...",
+    "events": {},
+    "children": []
+}
+        </pre>
+
+            <p>
+                Each property describes something about the eventual DOM
+                element.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>6. tagName</h2>
+
+            <p>
+                <code>tagName</code> determines the element that will eventually
+                be created.
+            </p>
+
+            <pre>
+{
+    "tagName": "div"
+}
+        </pre>
+
+            <p>
+                eventually becomes:
+            </p>
+
+            <pre>
+document.createElement("div")
+        </pre>
+
+            <p>
+                The God Spec therefore describes the element without directly
+                creating it.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>7. Attributes</h2>
+
+            <p>
+                Attributes describe HTML attributes that should eventually be
+                applied to the element.
+            </p>
+
+            <pre>
+{
+    "tagName": "input",
+    "attributes": {
+        "type": "text",
+        "placeholder": "Search"
+    }
+}
+        </pre>
+
+            <p>
+                The DOM builder later translates those attributes into actual
+                DOM attributes.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>8. Properties</h2>
+
+            <p>
+                Properties represent direct JavaScript properties of the DOM
+                element.
+            </p>
+
+            <pre>
+{
+    "tagName": "input",
+    "properties": {
+        "value": "Keshav"
+    }
+}
+        </pre>
+
+            <p>
+                These are different from HTML attributes.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Text Content</h2>
+
+            <p>
+                Text can be represented declaratively.
+            </p>
+
+            <pre>
+{
+    "tagName": "span",
+    "textContent": "Hello"
+}
+        </pre>
+
+            <p>
+                The DOM builder eventually assigns:
+            </p>
+
+            <pre>
+element.textContent = "Hello";
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>10. Children</h2>
+
+            <p>
+                The <code>children</code> property represents nested UI.
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+    "children": [
+        {
+            "tagName": "span"
+        },
+        {
+            "tagName": "button"
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                The resulting DOM structure is:
+            </p>
+
+            <pre>
+div
+ |
+ +-- span
+ |
+ +-- button
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Events</h2>
+
+            <p>
+                Events can also be described by the specification.
+            </p>
+
+            <pre>
+{
+    "tagName": "button",
+    "textContent": "Save",
+    "events": {
+        "click": handleSave
+    }
+}
+        </pre>
+
+            <p>
+                The specification describes the event.
+                The DOM builder attaches the actual listener.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>12. The God Spec Is Not the Final Spec</h2>
+
+            <p>
+                The initial God Spec is the starting point.
+                It can be transformed before it reaches the DOM builder.
+            </p>
+
+            <pre>
+God Spec
+    |
+    +---- Theme
+    |
+    +---- Header
+    |
+    +---- Body
+    |
+    +---- Footer
+    |
+    +---- Serial
+    |
+    +---- Custom
+    |
+    v
+Resolved Spec
+        </pre>
+
+            <p>
+                Therefore it is useful to distinguish between:
+            </p>
+
+            <pre>
+God Spec
+    =
+Initial Specification
+
+Resolved Spec
+    =
+Final Specification after transformations
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>13. God Spec and Theme Spec</h2>
+
+            <p>
+                The God Spec and Theme Spec are related but serve different
+                purposes.
+            </p>
+
+            <pre>
+God Spec
+    |
+    | structure
+    |
+    v
+Theme Spec
+    |
+    | appearance
+    |
+    v
+Merged / Resolved Spec
+        </pre>
+
+            <p>
+                The God Spec should not have to contain every possible theme.
+            </p>
+
+            <p>
+                The Theme Spec supplies presentation information independently.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. God Spec and Dynamic Data</h2>
+
+            <p>
+                The God Spec can establish a static structural shell while
+                dynamic application data is handled later.
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+Table Skeleton
+    |
+    +---- thead
+    |
+    +---- tbody
+    |
+    +---- tfoot
+        </pre>
+
+            <p>
+                The body can subsequently receive dynamically generated rows.
+            </p>
+
+            <pre>
+Application Data
+      |
+      v
+Row Generation
+      |
+      v
+tbody
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>15. Why the God Spec Can Be Deeply Nested</h2>
+
+            <p>
+                A complex component may contain many levels of nested elements.
+            </p>
+
+            <pre>
+wrapper
+ |
+ +-- toolbar
+ |    |
+ |    +-- controls
+ |         |
+ |         +-- input
+ |         |
+ |         +-- button
+ |
+ +-- table
+      |
+      +-- thead
+      |    |
+      |    +-- tr
+      |         |
+      |         +-- th
+      |         |
+      |         +-- th
+      |
+      +-- tbody
+      |
+      +-- tfoot
+        </pre>
+
+            <p>
+                The recursive builder handles the depth without requiring the
+                renderer to know how deeply nested the specification is.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>16. God Spec Is the Structural Contract</h2>
+
+            <p>
+                The God Spec effectively establishes the structural contract
+                between the component and the generic rendering system.
+            </p>
+
+            <pre>
+God Spec
+    |
+    +-- root
+    +-- children
+    +-- descendants
+    |
+    v
+Known UI structure
+        </pre>
+
+            <p>
+                Other transformations can then operate against that structure.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>17. Structural Stability</h2>
+
+            <p>
+                Because other specifications may correspond to the structure,
+                the God Spec should ideally remain reasonably stable.
+            </p>
+
+            <p>
+                Frequent structural changes can make mirrored theme
+                specifications or other tree-based transformations harder to
+                maintain.
+            </p>
+
+            <div class="note">
+                <strong>
+                    The God Spec should be treated as a structural contract,
+                    not as an arbitrary temporary object.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>18. God Spec → Pipeline</h2>
+
+            <p>
+                The God Spec enters the transformation stage.
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+Pipeline
+    |
+    +-- Theme
+    +-- Header
+    +-- Body
+    +-- Footer
+    +-- Serial
+    +-- Custom
+    |
+    v
+Resolved Spec
+        </pre>
+
+            <p>
+                Every transformation receives the result produced by the
+                previous transformation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>19. God Spec → DOM</h2>
+
+            <p>
+                The complete path is:
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+Theme Resolution
+    |
+    v
+Transformation Pipeline
+    |
+    v
+Resolved Spec
+    |
+    v
+buildSpecElement()
+    |
+    v
+domElementBuilder()
+    |
+    v
+DOM
+        </pre>
+
+            <p class="important">
+                The God Spec never needs to directly manipulate the DOM.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>20. God Spec Is Not Table-Specific at the Lowest Level</h2>
+
+            <p>
+                Although the current God Spec represents a Table, the
+                specification format itself is generic.
+            </p>
+
+            <p>
+                The same representation can describe:
+            </p>
+
+            <pre>
+div
+form
+section
+table
+thead
+tbody
+tfoot
+input
+button
+label
+span
+        </pre>
+
+            <p>
+                The Table meaning is introduced by the component-level renderer
+                and transformations, not by the generic DOM builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. God Spec as an Intermediate Representation</h2>
+
+            <p>
+                The God Spec can be thought of as an intermediate representation
+                of the UI.
+            </p>
+
+            <pre>
+Application Requirements
+          |
+          v
+      God Spec
+          |
+          v
+   Transformations
+          |
+          v
+   Resolved Spec
+          |
+          v
+        DOM
+        </pre>
+
+            <p>
+                This is similar to a compiler pipeline:
+                the source representation is transformed before the final
+                output is generated.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>22. Why This Model Is Useful</h2>
+
+            <p>
+                The specification can be inspected before DOM creation.
+            </p>
+
+            <p>
+                Therefore debugging can happen at multiple levels:
+            </p>
+
+            <pre>
+God Spec
+    |
+    v
+After Theme
+    |
+    v
+After Header
+    |
+    v
+After Body
+    |
+    v
+After Footer
+    |
+    v
+After Serial
+    |
+    v
+Final Spec
+    |
+    v
+DOM
+        </pre>
+
+            <p>
+                If something is wrong in the final DOM, the intermediate
+                specification can reveal where the change occurred.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. God Spec and Future Forms</h2>
+
+            <p>
+                A Form can have its own God Spec.
+            </p>
+
+            <pre>
+Form God Spec
+      |
+      v
+Form Pipeline
+      |
+      v
+Resolved Form Spec
+      |
+      v
+Generic Recursive Builder
+      |
+      v
+Form DOM
+        </pre>
+
+            <p>
+                The generic recursive builder does not need to know that the
+                specification represents a Form.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. Final Mental Model</h2>
+
+            <pre>
+                 GOD SPEC
+                    |
+                    | describes
+                    v
+               UI STRUCTURE
+                    |
+                    | transformed by
+                    v
+             PIPELINE / MIDDLEWARE
+                    |
+                    +---- Theme
+                    +---- Header
+                    +---- Body
+                    +---- Footer
+                    +---- Columns
+                    +---- Data-driven UI
+                    +---- Custom Tasks
+                    |
+                    v
+              RESOLVED SPEC
+                    |
+                    | materialized by
+                    v
+          RECURSIVE DOM BUILDER
+                    |
+                    v
+                   DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The God Spec is the starting description of the UI.
+                        It is transformed into the final specification before
+                        the browser DOM is created.
+                    </strong>
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

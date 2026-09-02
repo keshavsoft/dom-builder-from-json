@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Columns and Header | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        .important {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Columns and Header</h1>
+
+        <div>
+            How column definitions drive both the Table header and body
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+            <a href="pipeline-tasks.html">Tasks</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+            <a href="dom-element-builder.html">Element Builder</a>
+            <a href="table-renderer.html">Table Renderer</a>
+            <a href="data-to-tbody.html">Data to Tbody</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                Columns describe how a Table represents data.
+                They form the contract between the application's data and the
+                visual Table.
+            </p>
+
+            <pre>
+Application Data
+       |
+       v
+Column Definitions
+       |
+       +----------------+
+       |                |
+       v                v
+    Header             Body
+       |                |
+       v                v
+      th               td
+        </pre>
+
+            <div class="note">
+                <strong>
+                    A column is more than a header label. It can define how
+                    values are obtained, displayed, transformed, and rendered.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. The Basic Column</h2>
+
+            <p>
+                The simplest column can contain a data key and a display label.
+            </p>
+
+            <pre>
+{
+    "key": "name",
+    "label": "Name"
+}
+        </pre>
+
+            <p>
+                The <code>key</code> identifies the data field.
+                The <code>label</code> identifies the header text.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. Multiple Columns</h2>
+
+            <pre>
+[
+    {
+        "key": "name",
+        "label": "Name"
+    },
+
+    {
+        "key": "age",
+        "label": "Age"
+    },
+
+    {
+        "key": "city",
+        "label": "City"
+    }
+]
+        </pre>
+
+            <p>
+                The order of this array normally determines the visual order of
+                the columns.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Column Order</h2>
+
+            <p>
+                Given:
+            </p>
+
+            <pre>
+[
+    { "key": "name" },
+    { "key": "age" },
+    { "key": "city" }
+]
+        </pre>
+
+            <p>
+                the Table follows:
+            </p>
+
+            <pre>
+Name | Age | City
+        </pre>
+
+            <p>
+                If the definitions are reordered:
+            </p>
+
+            <pre>
+[
+    { "key": "city" },
+    { "key": "name" },
+    { "key": "age" }
+]
+        </pre>
+
+            <p>
+                the Table can correspondingly become:
+            </p>
+
+            <pre>
+City | Name | Age
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>5. Header Generation</h2>
+
+            <p>
+                The column definitions can be transformed into
+                <code>th</code> specifications.
+            </p>
+
+            <pre>
+Column
+    |
+    v
+Header Cell Spec
+    |
+    v
+th
+        </pre>
+
+            <p>
+                For example:
+            </p>
+
+            <pre>
+{
+    "key": "name",
+    "label": "Name"
+}
+        </pre>
+
+            <p>
+                can produce:
+            </p>
+
+            <pre>
+{
+    "tagName": "th",
+    "textContent": "Name"
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>6. Complete Header</h2>
+
+            <pre>
+{
+    "tagName": "thead",
+
+    "children": [
+        {
+            "tagName": "tr",
+
+            "children": [
+                {
+                    "tagName": "th",
+                    "textContent": "Name"
+                },
+                {
+                    "tagName": "th",
+                    "textContent": "Age"
+                },
+                {
+                    "tagName": "th",
+                    "textContent": "City"
+                }
+            ]
+        }
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>7. Body Generation</h2>
+
+            <p>
+                The same column definitions can be used to generate body cells.
+            </p>
+
+            <pre>
+Column
+    |
+    +-- key
+    |
+    v
+row[key]
+    |
+    v
+Cell Value
+    |
+    v
+td Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>8. Header and Body Share One Column Definition</h2>
+
+            <pre>
+                 COLUMNS
+                    |
+          +---------+---------+
+          |                   |
+          v                   v
+       HEADER               BODY
+          |                   |
+          v                   v
+         th                  td
+        </pre>
+
+            <p>
+                This prevents the header and body from independently deciding
+                their column order.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Why This Is Important</h2>
+
+            <p>
+                Without a shared column definition, it is possible for the
+                header and body to become inconsistent.
+            </p>
+
+            <pre>
+Header:
+Name | Age | City
+
+Body:
+Name | City | Age
+        </pre>
+
+            <p>
+                A common column contract avoids this mismatch.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>10. Column as a Mapping Contract</h2>
+
+            <pre>
+Column
+ |
+ +-- identifies data
+ |
+ +-- identifies display label
+ |
+ +-- determines position
+ |
+ +-- determines rendering
+ |
+ +-- may determine styling
+ |
+ +-- may determine behavior
+        </pre>
+
+            <p>
+                This makes the column definition one of the most important
+                declarative structures in a data-driven Table.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>11. Simple Data Mapping</h2>
+
+            <pre>
+const row = {
+    name: "John",
+    age: 30,
+    city: "London"
+};
+        </pre>
+
+            <pre>
+const column = {
+    key: "name",
+    label: "Name"
+};
+        </pre>
+
+            <p>
+                The value is:
+            </p>
+
+            <pre>
+row[column.key]
+        </pre>
+
+            <p>
+                Result:
+            </p>
+
+            <pre>
+"John"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>12. Creating a Cell</h2>
+
+            <pre>
+{
+    "tagName": "td",
+    "textContent": "John"
+}
+        </pre>
+
+            <p>
+                This specification can later be passed through the generic DOM
+                builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>13. Column Renderer</h2>
+
+            <p>
+                A column can optionally provide a rendering strategy.
+            </p>
+
+            <pre>
+{
+    "key": "amount",
+    "label": "Amount",
+
+    "render": ({ value }) => {
+
+        return {
+            "tagName": "span",
+            "textContent": String(value)
+        };
+
+    }
+}
+        </pre>
+
+            <p>
+                The renderer returns a specification rather than directly
+                manipulating the DOM.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. Why Renderers Return Specifications</h2>
+
+            <pre>
+Column Renderer
+      |
+      v
+Cell Spec
+      |
+      v
+Pipeline
+      |
+      v
+Recursive DOM Builder
+      |
+      v
+DOM
+        </pre>
+
+            <p>
+                This preserves the specification-first architecture.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>15. Text Cell vs Complex Cell</h2>
+
+            <p>
+                A simple column can produce:
+            </p>
+
+            <pre>
+td
+ |
+ +-- text
+        </pre>
+
+            <p>
+                A complex column can produce:
+            </p>
+
+            <pre>
+td
+ |
+ +-- div
+      |
+      +-- span
+      |
+      +-- button
+      |
+      +-- button
+        </pre>
+
+            <p>
+                Both are just specification trees.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>16. Column Attributes</h2>
+
+            <p>
+                A column can potentially carry presentation information.
+            </p>
+
+            <pre>
+{
+    "key": "name",
+    "label": "Name",
+
+    "attributes": {
+        "class": "customer-name"
+    }
+}
+        </pre>
+
+            <p>
+                Such information can be incorporated into the generated
+                specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>17. Header Attributes</h2>
+
+            <p>
+                Header-specific information can be transformed into the
+                <code>th</code> specification.
+            </p>
+
+            <pre>
+{
+    "key": "name",
+    "label": "Name",
+
+    "headerAttributes": {
+        "class": "text-left"
+    }
+}
+        </pre>
+
+            <p>
+                Conceptually:
+            </p>
+
+            <pre>
+{
+    "tagName": "th",
+
+    "attributes": {
+        "class": "text-left"
+    },
+
+    "textContent": "Name"
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>18. Body Attributes</h2>
+
+            <p>
+                A column may also specify attributes for its body cells.
+            </p>
+
+            <pre>
+{
+    "key": "amount",
+
+    "cellAttributes": {
+        "class": "text-right"
+    }
+}
+        </pre>
+
+            <p>
+                This can be transformed into the corresponding
+                <code>td</code> specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>19. Keeping Header and Cell Concerns Separate</h2>
+
+            <pre>
+Column
+ |
+ +-- key
+ +-- label
+ +-- headerAttributes
+ +-- cellAttributes
+ +-- renderer
+        </pre>
+
+            <p>
+                This lets one column definition describe both sides of the
+                Table without forcing identical configuration on
+                <code>th</code> and <code>td</code>.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>20. Column Visibility</h2>
+
+            <p>
+                A column may need to be conditionally visible.
+            </p>
+
+            <pre>
+{
+    "key": "internalId",
+    "label": "Internal ID",
+    "visible": false
+}
+        </pre>
+
+            <p>
+                A column transformation can remove or ignore this column before
+                header and body specifications are produced.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>21. Visibility Transformation</h2>
+
+            <pre>
+All Columns
+    |
+    v
+Visibility Filter
+    |
+    v
+Visible Columns
+    |
+    +-----------+
+    |           |
+    v           v
+ Header       Body
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>22. Serial Column</h2>
+
+            <p>
+                A serial column can be represented as an additional column or
+                introduced by a dedicated Table task.
+            </p>
+
+            <pre>
+[
+    Serial,
+    Name,
+    Age,
+    City
+]
+        </pre>
+
+            <p>
+                The same effective column ordering can then drive both header
+                and body generation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Serial Header</h2>
+
+            <pre>
+{
+    "tagName": "th",
+    "textContent": "#"
+}
+        </pre>
+
+            <p>
+                The serial column therefore has a header representation just
+                like any other column.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. Serial Body Cell</h2>
+
+            <pre>
+{
+    "tagName": "td",
+    "textContent": "1"
+}
+        </pre>
+
+            <p>
+                The value is derived from the row position rather than the
+                application's data object.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. Nested Data</h2>
+
+            <p>
+                Real-world data may contain nested structures.
+            </p>
+
+            <pre>
+{
+    "customer": {
+        "name": "John"
+    }
+}
+        </pre>
+
+            <p>
+                A column can provide a value-access strategy appropriate for
+                the application's data shape.
+            </p>
+
+            <pre>
+customer.name
+        </pre>
+
+            <p>
+                The result can still become a normal cell specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>26. Value Formatting</h2>
+
+            <p>
+                Raw data and display data do not always have the same form.
+            </p>
+
+            <pre>
+Raw:
+123456.78
+
+Display:
+123,456.78
+        </pre>
+
+            <p>
+                The column's transformation or renderer can perform this
+                presentation conversion.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>27. Date Formatting</h2>
+
+            <pre>
+Raw:
+2026-08-30T12:30:00
+
+Display:
+30 Aug 2026
+        </pre>
+
+            <p>
+                The underlying data remains unchanged while the column controls
+                its displayed representation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>28. Boolean Rendering</h2>
+
+            <p>
+                A boolean value can be represented as text:
+            </p>
+
+            <pre>
+true -> "Yes"
+false -> "No"
+        </pre>
+
+            <p>
+                or as a richer specification:
+            </p>
+
+            <pre>
+td
+ |
+ +-- span
+      |
+      +-- "Yes"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>29. Action Column</h2>
+
+            <p>
+                An action column often has no direct data key.
+            </p>
+
+            <pre>
+{
+    "key": "actions",
+    "label": "Actions"
+}
+        </pre>
+
+            <p>
+                Its renderer can construct controls based on the current row.
+            </p>
+
+            <pre>
+Row
+ |
+ v
+Action Column
+ |
+ v
+Button Specification
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>30. Action Column Example</h2>
+
+            <pre>
+{
+    "key": "actions",
+
+    "label": "Actions",
+
+    "render": ({ row }) => {
+
+        return {
+            "tagName": "button",
+
+            "attributes": {
+                "type": "button"
+            },
+
+            "textContent": "Edit"
+        };
+
+    }
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>31. Checkbox Column</h2>
+
+            <p>
+                A checkbox column can similarly produce a nested specification.
+            </p>
+
+            <pre>
+{
+    "key": "selected",
+
+    "label": "",
+
+    "render": ({ value }) => {
+
+        return {
+            "tagName": "input",
+
+            "attributes": {
+                "type": "checkbox"
+            },
+
+            "properties": {
+                "checked": value
+            }
+        };
+
+    }
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>32. Input Column</h2>
+
+            <p>
+                Editable cells can be represented in the same manner.
+            </p>
+
+            <pre>
+td
+ |
+ +-- input
+        </pre>
+
+            <p>
+                The data-to-body transformation produces the specification;
+                the generic builder materializes it.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>33. Column Renderer Receives Row Context</h2>
+
+            <p>
+                A renderer may need more than the current value.
+            </p>
+
+            <pre>
+render({
+    value,
+    row,
+    column,
+    rowIndex
+})
+        </pre>
+
+            <p>
+                This enables row-dependent rendering while keeping the output
+                declarative.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>34. Row Index</h2>
+
+            <p>
+                The row index can be used for:
+            </p>
+
+            <pre>
+Serial numbers
+Alternating content
+Conditional actions
+Row-specific controls
+        </pre>
+
+            <p>
+                It is particularly useful when generating UI-only columns.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>35. Header Is Also a Specification</h2>
+
+            <p>
+                The header should not be treated as an unrelated hard-coded DOM
+                structure.
+            </p>
+
+            <pre>
+Columns
+   |
+   v
+Header Spec
+   |
+   v
+thead
+   |
+   v
+Recursive Builder
+   |
+   v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>36. Header Task</h2>
+
+            <p>
+                The Header Task can transform the Table specification using
+                column definitions.
+            </p>
+
+            <pre>
+createHeaderTask({
+    inColumns
+})
+        </pre>
+
+            <p>
+                Conceptually:
+            </p>
+
+            <pre>
+God Spec
+   |
+   v
+Header Task
+   |
+   v
+thead populated from columns
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>37. Body Task</h2>
+
+            <p>
+                The Body Task uses the same column definitions against the data.
+            </p>
+
+            <pre>
+createBodyTask({
+    inColumns,
+    inData
+})
+        </pre>
+
+            <pre>
+Data + Columns
+      |
+      v
+tbody
+      |
+      v
+Rows
+      |
+      v
+Cells
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>38. Header Task + Body Task</h2>
+
+            <pre>
+                 COLUMNS
+                    |
+          +---------+---------+
+          |                   |
+          v                   v
+     HEADER TASK          BODY TASK
+          |                   |
+          v                   v
+       thead                tbody
+          |                   |
+          v                   v
+         th                  td
+        </pre>
+
+            <p>
+                This is the central relationship between columns, headers,
+                and data.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>39. Column Transformation Pipeline</h2>
+
+            <pre>
+Raw Columns
+    |
+    v
+Visibility
+    |
+    v
+Serial / UI Columns
+    |
+    v
+Column Normalization
+    |
+    v
+Resolved Columns
+    |
+    +----------------+
+    |                |
+    v                v
+Header           Body
+        </pre>
+
+            <p>
+                A normalized column set can become the common source for later
+                transformations.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>40. Why Normalize Columns?</h2>
+
+            <p>
+                Different application configurations may describe columns in
+                slightly different forms.
+            </p>
+
+            <pre>
+Application Column
+       |
+       v
+Normalization
+       |
+       v
+Internal Column Model
+       |
+       +------------+
+       |            |
+       v            v
+    Header        Body
+        </pre>
+
+            <p>
+                This gives downstream tasks a predictable structure.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>41. Column Model</h2>
+
+            <p>
+                A normalized internal model might conceptually contain:
+            </p>
+
+            <pre>
+{
+    key,
+    label,
+    visible,
+    headerAttributes,
+    cellAttributes,
+    render
+}
+        </pre>
+
+            <p>
+                The actual project model can contain whatever fields its
+                requirements need.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>42. Columns Do Not Need to Know DOM Recursion</h2>
+
+            <p>
+                A column renderer can return a nested specification without
+                knowing how deep the eventual DOM tree will be.
+            </p>
+
+            <pre>
+Column Renderer
+      |
+      v
+Specification Tree
+      |
+      v
+Recursive Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>43. Columns Do Not Need to Know Theme Resolution</h2>
+
+            <p>
+                Theme handling remains a separate concern.
+            </p>
+
+            <pre>
+Columns
+   |
+   v
+Cell/Header Specs
+   |
+   v
+Theme Transformation
+   |
+   v
+Resolved Spec
+        </pre>
+
+            <p>
+                Alternatively, theme transformation may occur earlier depending
+                on the pipeline ordering.
+            </p>
+
+            <p>
+                The key point is that column logic and theme lookup remain
+                conceptually separate.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>44. Columns and Classes</h2>
+
+            <p>
+                A column can describe semantic presentation requirements while
+                the theme layer supplies theme-specific classes.
+            </p>
+
+            <pre>
+Column Requirement
+       |
+       v
+Cell Spec
+       |
+       v
+Theme
+       |
+       v
+Final Classes
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>45. Example Theme Interaction</h2>
+
+            <pre>
+Column:
+{
+    "key": "name",
+    "label": "Name"
+}
+        </pre>
+
+            <p>
+                The generated cell may initially be:
+            </p>
+
+            <pre>
+{
+    "tagName": "td"
+}
+        </pre>
+
+            <p>
+                The theme transformation can then apply the appropriate class
+                according to the corresponding Theme Spec.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>46. Column Width</h2>
+
+            <p>
+                A column can also carry layout information where required.
+            </p>
+
+            <pre>
+{
+    "key": "name",
+    "label": "Name",
+    "width": "30%"
+}
+        </pre>
+
+            <p>
+                The column transformation can translate this requirement into
+                the appropriate specification representation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>47. Alignment</h2>
+
+            <pre>
+{
+    "key": "amount",
+    "label": "Amount",
+    "align": "right"
+}
+        </pre>
+
+            <p>
+                Alignment can become a cell/header attribute or class during
+                specification transformation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>48. Sorting Metadata</h2>
+
+            <p>
+                A column may also carry metadata used by sorting behavior.
+            </p>
+
+            <pre>
+{
+    "key": "name",
+    "label": "Name",
+    "sortable": true
+}
+        </pre>
+
+            <p>
+                The sorting system can use this metadata without requiring the
+                generic DOM builder to understand sorting.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>49. Filtering Metadata</h2>
+
+            <pre>
+{
+    "key": "city",
+    "label": "City",
+    "filterable": true
+}
+        </pre>
+
+            <p>
+                Again, this is Table behavior rather than generic DOM behavior.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>50. Column as a Declarative Contract</h2>
+
+            <pre>
+Column Definition
+       |
+       +-- Data mapping
+       +-- Display label
+       +-- Position
+       +-- Visibility
+       +-- Rendering
+       +-- Styling metadata
+       +-- Sorting metadata
+       +-- Filtering metadata
+       |
+       v
+Table UI
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>51. Complete Example</h2>
+
+            <pre>
+const columns = [
+
+    {
+        key: "name",
+        label: "Name"
+    },
+
+    {
+        key: "age",
+        label: "Age"
+    },
+
+    {
+        key: "city",
+        label: "City"
+    },
+
+    {
+        key: "actions",
+        label: "Actions",
+
+        render: ({ row }) => {
+
+            return {
+                tagName: "button",
+                attributes: {
+                    type: "button"
+                },
+                textContent: "Edit"
+            };
+
+        }
+    }
+
+];
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>52. Resulting Header</h2>
+
+            <pre>
+Name | Age | City | Actions
+        </pre>
+
+            <p>
+                The action column has no need for a corresponding property in
+                the data object.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>53. Resulting Body</h2>
+
+            <pre>
+John | 30 | London | Edit
+Mary | 25 | Paris  | Edit
+        </pre>
+
+            <p>
+                The first three columns read values from the row.
+                The final column generates its content through its renderer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>54. Header and Body as Two Projections</h2>
+
+            <p>
+                A useful mental model is that the same column model is projected
+                into two different structures.
+            </p>
+
+            <pre>
+                 COLUMN MODEL
+                       |
+             +---------+---------+
+             |                   |
+             v                   v
+       HEADER PROJECTION    BODY PROJECTION
+             |                   |
+             v                   v
+            th                  td
+        </pre>
+
+            <p>
+                This keeps the Table model coherent.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>55. Column Changes Propagate Naturally</h2>
+
+            <p>
+                If a column is added:
+            </p>
+
+            <pre>
+Columns
+   |
+   +-- Name
+   +-- Age
+   +-- City
+   +-- Country
+        </pre>
+
+            <p>
+                both header and body generation can automatically account for
+                the new column.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>56. Column Removal</h2>
+
+            <p>
+                Removing a column from the resolved column set removes its
+                corresponding header and body representation.
+            </p>
+
+            <pre>
+Before:
+Name | Age | City
+
+After:
+Name | City
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>57. Column Reordering</h2>
+
+            <p>
+                Reordering the resolved column list changes the presentation
+                order consistently.
+            </p>
+
+            <pre>
+Before:
+Name | Age | City
+
+After:
+City | Name | Age
+        </pre>
+
+            <p>
+                The body follows the same order because it uses the same
+                resolved columns.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>58. Column Transformation Is Middleware-Friendly</h2>
+
+            <pre>
+God Spec
+   |
+   v
+Column Task
+   |
+   v
+Resolved Columns
+   |
+   v
+Header / Body Tasks
+   |
+   v
+Resolved Table Spec
+        </pre>
+
+            <p>
+                This fits naturally into the larger transformation pipeline.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>59. Column Task and God Spec</h2>
+
+            <p>
+                The God Spec can remain concerned with the structural skeleton.
+            </p>
+
+            <pre>
+God Spec
+ |
+ +-- table
+      |
+      +-- thead
+      |    |
+      |    +-- placeholder structure
+      |
+      +-- tbody
+           |
+           +-- empty children
+        </pre>
+
+            <p>
+                Column tasks can populate or transform these regions.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>60. Final Column Architecture</h2>
+
+            <pre>
+                 APPLICATION DATA
+                         |
+                         |
+                 COLUMN DEFINITIONS
+                         |
+          +--------------+--------------+
+          |                             |
+          v                             v
+     HEADER TASK                    BODY TASK
+          |                             |
+          v                             v
+      thead Spec                    tbody Spec
+          |                             |
+          +--------------+--------------+
+                         |
+                         v
+                  TABLE SPEC
+                         |
+                         v
+               RECURSIVE BUILDER
+                         |
+                         v
+                        DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>61. Final Mental Model</h2>
+
+            <pre>
+Column Definition
+       |
+       +---- "Where does the value come from?"
+       |
+       +---- "What should the header say?"
+       |
+       +---- "Where should this column appear?"
+       |
+       +---- "How should the value be displayed?"
+       |
+       +---- "Should the column be visible?"
+       |
+       +---- "Does it have special UI?"
+       |
+       v
+Resolved Column
+       |
+       +----------------------+
+       |                      |
+       v                      v
+Header Spec               Body Spec
+       |                      |
+       v                      v
+      th                     td
+       \                      /
+        \                    /
+         +------ TABLE -----+
+                   |
+                   v
+                  DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        Columns are the bridge between data and Table structure.
+                    </strong>
+                </p>
+
+                <p>
+                    The God Spec provides the structural skeleton, column
+                    transformations determine what the Table's columns mean,
+                    data transformations generate the body, and the recursive
+                    DOM builder finally materializes the resulting specification.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

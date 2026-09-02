@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ks-table-builder-from-json — Documentation</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #222;
+            background: #f7f7f7;
+        }
+
+        header {
+            padding: 32px;
+            background: #222;
+            color: white;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        ul {
+            margin-bottom: 0;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            background: #181818;
+            color: #eee;
+            border-radius: 6px;
+        }
+
+        .flow {
+            font-family: monospace;
+            white-space: pre;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>ks-table-builder-from-json</h1>
+        <div>Detailed Technical Documentation</div>
+    </header>
+
+    <main>
+
+        <section>
+            <h2>Documentation</h2>
+
+            <p>
+                This documentation explains the JSON-driven rendering architecture,
+                transformation pipeline, theme system, recursive DOM construction,
+                and Table architecture.
+            </p>
+
+            <ul>
+                <li><a href="../README.md">README</a></li>
+                <li><a href="architecture.html">Architecture</a></li>
+                <li><a href="god-spec.html">God Spec</a></li>
+                <li><a href="themes.html">Themes</a></li>
+                <li><a href="transformation-pipeline.html">Transformation Pipeline</a></li>
+                <li><a href="pipeline-tasks.html">Pipeline Tasks</a></li>
+                <li><a href="recursive-dom-builder.html">Recursive DOM Builder</a></li>
+                <li><a href="dom-element-builder.html">DOM Element Builder</a></li>
+                <li><a href="table-renderer.html">Table Renderer</a></li>
+                <li><a href="table-store.html">Table Store</a></li>
+                <li><a href="data.html">Data</a></li>
+                <li><a href="columns.html">Columns</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="skeleton.html">Skeleton</a></li>
+                <li><a href="user-ui.html">User UI</a></li>
+                <li><a href="forms.html">Forms</a></li>
+                <li><a href="examples.html">Examples</a></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Core Architecture</h2>
+
+            <pre class="flow">Application
+    |
+    v
+God JSON / Base Specification
+    |
+    v
+Theme Resolution
+    |
+    v
+Transformation Pipeline
+    |
+    +-- Theme
+    +-- Header
+    +-- Body
+    +-- Footer
+    +-- Serial
+    +-- Custom Tasks
+    |
+    v
+Resolved JSON Specification
+    |
+    v
+Recursive Spec Builder
+    |
+    v
+DOM Element Builder
+    |
+    v
+DOM</pre>
+        </section>
+
+        <section>
+            <h2>Core Principle</h2>
+
+            <p>
+                The framework follows a simple architectural rule:
+            </p>
+
+            <p>
+                <strong>
+                    Describe the UI first. Transform the description second.
+                    Create the DOM last.
+                </strong>
+            </p>
+        </section>
+
+        <section>
+            <h2>JSON World and DOM World</h2>
+
+            <pre class="flow">JSON World
+    |
+    | specification transformations
+    v
+Resolved JSON
+    |
+    | materialization
+    v
+DOM World</pre>
+
+            <p>
+                Theme application, header visibility, body visibility, footer
+                visibility, serial columns, and other structural changes happen
+                before DOM creation.
+            </p>
+
+            <p>
+                The recursive DOM builder is the boundary between the JSON
+                specification and the browser DOM.
+            </p>
+        </section>
+
+        <section>
+            <h2>Component Architecture</h2>
+
+            <pre class="flow">Component
+    |
+    +-- Skeleton
+    |
+    +-- Event Binding
+    |
+    +-- User UI / Data
+    |
+    v
+Final Component</pre>
+
+            <p>
+                The static skeleton establishes the component structure.
+                Events connect behavior to that structure, while user data and
+                dynamic UI are applied afterward.
+            </p>
+        </section>
+
+        <section>
+            <h2>Reusable Foundation</h2>
+
+            <p>
+                The deeper abstraction is not the Table itself. The reusable
+                foundation is:
+            </p>
+
+            <pre>Declarative Specification
+        +
+Composable Transformations
+        +
+Generic Recursive DOM Materialization</pre>
+
+            <p>
+                A Table is one consumer of this foundation. A Form can use the
+                same underlying pipeline runner and recursive DOM construction
+                mechanism.
+            </p>
+        </section>
+
+    </main>
+
+</body>
+
+</html>

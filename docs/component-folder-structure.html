@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Component Folder Structure | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Component Folder Structure</h1>
+
+        <div>
+            Organizing God JSON, Themes, transformations, renderers and component-specific code
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="theme-transformation.html">Theme Transformation</a>
+            <a href="data-transformation.html">Data Transformation</a>
+            <a href="pipeline-execution.html">Pipeline Execution</a>
+            <a href="table-lifecycle.html">Table Lifecycle</a>
+            <a href="spec-transformation-contract.html">Transformation Contract</a>
+            <a href="component-composition.html">Component Composition</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                This document describes a practical organization for keeping the
+                different pieces of a specification-driven component together.
+            </p>
+
+            <pre>
+Component
+ |
+ +-- God JSON
+ +-- Themes
+ +-- Pipeline
+ +-- Columns
+ +-- Renderers
+ +-- Component code
+ +-- Documentation
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The folder should represent one component and contain the
+                    resources required to construct that component.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. Component as a Folder</h2>
+
+            <p>
+                A component can have its own directory.
+            </p>
+
+            <pre>
+table/
+        </pre>
+
+            <p>
+                Everything specific to that Table can then live below it.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. Basic Table Structure</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ |
+ +-- themes/
+ |
+ +-- pipeline/
+ |
+ +-- columns/
+ |
+ +-- renderers/
+ |
+ +-- index.js
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>4. God JSON</h2>
+
+            <p>
+                The God JSON contains the structural specification for the
+                component.
+            </p>
+
+            <pre>
+table/
+ |
+ +-- god.json
+        </pre>
+
+            <p>
+                It establishes the structural tree before dynamic transformations
+                are applied.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. Example God JSON</h2>
+
+            <pre>
+{
+    "tagName": "div",
+
+    "attributes": {
+        "class": "table-wrapper"
+    },
+
+    "children": [
+
+        {
+            "tagName": "div",
+            "attributes": {
+                "class": "table-toolbar"
+            }
+        },
+
+        {
+            "tagName": "table",
+
+            "children": [
+
+                {
+                    "tagName": "thead"
+                },
+
+                {
+                    "tagName": "tbody",
+                    "attributes": {
+                        "slot": "body"
+                    }
+                }
+
+            ]
+        }
+
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>6. Themes Folder</h2>
+
+            <pre>
+table/
+ |
+ +-- themes/
+      |
+      +-- dark.json
+      +-- light.json
+      +-- medium.json
+        </pre>
+
+            <p>
+                Themes are kept separate from the structural specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>7. Theme Pairing</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ |
+ +-- themes/
+      |
+      +-- dark.json
+      +-- light.json
+      +-- custom.json
+        </pre>
+
+            <p>
+                Conceptually, each Theme is paired with the same God Spec.
+            </p>
+
+            <pre>
+God JSON + dark.json
+God JSON + light.json
+God JSON + custom.json
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>8. Why Keep Theme Separate?</h2>
+
+            <p>
+                The structural tree and presentation rules have different
+                responsibilities.
+            </p>
+
+            <pre>
+god.json
+
+    structure
+        |
+        v
+    component tree
+
+
+dark.json
+
+    presentation
+        |
+        v
+    visual classes
+        </pre>
+
+            <p>
+                This makes Theme replacement straightforward.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Theme Folder Can Grow</h2>
+
+            <pre>
+themes/
+ |
+ +-- dark.json
+ +-- light.json
+ +-- compact.json
+ +-- spacious.json
+ +-- high-contrast.json
+        </pre>
+
+            <p>
+                The component structure does not need to be duplicated for every
+                Theme.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>10. Theme Index</h2>
+
+            <p>
+                A Theme index can provide named access to available Themes.
+            </p>
+
+            <pre>
+themes/
+ |
+ +-- index.js
+ +-- dark.json
+ +-- light.json
+        </pre>
+
+            <pre>
+export {
+    dark,
+    light
+};
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Pipeline Folder</h2>
+
+            <pre>
+table/
+ |
+ +-- pipeline/
+      |
+      +-- index.js
+      +-- createPipeline.js
+      +-- runPipeline.js
+        </pre>
+
+            <p>
+                The pipeline folder contains the orchestration of component
+                transformations.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>12. Pipeline Responsibilities</h2>
+
+            <pre>
+Pipeline
+ |
+ +-- determine tasks
+ |
+ +-- order tasks
+ |
+ +-- execute tasks
+ |
+ +-- produce final specification
+        </pre>
+
+            <p>
+                The pipeline should not itself become responsible for DOM
+                construction.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>13. Columns Folder</h2>
+
+            <pre>
+table/
+ |
+ +-- columns/
+      |
+      +-- index.js
+      +-- resolveColumns.js
+      +-- createColumn.js
+        </pre>
+
+            <p>
+                Column-specific logic can be kept together.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>14. Column Configuration</h2>
+
+            <pre>
+columns/
+ |
+ +-- name.js
+ +-- age.js
+ +-- city.js
+        </pre>
+
+            <p>
+                Alternatively, columns can be supplied as runtime configuration
+                rather than individual files.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>15. Renderers Folder</h2>
+
+            <pre>
+table/
+ |
+ +-- renderers/
+      |
+      +-- index.js
+      +-- text.js
+      +-- number.js
+      +-- date.js
+      +-- currency.js
+      +-- actions.js
+        </pre>
+
+            <p>
+                Renderer code describes how individual values become cell content
+                specifications.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>16. Renderer Independence</h2>
+
+            <pre>
+Renderer
+ |
+ +-- receives value/context
+ |
+ +-- produces cell specification
+ |
+ X-- does not build the complete Table
+        </pre>
+
+            <p>
+                This keeps renderers focused on cell-level composition.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>17. Component Entry Point</h2>
+
+            <pre>
+table/
+ |
+ +-- index.js
+        </pre>
+
+            <p>
+                The entry point can expose the component construction API.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>18. Conceptual Entry Point</h2>
+
+            <pre>
+import godSpec from "./god.json";
+
+const createTable = options => {
+
+    const tasks =
+        createPipeline(options);
+
+    const finalSpec =
+        runPipeline({
+            inSpec: godSpec,
+            inTasks: tasks
+        });
+
+    return buildDom({
+        inSpec: finalSpec
+    });
+
+};
+
+export {
+    createTable
+};
+        </pre>
+
+            <p>
+                The exact implementation can differ; this illustrates the
+                separation between specification, pipeline and DOM construction.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>19. DOM Builder Should Usually Be Outside the Component</h2>
+
+            <p>
+                The recursive DOM builder is generic infrastructure rather than
+                Table-specific functionality.
+            </p>
+
+            <pre>
+src/
+ |
+ +-- core/
+ |    |
+ |    +-- dom/
+ |    |    |
+ |    |    +-- recursiveDomBuilder.js
+ |    |    +-- domElementBuilder.js
+ |    |
+ |    +-- pipeline/
+ |
+ +-- components/
+      |
+      +-- table/
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>20. Generic Infrastructure</h2>
+
+            <pre>
+core/
+ |
+ +-- dom/
+ |
+ +-- pipeline/
+ |
+ +-- specification/
+        </pre>
+
+            <p>
+                These pieces can potentially be reused by multiple components.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>21. Component-Specific Infrastructure</h2>
+
+            <pre>
+components/
+ |
+ +-- table/
+ |
+ +-- form/
+ |
+ +-- card/
+        </pre>
+
+            <p>
+                Each component can contain its own specification and transformation
+                resources.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>22. Complete Example</h2>
+
+            <pre>
+src/
+ |
+ +-- core/
+ |    |
+ |    +-- dom/
+ |    |    |
+ |    |    +-- recursiveDomBuilder.js
+ |    |    +-- domElementBuilder.js
+ |    |
+ |    +-- pipeline/
+ |         |
+ |         +-- runPipeline.js
+ |
+ +-- components/
+      |
+      +-- table/
+           |
+           +-- god.json
+           |
+           +-- themes/
+           |    |
+           |    +-- index.js
+           |    +-- dark.json
+           |    +-- light.json
+           |
+           +-- columns/
+           |    |
+           |    +-- index.js
+           |    +-- resolveColumns.js
+           |
+           +-- renderers/
+           |    |
+           |    +-- index.js
+           |    +-- text.js
+           |    +-- number.js
+           |
+           +-- pipeline/
+           |    |
+           |    +-- createPipeline.js
+           |    +-- headerTask.js
+           |    +-- dataTask.js
+           |    +-- themeTask.js
+           |
+           +-- index.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>23. Component Folder as a Boundary</h2>
+
+            <p>
+                The Table directory should contain information that is primarily
+                concerned with the Table.
+            </p>
+
+            <pre>
+table/
+ |
+ +-- structure
+ +-- presentation
+ +-- transformation
+ +-- rendering
+        </pre>
+
+            <p>
+                Generic infrastructure can remain outside.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>24. Table Folder Responsibilities</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Folder/File</th>
+                        <th>Responsibility</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td><code>god.json</code></td>
+                        <td>Base structural specification.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>themes/</code></td>
+                        <td>Table presentation specifications.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>columns/</code></td>
+                        <td>Column resolution and definitions.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>renderers/</code></td>
+                        <td>Cell-level rendering.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>pipeline/</code></td>
+                        <td>Table transformation composition.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>index.js</code></td>
+                        <td>Table component entry point.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+        </section>
+
+        <section>
+
+            <h2>25. The God JSON Is Not the Whole Component</h2>
+
+            <p>
+                The God JSON is the structural foundation.
+            </p>
+
+            <pre>
+God JSON
+   |
+   +-- structure
+        </pre>
+
+            <p>
+                The complete component is produced by combining that structure
+                with the other component resources.
+            </p>
+
+            <pre>
+God JSON
+   +
+Columns
+   +
+Data
+   +
+Renderers
+   +
+Theme
+   |
+   v
+Component
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>26. Component Pair</h2>
+
+            <p>
+                At the simplest level, the component can be viewed as a pair:
+            </p>
+
+            <pre>
+Component
+    =
+God JSON
+    +
+Theme JSON
+        </pre>
+
+            <p>
+                Runtime transformations can then enrich that pair with dynamic
+                data and behavior.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>27. Component Pair With Runtime Data</h2>
+
+            <pre>
+God JSON
+    +
+Theme JSON
+    +
+Runtime Data
+    +
+Columns
+        |
+        v
+Table Specification
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>28. Component Pair With Pipeline</h2>
+
+            <pre>
+God JSON
+    +
+Theme JSON
+    +
+Pipeline
+        |
+        v
+Transformed Specification
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>29. Form Folder</h2>
+
+            <p>
+                The same organizational model can be applied to a Form.
+            </p>
+
+            <pre>
+form/
+ |
+ +-- god.json
+ |
+ +-- themes/
+ |    |
+ |    +-- dark.json
+ |    +-- light.json
+ |
+ +-- fields/
+ |
+ +-- pipeline/
+ |
+ +-- index.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>30. Table and Form Side by Side</h2>
+
+            <pre>
+components/
+ |
+ +-- table/
+ |    |
+ |    +-- god.json
+ |    +-- themes/
+ |    +-- columns/
+ |    +-- renderers/
+ |    +-- pipeline/
+ |    +-- index.js
+ |
+ +-- form/
+      |
+      +-- god.json
+      +-- themes/
+      +-- fields/
+      +-- pipeline/
+      +-- index.js
+        </pre>
+
+            <p>
+                Both components can use the same generic DOM and pipeline
+                infrastructure.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>31. Why Component-Local Themes?</h2>
+
+            <p>
+                A Theme specification often depends on the structure it styles.
+            </p>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ |
+ +-- themes/
+        </pre>
+
+            <p>
+                Keeping the Theme beside the God Spec makes that relationship
+                explicit.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>32. Theme Depends on Structure</h2>
+
+            <pre>
+God Spec
+   |
+   +-- wrapper
+   +-- toolbar
+   +-- table
+   +-- thead
+   +-- tbody
+        |
+        v
+Theme
+   |
+   +-- wrapper styling
+   +-- toolbar styling
+   +-- table styling
+   +-- header styling
+   +-- body styling
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>33. One God Spec, Multiple Themes</h2>
+
+            <pre>
+                 god.json
+                    |
+        +-----------+-----------+
+        |           |           |
+        v           v           v
+     dark.json   light.json  custom.json
+        |           |           |
+        v           v           v
+     Table A     Table B     Table C
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>34. Theme Selection at Runtime</h2>
+
+            <pre>
+createTable({
+
+    theme: "dark"
+
+});
+        </pre>
+
+            <p>
+                The Theme resolver can select the appropriate Theme specification.
+            </p>
+
+            <pre>
+"dark"
+  |
+  v
+themes/dark.json
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>35. Theme Resolver</h2>
+
+            <pre>
+const resolveTheme = ({
+    inTheme
+}) => {
+
+    return themes[inTheme];
+
+};
+        </pre>
+
+            <p>
+                The resolver's exact implementation depends on the project's
+                module and configuration strategy.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>36. Folder Structure and Ownership</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json          <-- structure
+ |
+ +-- themes/           <-- presentation
+ |
+ +-- columns/          <-- field mapping
+ |
+ +-- renderers/        <-- cell representation
+ |
+ +-- pipeline/         <-- transformations
+ |
+ +-- index.js          <-- public entry
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>37. Avoid a Generic Dump Folder</h2>
+
+            <p>
+                Component resources should have recognizable responsibilities.
+            </p>
+
+            <pre>
+table/
+ |
+ +-- stuff/
+      |
+      +-- file1.js
+      +-- file2.js
+      +-- file3.js
+      +-- ...
+        </pre>
+
+            <p>
+                A structure based on responsibility is easier to navigate.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>38. Organize by Concern</h2>
+
+            <pre>
+table/
+ |
+ +-- structure
+ +-- themes
+ +-- columns
+ +-- renderers
+ +-- pipeline
+        </pre>
+
+            <p>
+                Each directory answers a specific architectural question.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>39. Where Is the Structure?</h2>
+
+            <pre>
+god.json
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>40. Where Are the Themes?</h2>
+
+            <pre>
+themes/
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>41. Where Is the Data Logic?</h2>
+
+            <pre>
+pipeline/
+ |
+ +-- dataTask.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>42. Where Are the Cell Renderers?</h2>
+
+            <pre>
+renderers/
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>43. Where Are the Columns?</h2>
+
+            <pre>
+columns/
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>44. Where Is the Pipeline?</h2>
+
+            <pre>
+pipeline/
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>45. Where Is the Generic DOM Builder?</h2>
+
+            <pre>
+core/
+ |
+ +-- dom/
+      |
+      +-- recursiveDomBuilder.js
+      +-- domElementBuilder.js
+        </pre>
+
+            <p>
+                It belongs to the generic rendering infrastructure rather than
+                being tied specifically to Table.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>46. Component Dependency Direction</h2>
+
+            <pre>
+Table Component
+      |
+      v
+Table Pipeline
+      |
+      v
+Final Specification
+      |
+      v
+Generic DOM Builder
+        </pre>
+
+            <p>
+                The Table-specific layer produces the specification consumed by
+                the generic layer.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>47. Generic Layer Should Not Know Table Rules</h2>
+
+            <pre>
+Generic DOM Builder
+
+knows:
+    tagName
+    attributes
+    children
+
+does not need to know:
+    columns
+    rows
+    themes
+    sorting
+    filtering
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>48. Table Layer Knows Table Rules</h2>
+
+            <pre>
+Table Layer
+
+knows:
+    columns
+    rows
+    header
+    body
+    renderers
+    table themes
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>49. This Creates a Clean Boundary</h2>
+
+            <pre>
+TABLE-SPECIFIC
+ |
+ | Final Specification
+ v
+GENERIC
+ |
+ | DOM
+ v
+BROWSER
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>50. Documentation Can Live Beside the Component</h2>
+
+            <pre>
+table/
+ |
+ +-- docs/
+      |
+      +-- overview.html
+      +-- lifecycle.html
+      +-- columns.html
+      +-- themes.html
+        </pre>
+
+            <p>
+                Component-specific documentation can therefore remain close to
+                the implementation.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>51. Documentation Does Not Need to Be Runtime Code</h2>
+
+            <pre>
+table/
+ |
+ +-- docs/
+ |
+ +-- god.json
+ |
+ +-- pipeline/
+ |
+ +-- themes/
+        </pre>
+
+            <p>
+                Documentation and implementation can coexist without being part
+                of the runtime transformation pipeline.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>52. Tests Can Also Be Component-Local</h2>
+
+            <pre>
+table/
+ |
+ +-- tests/
+      |
+      +-- godSpec.test.js
+      +-- columns.test.js
+      +-- data.test.js
+      +-- theme.test.js
+      +-- pipeline.test.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>53. Complete Development Structure</h2>
+
+            <pre>
+components/
+ |
+ +-- table/
+      |
+      +-- god.json
+      |
+      +-- themes/
+      |    |
+      |    +-- index.js
+      |    +-- dark.json
+      |    +-- light.json
+      |
+      +-- columns/
+      |    |
+      |    +-- index.js
+      |    +-- resolveColumns.js
+      |
+      +-- renderers/
+      |    |
+      |    +-- index.js
+      |    +-- text.js
+      |    +-- number.js
+      |    +-- date.js
+      |
+      +-- pipeline/
+      |    |
+      |    +-- createPipeline.js
+      |    +-- headerTask.js
+      |    +-- dataTask.js
+      |    +-- themeTask.js
+      |
+      +-- tests/
+      |
+      +-- docs/
+      |
+      +-- index.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>54. Minimal Development Structure</h2>
+
+            <p>
+                The project does not need to start with every directory.
+            </p>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ |
+ +-- themes/
+ |
+ +-- index.js
+        </pre>
+
+            <p>
+                More folders can be introduced when the corresponding
+                responsibility becomes large enough to justify them.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>55. Growth From Minimal to Full</h2>
+
+            <pre>
+Initial:
+
+table/
+ |
+ +-- god.json
+ +-- themes/
+ +-- index.js
+
+
+Later:
+
+table/
+ |
+ +-- god.json
+ +-- themes/
+ +-- columns/
+ +-- renderers/
+ +-- pipeline/
+ +-- tests/
+ +-- docs/
+ +-- index.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>56. Avoid Premature Complexity</h2>
+
+            <p>
+                Folder structure should reflect actual responsibilities rather
+                than creating directories merely because they might be needed
+                later.
+            </p>
+
+            <pre>
+Need a new responsibility
+        |
+        v
+Create its directory
+        |
+        v
+Move related implementation there
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>57. Component Folder as a Self-Contained Unit</h2>
+
+            <pre>
+table/
+ |
+ +-- structure
+ +-- presentation
+ +-- transformation
+ +-- rendering
+ +-- tests
+ +-- docs
+        </pre>
+
+            <p>
+                A developer should be able to understand most Table-specific
+                behavior by entering this folder.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>58. Reusable Generic Infrastructure</h2>
+
+            <pre>
+core/
+ |
+ +-- specification/
+ +-- pipeline/
+ +-- dom/
+        </pre>
+
+            <p>
+                These facilities can be shared by Table, Form and other
+                specification-driven components.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>59. Multiple Components Sharing Core</h2>
+
+            <pre>
+                 CORE
+                  |
+        +---------+---------+
+        |         |         |
+        v         v         v
+      Table      Form      Card
+        |         |         |
+        v         v         v
+   Component-specific
+      pipelines
+        |
+        v
+ Generic DOM Builder
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>60. Folder Structure Mirrors Architecture</h2>
+
+            <p>
+                A good folder structure should make the architecture visible.
+            </p>
+
+            <pre>
+Folder                 Architecture
+
+god.json       ----->  Structure
+
+themes/        ----->  Presentation
+
+columns/       ----->  Column logic
+
+renderers/     ----->  Cell rendering
+
+pipeline/      ----->  Transformation
+
+core/dom/      ----->  DOM materialization
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>61. File Names Should Explain Responsibility</h2>
+
+            <pre>
+dataTask.js
+themeTask.js
+headerTask.js
+resolveColumns.js
+currency.js
+recursiveDomBuilder.js
+        </pre>
+
+            <p>
+                Names should make the responsibility apparent without requiring
+                the developer to open every file.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>62. Avoid Mixing Specification and DOM Logic</h2>
+
+            <p>
+                The specification layer should remain separate from the DOM
+                materialization layer.
+            </p>
+
+            <pre>
+Specification Layer
+
+god.json
+pipeline
+themes
+columns
+renderers
+
+
+DOM Layer
+
+recursiveDomBuilder
+domElementBuilder
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>63. Avoid Mixing Themes With Structure</h2>
+
+            <pre>
+god.json
+
+structure
+
+
+themes/dark.json
+
+presentation
+        </pre>
+
+            <p>
+                This makes the structural specification reusable across Themes.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>64. Avoid Putting Runtime Data in God JSON</h2>
+
+            <p>
+                Runtime rows should normally remain runtime inputs rather than
+                becoming part of the static structural specification.
+            </p>
+
+            <pre>
+god.json
+ |
+ +-- structure
+
+
+runtime
+ |
+ +-- rows
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>65. Runtime Data Enters Through Transformation</h2>
+
+            <pre>
+God Spec
+   +
+Rows
+   |
+   v
+Data Task
+   |
+   v
+Updated Specification
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>66. Theme Enters Through Transformation</h2>
+
+            <pre>
+God Spec
+   +
+Theme
+   |
+   v
+Theme Task
+   |
+   v
+Updated Specification
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>67. Columns Enter Through Transformation</h2>
+
+            <pre>
+God Spec
+   +
+Columns
+   |
+   v
+Header/Data Tasks
+   |
+   v
+Updated Specification
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>68. Folder Structure and Lifecycle</h2>
+
+            <pre>
+table/god.json
+      |
+      v
+table/columns/
+      |
+      v
+table/pipeline/
+      |
+      v
+table/themes/
+      |
+      v
+final specification
+      |
+      v
+core/dom/
+      |
+      v
+DOM
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>69. Folder Structure and Composition</h2>
+
+            <pre>
+                 table/
+                    |
+       +------------+------------+
+       |            |            |
+       v            v            v
+   god.json      columns/     themes/
+       |            |            |
+       +------------+------------+
+                    |
+                    v
+                pipeline/
+                    |
+                    v
+              Final Spec
+                    |
+                    v
+                core/dom/
+                    |
+                    v
+                   DOM
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>70. Folder Structure and the Component Pair</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ |
+ +-- themes/
+      |
+      +-- dark.json
+      +-- light.json
+        </pre>
+
+            <p>
+                This directly represents the idea of a component structure paired
+                with one or more presentation specifications.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>71. Table Folder as a Product Boundary</h2>
+
+            <pre>
+table/
+ |
+ +-- everything specifically required
+ |   to define and transform Table
+ |
+ +-- except generic infrastructure
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>72. Generic vs Component-Specific</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Generic</th>
+                        <th>Component-Specific</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>DOM builder</td>
+                        <td>God JSON</td>
+                    </tr>
+
+                    <tr>
+                        <td>Pipeline runner</td>
+                        <td>Table pipeline</td>
+                    </tr>
+
+                    <tr>
+                        <td>Specification utilities</td>
+                        <td>Table Themes</td>
+                    </tr>
+
+                    <tr>
+                        <td>Generic element builder</td>
+                        <td>Table columns</td>
+                    </tr>
+
+                    <tr>
+                        <td></td>
+                        <td>Table renderers</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+        </section>
+
+        <section>
+
+            <h2>73. Dependency Direction</h2>
+
+            <pre>
+Component-specific code
+        |
+        v
+Generic infrastructure
+        |
+        v
+Browser APIs
+        </pre>
+
+            <p>
+                The generic infrastructure should not need to understand the
+                business meaning of a Table.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>74. Component Entry Point as Facade</h2>
+
+            <pre>
+Application
+    |
+    v
+table/index.js
+    |
+    +-- load God Spec
+    +-- resolve configuration
+    +-- create tasks
+    +-- run pipeline
+    +-- build DOM
+    |
+    v
+Table
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>75. Public API</h2>
+
+            <p>
+                The internal folder structure does not need to become the public
+                API.
+            </p>
+
+            <pre>
+Application
+    |
+    v
+createTable(options)
+        |
+        v
+internal implementation
+        |
+        v
+DOM
+        </pre>
+
+            <p>
+                Internal files can therefore change without necessarily changing
+                the consumer-facing API.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>76. Internal Organization</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ +-- themes/
+ +-- columns/
+ +-- renderers/
+ +-- pipeline/
+ +-- index.js
+        </pre>
+
+            <p>
+                Consumers can simply use the component entry point.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>77. Component Folder and Documentation</h2>
+
+            <pre>
+table/
+ |
+ +-- docs/
+ |    |
+ |    +-- overview.html
+ |    +-- lifecycle.html
+ |    +-- themes.html
+ |    +-- pipeline.html
+ |
+ +-- implementation
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>78. Documentation Should Follow the Architecture</h2>
+
+            <pre>
+Architecture
+     |
+     +-- God Spec
+     +-- Themes
+     +-- Pipeline
+     +-- Columns
+     +-- Renderers
+     +-- DOM Builder
+        </pre>
+
+            <p>
+                Documentation becomes easier to navigate when it follows the
+                same boundaries as the implementation.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>79. Folder Structure Is Not the Architecture</h2>
+
+            <p>
+                The folders are only a physical representation of the conceptual
+                boundaries.
+            </p>
+
+            <pre>
+Architecture
+    |
+    v
+Responsibilities
+    |
+    v
+Folders / Files
+        </pre>
+
+            <p>
+                The responsibilities should be decided first; the directory
+                structure follows them.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>80. The Important Idea</h2>
+
+            <pre>
+ONE COMPONENT
+      |
+      +-- ONE STRUCTURAL SPEC
+      |
+      +-- ONE OR MORE THEMES
+      |
+      +-- COMPONENT-SPECIFIC TRANSFORMATIONS
+      |
+      +-- COMPONENT-SPECIFIC RENDERERS
+      |
+      +-- ONE ENTRY POINT
+      |
+      v
+   FINAL SPEC
+      |
+      v
+GENERIC DOM BUILDER
+      |
+      v
+      DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>81. Recommended Conceptual Structure</h2>
+
+            <pre>
+components/
+ |
+ +-- table/
+      |
+      +-- god.json
+      |
+      +-- themes/
+      |
+      +-- columns/
+      |
+      +-- renderers/
+      |
+      +-- pipeline/
+      |
+      +-- index.js
+        </pre>
+
+            <p>
+                This is a useful starting point for a specification-driven Table
+                component.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>82. Expanded Structure</h2>
+
+            <pre>
+components/
+ |
+ +-- table/
+      |
+      +-- god.json
+      |
+      +-- themes/
+      |    |
+      |    +-- index.js
+      |    +-- dark.json
+      |    +-- light.json
+      |
+      +-- columns/
+      |    |
+      |    +-- index.js
+      |    +-- resolveColumns.js
+      |
+      +-- renderers/
+      |    |
+      |    +-- index.js
+      |    +-- text.js
+      |    +-- number.js
+      |    +-- date.js
+      |
+      +-- pipeline/
+      |    |
+      |    +-- createPipeline.js
+      |    +-- headerTask.js
+      |    +-- dataTask.js
+      |    +-- themeTask.js
+      |
+      +-- index.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>83. Relationship Between Files</h2>
+
+            <pre>
+index.js
+   |
+   +-- god.json
+   |
+   +-- columns/
+   |
+   +-- themes/
+   |
+   +-- pipeline/
+   |
+   +-- renderers/
+        </pre>
+
+            <p>
+                The entry point coordinates these resources rather than
+                duplicating their responsibilities.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>84. Complete Construction Flow</h2>
+
+            <pre>
+table/index.js
+       |
+       v
+god.json
+       |
+       v
+columns/
+       |
+       v
+pipeline/
+       |
+       +-- header
+       +-- data
+       +-- renderers
+       |
+       v
+themes/
+       |
+       v
+Final Specification
+       |
+       v
+core/dom/
+       |
+       v
+DOM
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>85. Component Folder and Future Components</h2>
+
+            <pre>
+components/
+ |
+ +-- table/
+ |
+ +-- form/
+ |
+ +-- card/
+ |
+ +-- list/
+ |
+ +-- menu/
+        </pre>
+
+            <p>
+                Each component can follow the same high-level organization while
+                having its own domain-specific transformations.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>86. Common Pattern Across Components</h2>
+
+            <pre>
+component/
+ |
+ +-- god.json
+ |
+ +-- themes/
+ |
+ +-- pipeline/
+ |
+ +-- component-specific configuration
+ |
+ +-- index.js
+        </pre>
+
+            <p>
+                The exact subdirectories can differ according to the component.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>87. Table-Specific Pattern</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ +-- themes/
+ +-- columns/
+ +-- renderers/
+ +-- pipeline/
+ +-- index.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>88. Form-Specific Pattern</h2>
+
+            <pre>
+form/
+ |
+ +-- god.json
+ +-- themes/
+ +-- fields/
+ +-- renderers/
+ +-- pipeline/
+ +-- index.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>89. Same Architecture, Different Vocabulary</h2>
+
+            <pre>
+TABLE                 FORM
+
+columns               fields
+rows                  values
+cells                 controls
+header                form header
+body                  form body
+        </pre>
+
+            <p>
+                The underlying specification and transformation concepts can
+                remain common.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>90. Final Folder Model</h2>
+
+            <pre>
+project/
+ |
+ +-- core/
+ |    |
+ |    +-- specification/
+ |    |
+ |    +-- pipeline/
+ |    |
+ |    +-- dom/
+ |         |
+ |         +-- recursiveDomBuilder.js
+ |         +-- domElementBuilder.js
+ |
+ +-- components/
+      |
+      +-- table/
+      |    |
+      |    +-- god.json
+      |    +-- themes/
+      |    +-- columns/
+      |    +-- renderers/
+      |    +-- pipeline/
+      |    +-- tests/
+      |    +-- docs/
+      |    +-- index.js
+      |
+      +-- form/
+           |
+           +-- god.json
+           +-- themes/
+           +-- fields/
+           +-- pipeline/
+           +-- index.js
+        </pre>
+        </section>
+
+        <section>
+
+            <h2>91. Final Mental Model</h2>
+
+            <pre>
+                  COMPONENT FOLDER
+                         |
+          +--------------+--------------+
+          |              |              |
+          v              v              v
+       god.json       themes/       pipeline/
+          |              |              |
+          |              |              |
+          +--------------+--------------+
+                         |
+                         v
+                FINAL SPECIFICATION
+                         |
+                         v
+                  GENERIC DOM CORE
+                         |
+                         v
+                        DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The folder structure should make the architecture
+                        discoverable.
+                    </strong>
+                </p>
+
+                <p>
+                    For a Table, the God JSON is the structural foundation.
+                    Themes are kept as a related but separate presentation
+                    resource. Columns and renderers describe Table-specific
+                    behavior, while the pipeline composes those transformations.
+                </p>
+
+                <p>
+                    The generic recursive DOM builder remains outside the Table
+                    folder because it is not Table-specific. It receives the
+                    completed specification and materializes it into DOM.
+                </p>
+
+                <p>
+                    This gives the component a clean boundary: everything required
+                    to define and transform the Table stays together, while
+                    reusable infrastructure remains shared.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

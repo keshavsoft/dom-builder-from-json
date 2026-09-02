@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Table Renderer | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        .important {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Table Renderer</h1>
+
+        <div>
+            The orchestration layer responsible for producing the Table
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+            <a href="pipeline-tasks.html">Tasks</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+            <a href="dom-element-builder.html">Element Builder</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                The Table Renderer is the component-level orchestration layer.
+                It brings together the Table specification, configuration,
+                transformation pipeline, dynamic data, and DOM construction.
+            </p>
+
+            <pre>
+Table Configuration
+        |
+        v
+God Spec
+        |
+        v
+Theme Resolution
+        |
+        v
+Table Pipeline
+        |
+        v
+Resolved Table Spec
+        |
+        v
+Recursive DOM Builder
+        |
+        v
+Table DOM
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The renderer coordinates the process; it should not become
+                    the implementation of every individual Table feature.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. Renderer in the Overall Architecture</h2>
+
+            <pre>
+                 TABLE COMPONENT
+                       |
+                       v
+                  RENDERER
+                       |
+          +------------+------------+
+          |            |            |
+          v            v            v
+       Theme         Data        Columns
+          |            |            |
+          +------------+------------+
+                       |
+                       v
+                  God Spec
+                       |
+                       v
+                Pipeline Tasks
+                       |
+                       v
+                 Resolved Spec
+                       |
+                       v
+              Recursive Builder
+                       |
+                       v
+                      DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>3. Renderer Is an Orchestrator</h2>
+
+            <p>
+                The renderer should primarily coordinate the different layers.
+            </p>
+
+            <pre>
+Renderer
+   |
+   +-- resolve configuration
+   |
+   +-- obtain God Spec
+   |
+   +-- resolve Theme
+   |
+   +-- build Pipeline
+   |
+   +-- run Pipeline
+   |
+   +-- materialize Spec
+   |
+   +-- connect resulting DOM
+        </pre>
+
+            <p>
+                Each individual responsibility can remain in its own module.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Renderer Does Not Need to Know Every Transformation</h2>
+
+            <p>
+                The renderer does not need to contain the implementation of:
+            </p>
+
+            <pre>
+Theme transformation
+Header transformation
+Body transformation
+Footer transformation
+Serial transformation
+Column transformation
+        </pre>
+
+            <p>
+                Those responsibilities belong to pipeline tasks.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. Rendering Lifecycle</h2>
+
+            <pre>
+1. Component receives configuration
+        |
+        v
+2. Resolve Table specification
+        |
+        v
+3. Resolve Theme specification
+        |
+        v
+4. Build Table pipeline
+        |
+        v
+5. Run pipeline
+        |
+        v
+6. Obtain resolved specification
+        |
+        v
+7. Build DOM recursively
+        |
+        v
+8. Attach resulting DOM
+        |
+        v
+9. Apply dynamic behavior
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>6. Configuration</h2>
+
+            <p>
+                The renderer receives configuration describing how the Table
+                should behave.
+            </p>
+
+            <pre>
+{
+    inTheme: "dark",
+
+    inShowHeader: true,
+
+    inShowBody: true,
+
+    inShowFooter: false,
+
+    inShowSerial: true,
+
+    inCustomTasks: []
+}
+        </pre>
+
+            <p>
+                These values are used to construct the appropriate pipeline.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>7. God Spec</h2>
+
+            <p>
+                The renderer starts from the Table's structural specification.
+            </p>
+
+            <pre>
+God Spec
+    |
+    +-- wrapper
+    |
+    +-- toolbar
+    |
+    +-- table
+         |
+         +-- thead
+         |
+         +-- tbody
+         |
+         +-- tfoot
+        </pre>
+
+            <p>
+                This specification represents the Table structure before
+                component-specific transformations are applied.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>8. Theme Resolution</h2>
+
+            <p>
+                If the Table configuration specifies a theme, the renderer
+                resolves it into a Theme Spec.
+            </p>
+
+            <pre>
+inTheme
+    |
+    v
+resolveThemeSpec()
+    |
+    v
+inThemeSpec
+        </pre>
+
+            <p>
+                The renderer then supplies the resolved Theme Spec to the
+                pipeline builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Pipeline Construction</h2>
+
+            <p>
+                The renderer can construct the Table pipeline using the Table
+                configuration.
+            </p>
+
+            <pre>
+buildTablePipeline({
+    inThemeSpec,
+    inShowHeader,
+    inShowBody,
+    inShowFooter,
+    inShowSerial,
+    inCustomTasks
+})
+        </pre>
+
+            <p>
+                The result is an ordered list of transformation functions.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>10. Pipeline Execution</h2>
+
+            <p>
+                Once the pipeline has been constructed, it is executed against
+                the God Spec.
+            </p>
+
+            <pre>
+const resolvedSpec = runPipeline({
+    inSpec: godSpec,
+    inPipeline: pipeline
+});
+        </pre>
+
+            <p>
+                The result is the final specification that should be
+                materialized.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>11. Renderer Flow</h2>
+
+            <pre>
+godSpec
+   |
+   v
+resolveThemeSpec()
+   |
+   v
+themeSpec
+   |
+   v
+buildTablePipeline()
+   |
+   v
+pipeline[]
+   |
+   v
+runPipeline()
+   |
+   v
+resolvedSpec
+   |
+   v
+buildSpecElement()
+   |
+   v
+tableElement
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>12. The Renderer Should Not Build Every Element</h2>
+
+            <p>
+                The renderer should not contain a long sequence such as:
+            </p>
+
+            <pre>
+document.createElement("table")
+document.createElement("thead")
+document.createElement("tbody")
+document.createElement("tr")
+document.createElement("td")
+...
+        </pre>
+
+            <p>
+                That work belongs to the generic DOM-building layer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>13. Renderer vs DOM Builder</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Renderer</th>
+                        <th>DOM Builder</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Coordinates Table rendering.</td>
+                        <td>Creates DOM elements.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Resolves configuration.</td>
+                        <td>Processes element specification.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Builds pipeline.</td>
+                        <td>Applies attributes/properties.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runs transformations.</td>
+                        <td>Materializes the specification.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Handles Table-specific orchestration.</td>
+                        <td>Remains generic.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>14. Renderer vs Pipeline</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Renderer</th>
+                        <th>Pipeline</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Coordinates the process.</td>
+                        <td>Transforms the specification.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Chooses configuration.</td>
+                        <td>Executes configured tasks.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Connects layers.</td>
+                        <td>Produces a new specification state.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>15. Renderer vs Store</h2>
+
+            <p>
+                The renderer and Table Store should have different
+                responsibilities.
+            </p>
+
+            <pre>
+Store
+ |
+ +-- Table state
+ +-- Data
+ +-- Selection
+ +-- Sorting state
+ +-- Filtering state
+
+
+Renderer
+ |
+ +-- Turns current state/configuration into UI
+        </pre>
+
+            <p>
+                The renderer consumes the relevant state rather than becoming
+                the state-management layer itself.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>16. Data Flow</h2>
+
+            <pre>
+Application Data
+       |
+       v
+Table Store
+       |
+       v
+Renderer
+       |
+       v
+Row / Cell Specifications
+       |
+       v
+tbody Specification
+       |
+       v
+DOM
+        </pre>
+
+            <p>
+                Dynamic rows can therefore be generated as specification nodes
+                before they are materialized.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>17. Column Flow</h2>
+
+            <pre>
+Column Configuration
+       |
+       v
+Column Processing
+       |
+       v
+Header Specification
+       |
+       +
+       |
+       v
+Body Cell Specification
+       |
+       v
+DOM
+        </pre>
+
+            <p>
+                The same column definition can therefore influence both the
+                header and body representations.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>18. Serial Column</h2>
+
+            <p>
+                The serial column can be introduced as a transformation rather
+                than being permanently embedded in the original application
+                column configuration.
+            </p>
+
+            <pre>
+Original Columns
+       |
+       v
+Serial Task
+       |
+       v
+UI Column Structure
+       |
+       v
+Table Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>19. Dynamic Rows</h2>
+
+            <p>
+                The Table's structural specification can contain an empty body
+                region:
+            </p>
+
+            <pre>
+{
+    "tagName": "tbody",
+    "children": []
+}
+        </pre>
+
+            <p>
+                Row generation can then populate that region.
+            </p>
+
+            <pre>
+Data
+ |
+ v
+Row Specs
+ |
+ v
+tbody.children
+ |
+ v
+Resolved Table Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>20. Static Structure vs Dynamic Content</h2>
+
+            <pre>
+                TABLE
+                  |
+        +---------+---------+
+        |                   |
+     Static               Dynamic
+     Structure            Content
+        |                   |
+        |                   |
+     wrapper             rows
+     toolbar             cells
+     table               values
+     thead               controls
+     tbody
+     tfoot
+        </pre>
+
+            <p>
+                This separation allows the structural shell to remain stable
+                while data-driven content changes.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. Initial Render</h2>
+
+            <pre>
+Configuration
+      |
+      v
+God Spec
+      |
+      v
+Pipeline
+      |
+      v
+Resolved Spec
+      |
+      v
+DOM
+      |
+      v
+Initial Table
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>22. Data Refresh</h2>
+
+            <p>
+                A data refresh does not necessarily require rebuilding the
+                entire Table specification from scratch.
+            </p>
+
+            <pre>
+New Data
+   |
+   v
+Row Generation
+   |
+   v
+tbody
+   |
+   v
+Updated Table UI
+        </pre>
+
+            <p>
+                The exact update strategy depends on the component implementation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Filtering</h2>
+
+            <pre>
+Original Data
+     |
+     v
+Filter
+     |
+     v
+Filtered Data
+     |
+     v
+Rows
+     |
+     v
+tbody
+        </pre>
+
+            <p>
+                Filtering is a data/UI concern rather than a responsibility of
+                the generic DOM element builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. Sorting</h2>
+
+            <pre>
+Original Data
+     |
+     v
+Sort
+     |
+     v
+Sorted Data
+     |
+     v
+Rows
+     |
+     v
+tbody
+        </pre>
+
+            <p>
+                Sorting changes the ordering of displayed data.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. Theme Change</h2>
+
+            <p>
+                A theme change belongs to the specification transformation
+                layer.
+            </p>
+
+            <pre>
+Theme Name
+    |
+    v
+resolveThemeSpec()
+    |
+    v
+Theme Spec
+    |
+    v
+applyTheme()
+    |
+    v
+Resolved Spec
+    |
+    v
+DOM
+        </pre>
+
+            <p>
+                The renderer can coordinate this process without embedding the
+                theme's actual classes into its logic.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>26. Visibility Configuration</h2>
+
+            <p>
+                Header, body, and footer visibility can be represented as
+                configuration and translated into transformation tasks.
+            </p>
+
+            <pre>
+inShowHeader
+inShowBody
+inShowFooter
+        |
+        v
+Table Pipeline
+        |
+        v
+Resolved Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>27. Custom Tasks</h2>
+
+            <p>
+                The renderer can accept external transformation tasks.
+            </p>
+
+            <pre>
+Table Configuration
+       |
+       v
+inCustomTasks
+       |
+       v
+buildTablePipeline()
+       |
+       v
+pipeline[]
+        </pre>
+
+            <p>
+                This gives consumers an extension point without modifying the
+                generic runner.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>28. Example Custom Transformation</h2>
+
+            <pre>
+const addOptionsColumnTask = ({ inSpec }) => {
+
+    // Transform the Table specification.
+
+    return inSpec;
+};
+        </pre>
+
+            <p>
+                The task can be inserted into the Table pipeline.
+            </p>
+
+            <pre>
+inCustomTasks: [
+    addOptionsColumnTask
+]
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>29. Renderer Should Remain Thin</h2>
+
+            <p>
+                A healthy renderer coordinates rather than implementing every
+                feature itself.
+            </p>
+
+            <pre>
+Renderer
+ |
+ +-- resolve
+ |
+ +-- assemble
+ |
+ +-- execute
+ |
+ +-- materialize
+ |
+ +-- connect
+        </pre>
+
+            <p>
+                Feature-specific logic should live in the appropriate module.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>30. Feature Ownership</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Natural Owner</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Theme lookup</td>
+                        <td>Theme resolver</td>
+                    </tr>
+
+                    <tr>
+                        <td>Theme classes</td>
+                        <td>Theme transformation</td>
+                    </tr>
+
+                    <tr>
+                        <td>Header visibility</td>
+                        <td>Header task</td>
+                    </tr>
+
+                    <tr>
+                        <td>Body visibility</td>
+                        <td>Body task</td>
+                    </tr>
+
+                    <tr>
+                        <td>Footer visibility</td>
+                        <td>Footer task</td>
+                    </tr>
+
+                    <tr>
+                        <td>Serial column</td>
+                        <td>Serial task</td>
+                    </tr>
+
+                    <tr>
+                        <td>Data state</td>
+                        <td>Store / data layer</td>
+                    </tr>
+
+                    <tr>
+                        <td>Column definitions</td>
+                        <td>Column layer</td>
+                    </tr>
+
+                    <tr>
+                        <td>DOM recursion</td>
+                        <td>Recursive DOM builder</td>
+                    </tr>
+
+                    <tr>
+                        <td>Individual DOM element creation</td>
+                        <td>DOM Element Builder</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>31. Renderer as Coordinator</h2>
+
+            <pre>
+                 RENDERER
+                    |
+       +------------+------------+
+       |            |            |
+       v            v            v
+    Theme         Store       Columns
+       |            |            |
+       +------------+------------+
+                    |
+                    v
+                 Pipeline
+                    |
+                    v
+              Resolved Spec
+                    |
+                    v
+              DOM Builder
+                    |
+                    v
+                   DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>32. Initial Construction</h2>
+
+            <p>
+                A complete initial rendering can conceptually be represented as:
+            </p>
+
+            <pre>
+const themeSpec =
+    resolveThemeSpec({
+        inTheme,
+        inThemeName,
+        inThemeSpec
+    });
+
+const pipeline =
+    buildTablePipeline({
+        inThemeSpec: themeSpec,
+        inShowHeader,
+        inShowBody,
+        inShowFooter,
+        inShowSerial,
+        inCustomTasks
+    });
+
+const resolvedSpec =
+    runPipeline({
+        inSpec: godSpec,
+        inPipeline: pipeline
+    });
+
+const tableElement =
+    buildSpecElement({
+        inSpec: resolvedSpec
+    });
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>33. The Renderer Does Not Need to Know the Recursive Depth</h2>
+
+            <p>
+                The God Spec may become very deeply nested.
+            </p>
+
+            <pre>
+Renderer
+    |
+    v
+Resolved Spec
+    |
+    v
+Recursive Builder
+        |
+        +-- depth 1
+        +-- depth 2
+        +-- depth 3
+        +-- depth 4
+        +-- depth N
+        </pre>
+
+            <p>
+                The renderer simply passes the specification to the recursive
+                builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>34. Renderer Does Not Need to Know Every DOM Element</h2>
+
+            <p>
+                The renderer does not need to manually create:
+            </p>
+
+            <pre>
+div
+span
+input
+button
+table
+thead
+tbody
+tr
+th
+td
+tfoot
+        </pre>
+
+            <p>
+                Those details are represented by the specification and handled
+                by the generic DOM construction layer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>35. Renderer and Component Lifecycle</h2>
+
+            <pre>
+Component Created
+       |
+       v
+Configuration Available
+       |
+       v
+Render
+       |
+       v
+DOM Created
+       |
+       v
+Events Connected
+       |
+       v
+Data Available
+       |
+       v
+Dynamic UI
+        </pre>
+
+            <p>
+                The exact lifecycle can vary according to the component
+                implementation, but the renderer provides the central
+                coordination point.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>36. Rendering and Events</h2>
+
+            <p>
+                Event definitions can be included in specifications or attached
+                by a separate event-binding layer, depending on the component's
+                design.
+            </p>
+
+            <pre>
+Resolved Spec
+      |
+      v
+DOM Creation
+      |
+      v
+Event Binding
+      |
+      v
+Interactive Table
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>37. Rendering and Store State</h2>
+
+            <pre>
+Store State
+    |
+    +-- data
+    +-- filters
+    +-- sorting
+    +-- selection
+    |
+    v
+Renderer
+    |
+    v
+UI
+        </pre>
+
+            <p>
+                This keeps state management separate from DOM materialization.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>38. Renderer and Re-rendering</h2>
+
+            <p>
+                A renderer may be called multiple times during the lifetime of
+                a component.
+            </p>
+
+            <pre>
+State Change
+    |
+    v
+Render / Update
+    |
+    v
+Specification
+    |
+    v
+DOM
+        </pre>
+
+            <p>
+                Whether the implementation rebuilds the entire tree or updates
+                selected regions is a separate optimization decision.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>39. Specification-First Rendering</h2>
+
+            <p>
+                The key rendering sequence is:
+            </p>
+
+            <pre>
+Requirements
+     |
+     v
+Specification
+     |
+     v
+Transformation
+     |
+     v
+Resolved Specification
+     |
+     v
+DOM
+        </pre>
+
+            <p>
+                This prevents application requirements from becoming tightly
+                coupled to low-level DOM operations.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>40. Renderer and Themes</h2>
+
+            <p>
+                The renderer selects or receives the Theme Spec.
+                The theme transformation applies it.
+                The DOM builder materializes the result.
+            </p>
+
+            <pre>
+Renderer
+   |
+   v
+Theme Resolver
+   |
+   v
+Theme Task
+   |
+   v
+Resolved Spec
+   |
+   v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>41. Renderer and Columns</h2>
+
+            <p>
+                Columns should be treated as a Table concern rather than a
+                generic DOM concern.
+            </p>
+
+            <pre>
+Columns
+   |
+   v
+Table Transformation
+   |
+   v
+Table Spec
+   |
+   v
+Generic DOM Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>42. Renderer and Rows</h2>
+
+            <pre>
+Data
+ |
+ v
+Row Creation
+ |
+ v
+tbody Specification
+ |
+ v
+Resolved Table Specification
+ |
+ v
+DOM
+        </pre>
+
+            <p>
+                Rows are therefore another example of dynamic specification
+                generation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>43. Renderer and Customization</h2>
+
+            <p>
+                The renderer can expose configuration without exposing the
+                internals of the generic DOM system.
+            </p>
+
+            <pre>
+Consumer
+   |
+   +-- theme
+   +-- visibility
+   +-- columns
+   +-- custom tasks
+   |
+   v
+Table Renderer
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>44. Renderer as the Table Boundary</h2>
+
+            <p>
+                The renderer is a useful boundary between the Table component
+                and the generic infrastructure.
+            </p>
+
+            <pre>
+              TABLE COMPONENT
+                     |
+                     v
+                 RENDERER
+                     |
+                     v
+        GENERIC SPECIFICATION ENGINE
+                     |
+                     v
+                    DOM
+        </pre>
+
+            <p>
+                Table-specific concerns remain above the generic infrastructure.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>45. Recommended Responsibility Boundary</h2>
+
+            <pre>
+Table Renderer
+    |
+    +-- What should be rendered?
+    |
+    +-- Which configuration applies?
+    |
+    +-- Which pipeline should run?
+    |
+    v
+Pipeline
+    |
+    +-- How should the specification change?
+    |
+    v
+DOM Builder
+    |
+    +-- How should the final specification become DOM?
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>46. Complete Table Rendering Architecture</h2>
+
+            <pre>
+                         TABLE
+                           |
+                           v
+                       RENDERER
+                           |
+          +----------------+----------------+
+          |                |                |
+          v                v                v
+        STORE           COLUMNS          THEME
+          |                |                |
+          +----------------+----------------+
+                           |
+                           v
+                      GOD SPEC
+                           |
+                           v
+                  TABLE PIPELINE
+                           |
+          +----------------+----------------+
+          |                |                |
+          v                v                v
+        Theme          Structure          Custom
+        Tasks             Tasks            Tasks
+                           |
+                           v
+                    RESOLVED SPEC
+                           |
+                           v
+                 RECURSIVE DOM BUILDER
+                           |
+                           v
+                  DOM ELEMENT BUILDER
+                           |
+                           v
+                         DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>47. The Renderer Should Stay Understandable</h2>
+
+            <p>
+                A developer should be able to look at the renderer and quickly
+                understand the high-level flow:
+            </p>
+
+            <pre>
+configuration
+     |
+     v
+spec
+     |
+     v
+pipeline
+     |
+     v
+resolved spec
+     |
+     v
+DOM
+        </pre>
+
+            <p>
+                Detailed behavior should be discoverable in the corresponding
+                task, store, theme, column, or DOM-builder module.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>48. Final Mental Model</h2>
+
+            <pre>
+                 TABLE RENDERER
+                        |
+                        v
+                "Prepare the UI"
+                        |
+                        v
+                  GOD SPEC
+                        |
+                        v
+              "Transform the UI"
+                        |
+                        v
+                   PIPELINE
+                        |
+                        v
+                RESOLVED SPEC
+                        |
+                        v
+              "Build the UI"
+                        |
+                        v
+             RECURSIVE DOM BUILDER
+                        |
+                        v
+                       DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The Table Renderer is the orchestrator between Table
+                        configuration and the generic specification-to-DOM
+                        infrastructure.
+                    </strong>
+                </p>
+
+                <p>
+                    Its strength comes from keeping Table-specific decisions,
+                    specification transformations, and generic DOM construction
+                    in separate layers.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

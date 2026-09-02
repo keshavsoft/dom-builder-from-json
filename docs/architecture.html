@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Architecture | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        .important {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Architecture</h1>
+
+        <div>
+            ks-table-builder-from-json
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+            <a href="recursive-dom-builder.html">DOM Builder</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Architectural Overview</h2>
+
+            <p>
+                The project is based on a JSON-driven rendering model.
+                Instead of directly constructing the complete DOM tree inside
+                the component renderer, the UI is first described as a
+                declarative specification.
+            </p>
+
+            <pre>
+Application
+     |
+     v
+God JSON / Base Specification
+     |
+     v
+Theme Resolution
+     |
+     v
+Transformation Pipeline
+     |
+     +---- Theme
+     +---- Header
+     +---- Body
+     +---- Footer
+     +---- Serial
+     +---- Custom Tasks
+     |
+     v
+Resolved JSON Specification
+     |
+     v
+buildSpecElement()
+     |
+     v
+domElementBuilder()
+     |
+     v
+DOM
+        </pre>
+
+            <p>
+                This separation is the central architectural decision of the
+                project.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>2. The Four Major Stages</h2>
+
+            <p>
+                The complete rendering process can be understood as four stages.
+            </p>
+
+            <h3>Stage 1 — Description</h3>
+
+            <pre>
+God JSON
+    |
+    v
+UI Description
+        </pre>
+
+            <p>
+                The God JSON describes the structure of the UI.
+            </p>
+
+            <h3>Stage 2 — Transformation</h3>
+
+            <pre>
+UI Description
+    |
+    v
+Transformation Pipeline
+    |
+    v
+Modified Specification
+        </pre>
+
+            <p>
+                Themes and component-specific transformations operate here.
+            </p>
+
+            <h3>Stage 3 — Materialization</h3>
+
+            <pre>
+Resolved Specification
+    |
+    v
+Recursive Spec Builder
+        </pre>
+
+            <p>
+                The JSON specification is converted into real DOM nodes.
+            </p>
+
+            <h3>Stage 4 — DOM</h3>
+
+            <pre>
+Recursive Builder
+    |
+    v
+Actual Browser DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>3. JSON World vs DOM World</h2>
+
+            <p>
+                One of the most important boundaries in the project is the
+                separation between specification objects and browser DOM objects.
+            </p>
+
+            <pre>
+              JSON WORLD
+                  |
+                  |
+        specification changes
+                  |
+                  v
+          Resolved JSON Spec
+                  |
+                  |
+          materialization
+                  |
+                  v
+               DOM WORLD
+        </pre>
+
+            <p>
+                Theme application belongs to the JSON world.
+                Header and footer transformations belong to the JSON world.
+                Column transformations belong to the JSON world.
+            </p>
+
+            <p class="important">
+                DOM creation should happen only after these decisions have been
+                resolved.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. God Spec</h2>
+
+            <p>
+                The God Spec is the structural blueprint of the component.
+            </p>
+
+            <pre>
+God Spec
+    |
+    +-- wrapper
+    |
+    +-- toolbar
+    |
+    +-- table
+          |
+          +-- thead
+          |
+          +-- tbody
+          |
+          +-- tfoot
+        </pre>
+
+            <p>
+                It answers:
+            </p>
+
+            <div class="note">
+                <strong>What should exist?</strong>
+            </div>
+
+            <p>
+                It does not directly create DOM elements.
+                It is data describing the elements.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. Theme Spec</h2>
+
+            <p>
+                The Theme Spec is maintained separately from the structural
+                specification.
+            </p>
+
+            <pre>
+God Spec
+    =
+Structure
+
+Theme Spec
+    =
+Appearance
+        </pre>
+
+            <p>
+                The theme can provide class information for the corresponding
+                nodes of the specification.
+            </p>
+
+            <pre>
+God Spec
+     +
+Theme Spec
+     |
+     v
+Merged Spec
+        </pre>
+
+            <p>
+                The result is still JSON.
+                No DOM needs to exist at this point.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>6. Transformation Pipeline</h2>
+
+            <p>
+                Once the base specification exists, transformations are applied
+                sequentially.
+            </p>
+
+            <pre>
+Base Spec
+    |
+    v
+Theme Task
+    |
+    v
+Header Task
+    |
+    v
+Body Task
+    |
+    v
+Footer Task
+    |
+    v
+Serial Task
+    |
+    v
+Custom Tasks
+    |
+    v
+Resolved Spec
+        </pre>
+
+            <p>
+                Each transformation receives the result of the previous
+                transformation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>7. Pipeline Builder vs Pipeline Runner</h2>
+
+            <p>
+                These two responsibilities are deliberately separated.
+            </p>
+
+            <pre>
+buildTablePipeline()
+        |
+        | assembles
+        v
+pipeline[]
+        |
+        | executes
+        v
+runPipeline()
+        |
+        v
+resolvedSpec
+        </pre>
+
+            <h3>Pipeline Builder</h3>
+
+            <p>
+                Decides which transformation functions should participate.
+            </p>
+
+            <h3>Pipeline Runner</h3>
+
+            <p>
+                Executes those functions in sequence.
+            </p>
+
+            <p>
+                The runner does not need to know anything about Tables.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>8. Generic Pipeline Runner</h2>
+
+            <p>
+                Conceptually, the pipeline runner performs:
+            </p>
+
+            <pre>
+currentSpec
+      |
+      v
+task 1
+      |
+      v
+currentSpec
+      |
+      v
+task 2
+      |
+      v
+currentSpec
+      |
+      v
+task 3
+      |
+      v
+finalSpec
+        </pre>
+
+            <p>
+                Each task follows the basic contract:
+            </p>
+
+            <pre>
+Specification
+      |
+      v
+Transformation
+      |
+      v
+Specification
+        </pre>
+
+            <p>
+                This is why the same pipeline runner can be reused by Forms or
+                other future components.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Component-Specific Responsibilities</h2>
+
+            <p>
+                Component-specific code should remain outside the generic DOM
+                infrastructure.
+            </p>
+
+            <pre>
+Table
+ |
+ +-- Table Store
+ |
+ +-- Table Pipeline
+ |
+ +-- Table Tasks
+ |
+ +-- Table Renderer
+        </pre>
+
+            <p>
+                The generic infrastructure remains:
+            </p>
+
+            <pre>
+runPipeline()
+buildSpecElement()
+domElementBuilder()
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>10. Table Component Architecture</h2>
+
+            <pre>
+                  Table
+                    |
+          +---------+---------+
+          |                   |
+        Store              Renderer
+          |                   |
+          |             Skeleton Creation
+          |                   |
+          |             Event Binding
+          |                   |
+          |             User UI / Data
+          |                   |
+          +---------+---------+
+                    |
+                    v
+               Final Table
+        </pre>
+
+            <p>
+                The renderer orchestrates the component.
+                The store owns the relevant table state.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>11. Skeleton, Events and User UI</h2>
+
+            <p>
+                The component lifecycle can be viewed as three layers.
+            </p>
+
+            <pre>
+Layer 1
+Skeleton
+    |
+    v
+Static Component Structure
+
+Layer 2
+Events
+    |
+    v
+Component Behaviour
+
+Layer 3
+User UI / Data
+    |
+    v
+Dynamic Application Content
+        </pre>
+
+            <p>
+                This separation means that changing the data does not necessarily
+                require rebuilding the complete component.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>12. Static Shell and Dynamic Content</h2>
+
+            <p>
+                A Table may have a stable shell:
+            </p>
+
+            <pre>
+wrapper
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+      |
+      +-- tfoot
+        </pre>
+
+            <p>
+                The body can then be treated as a dynamic region.
+            </p>
+
+            <pre>
+Static Shell
+     |
+     +---- Dynamic tbody
+                |
+                +---- Row
+                +---- Row
+                +---- Row
+        </pre>
+
+            <p>
+                Search, sorting, and filtering can therefore update the dynamic
+                region without rebuilding the entire shell.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>13. Data Architecture</h2>
+
+            <p>
+                Source data and UI-derived data should remain conceptually
+                separate.
+            </p>
+
+            <pre>
+Original Data
+      |
+      +---- Filtering
+      |
+      +---- Sorting
+      |
+      +---- Serial Numbers
+      |
+      +---- Computed Values
+      |
+      +---- Selection State
+      |
+      v
+UI Data
+        </pre>
+
+            <p>
+                The original data remains the source of truth.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. Column Architecture</h2>
+
+            <p>
+                Columns can follow the same separation.
+            </p>
+
+            <pre>
+Columns
+ |
+ +-- Original Columns
+ |
+ +-- UI Columns
+ |
+ +-- Header Columns
+ |
+ +-- Body Columns
+ |
+ +-- Footer Columns
+        </pre>
+
+            <p>
+                This makes it possible to add presentation-specific columns
+                without changing the original application column definitions.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>15. UI Columns</h2>
+
+            <p>
+                A UI column is a column introduced because the UI requires it.
+            </p>
+
+            <pre>
+Original Columns
+       |
+       v
+Column Transformation
+       |
+       +---- Serial
+       |
+       +---- Options
+       |
+       +---- Actions
+       |
+       +---- Checkbox
+       |
+       v
+UI Columns
+        </pre>
+
+            <p>
+                The DOM builder does not need to know why a column exists.
+                It only receives the resulting specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>16. Recursive DOM Builder</h2>
+
+            <p>
+                <code>buildSpecElement()</code> is the bridge between the JSON
+                specification and actual DOM.
+            </p>
+
+            <pre>
+Specification
+      |
+      +---- Node?
+      |       |
+      |       +---- return Node
+      |
+      +---- Array?
+      |       |
+      |       +---- recursively build items
+      |
+      +---- Object?
+              |
+              +---- recursively build children
+              |
+              +---- create current element
+        </pre>
+
+            <p>
+                Because the input is a tree, recursion is a natural fit.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>17. DOM Element Builder</h2>
+
+            <p>
+                The lower-level DOM builder is responsible for creating one
+                element and applying its specification.
+            </p>
+
+            <pre>
+Spec Node
+   |
+   v
+document.createElement()
+   |
+   +---- textContent
+   |
+   +---- properties
+   |
+   +---- attributes
+   |
+   +---- classes
+   |
+   +---- events
+   |
+   +---- children
+   |
+   v
+DOM Node
+        </pre>
+
+            <p>
+                It should remain generic.
+            </p>
+
+            <p>
+                It should not contain Table-specific or Form-specific logic.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>18. Why the DOM Builder Is Generic</h2>
+
+            <p>
+                The same specification engine can create:
+            </p>
+
+            <pre>
+div
+table
+thead
+tbody
+tfoot
+form
+label
+input
+button
+section
+article
+        </pre>
+
+            <p>
+                There is no need to create separate DOM builders for each
+                component.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>19. Theme, Pipeline and DOM Builder</h2>
+
+            <p>
+                These three layers have very different responsibilities.
+            </p>
+
+            <pre>
+Theme
+  |
+  | modifies appearance
+  v
+
+Pipeline
+  |
+  | modifies specification
+  v
+
+Resolved Spec
+  |
+  | materializes
+  v
+
+DOM Builder
+        </pre>
+
+            <p>
+                Keeping these responsibilities separate prevents the rendering
+                engine from becoming tightly coupled to individual features.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>20. Adding a New Feature</h2>
+
+            <p>
+                When adding a feature, first ask whether the feature can be
+                represented as a specification transformation.
+            </p>
+
+            <pre>
+New Feature
+     |
+     v
+Can it modify the Spec?
+     |
+    Yes
+     |
+     v
+Create Transformation Task
+     |
+     v
+Add to Pipeline
+     |
+     v
+Resolved Spec
+     |
+     v
+Existing DOM Builder
+        </pre>
+
+            <p>
+                This is preferable to adding another special case to the DOM
+                creation layer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. Adding a New Component</h2>
+
+            <p>
+                A new component should reuse the generic foundation.
+            </p>
+
+            <pre>
+New Component
+      |
+      +---- God Spec
+      |
+      +---- Theme
+      |
+      +---- Component Pipeline
+      |
+      +---- Component Store
+      |
+      +---- Component Renderer
+                  |
+                  v
+          Shared DOM Builder
+        </pre>
+
+            <p>
+                The generic infrastructure should remain unchanged wherever
+                possible.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>22. Form as the Next Consumer</h2>
+
+            <p>
+                A Form can follow exactly the same architectural pattern.
+            </p>
+
+            <pre>
+Form God Spec
+      |
+      v
+Form Theme
+      |
+      v
+Form Pipeline
+      |
+      v
+Resolved Form Spec
+      |
+      v
+buildSpecElement()
+      |
+      v
+DOM
+        </pre>
+
+            <p>
+                If the Form can reuse the same recursive DOM builder and
+                pipeline runner, that demonstrates that the underlying
+                architecture is genuinely reusable.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. The Architecture in One Diagram</h2>
+
+            <pre>
+                         APPLICATION
+                              |
+                              v
+                    COMPONENT CONFIGURATION
+                              |
+                              v
+                         GOD JSON
+                              |
+                              v
+                       THEME RESOLUTION
+                              |
+                              v
+                    BUILD COMPONENT PIPELINE
+                              |
+                              v
+                       RUN PIPELINE
+                              |
+          +-------------------+-------------------+
+          |                   |                   |
+        THEME              DATA              COLUMNS
+          |                   |                   |
+          +-------------------+-------------------+
+                              |
+                              v
+                      RESOLVED JSON SPEC
+                              |
+                              v
+                    buildSpecElement()
+                              |
+                              v
+                   domElementBuilder()
+                              |
+                              v
+                            DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>24. Final Architectural Rule</h2>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The framework describes the UI, transforms the
+                        description, and only then creates the DOM.
+                    </strong>
+                </p>
+
+            </div>
+
+            <p>
+                This separation is what allows the Table architecture to become
+                a reusable UI rendering foundation rather than a collection of
+                Table-specific DOM creation routines.
+            </p>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

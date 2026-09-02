@@ -1,0 +1,2629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pipeline Execution | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Pipeline Execution</h1>
+
+        <div>
+            How the specification is passed through transformation middleware
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="theme-transformation.html">Theme Transformation</a>
+            <a href="data-transformation.html">Data Transformation</a>
+            <a href="columns-and-header.html">Columns and Header</a>
+            <a href="column-renderers.html">Column Renderers</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+            <a href="dom-element-builder.html">Element Builder</a>
+
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                The pipeline is the mechanism that takes the original God
+                Specification and passes it through a sequence of transformations
+                until a final specification is ready for DOM construction.
+            </p>
+
+            <pre>
+God Spec
+   |
+   v
+Transformation 1
+   |
+   v
+Transformation 2
+   |
+   v
+Transformation 3
+   |
+   v
+Transformation N
+   |
+   v
+Final Spec
+   |
+   v
+DOM Builder
+   |
+   v
+DOM
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The important idea is that every middleware operates on the
+                    specification and passes the resulting specification to the
+                    next stage.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. The Specification Is the Working Object</h2>
+
+            <p>
+                The pipeline does not need to construct a completely independent
+                representation at every stage.
+            </p>
+
+            <pre>
+God Spec
+   |
+   v
+working Spec
+   |
+   +-- columns added
+   +-- header generated
+   +-- body generated
+   +-- theme applied
+   +-- other transformations
+   |
+   v
+final Spec
+        </pre>
+
+            <p>
+                The specification is therefore the central object flowing
+                through the pipeline.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. Why a Pipeline?</h2>
+
+            <p>
+                A Table contains several different concerns:
+            </p>
+
+            <ul>
+                <li>structural definition</li>
+                <li>column resolution</li>
+                <li>header generation</li>
+                <li>data-to-row transformation</li>
+                <li>cell rendering</li>
+                <li>theme application</li>
+                <li>additional component behavior</li>
+                <li>DOM construction</li>
+            </ul>
+
+            <p>
+                Putting all of this into one function would make the component
+                difficult to maintain.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Without a Pipeline</h2>
+
+            <pre>
+buildTable()
+    |
+    +-- resolve columns
+    +-- create header
+    +-- create rows
+    +-- render cells
+    +-- apply theme
+    +-- create DOM
+    +-- handle everything else
+        </pre>
+
+            <p>
+                As the component grows, this function becomes a large collection
+                of unrelated responsibilities.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. With a Pipeline</h2>
+
+            <pre>
+buildTable()
+    |
+    +-- Column Task
+    |
+    +-- Header Task
+    |
+    +-- Data Task
+    |
+    +-- Theme Task
+    |
+    +-- Other Tasks
+    |
+    +-- DOM Builder
+        </pre>
+
+            <p>
+                Each stage can remain small and focused.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>6. Middleware Concept</h2>
+
+            <p>
+                A middleware can be thought of as:
+            </p>
+
+            <pre>
+Input Spec
+    |
+    v
+Middleware
+    |
+    v
+Output Spec
+        </pre>
+
+            <p>
+                The output then becomes the input to the next middleware.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>7. Basic Middleware Shape</h2>
+
+            <pre>
+const task = ({ ...configuration }) => {
+
+    return ({ inSpec }) => {
+
+        // transform inSpec
+
+        return inSpec;
+
+    };
+
+};
+        </pre>
+
+            <p>
+                The outer function can capture configuration, while the inner
+                function receives the current specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>8. Why Two Functions?</h2>
+
+            <p>
+                The two-level structure separates configuration from execution.
+            </p>
+
+            <pre>
+createTask(configuration)
+        |
+        v
+configuredTask
+        |
+        v
+execute(inSpec)
+        |
+        v
+result
+        </pre>
+
+            <p>
+                This makes the same task factory reusable with different
+                configurations.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>9. Example Theme Task</h2>
+
+            <pre>
+const createThemeTask = ({
+    inThemeSpec
+}) => {
+
+    return ({ inSpec }) => {
+
+        return applyTheme({
+            inSpec,
+            inThemeSpec
+        });
+
+    };
+
+};
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>10. Example Data Task</h2>
+
+            <pre>
+const createDataTask = ({
+    inRows,
+    inColumns
+}) => {
+
+    return ({ inSpec }) => {
+
+        return createBody({
+            inSpec,
+            inRows,
+            inColumns
+        });
+
+    };
+
+};
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Pipeline Array</h2>
+
+            <p>
+                Configured tasks can be collected into an ordered array.
+            </p>
+
+            <pre>
+const pipeline = [
+
+    createColumnsTask(...),
+
+    createHeaderTask(...),
+
+    createDataTask(...),
+
+    createThemeTask(...)
+
+];
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>12. Execution Order</h2>
+
+            <p>
+                The order in the pipeline is significant.
+            </p>
+
+            <pre>
+pipeline[0]
+    |
+    v
+pipeline[1]
+    |
+    v
+pipeline[2]
+    |
+    v
+pipeline[3]
+        </pre>
+
+            <p>
+                The output of one stage becomes the input of the next stage.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>13. Sequential Execution</h2>
+
+            <pre>
+let localSpec = godSpec;
+
+localSpec =
+    task1({
+        inSpec: localSpec
+    });
+
+localSpec =
+    task2({
+        inSpec: localSpec
+    });
+
+localSpec =
+    task3({
+        inSpec: localSpec
+    });
+
+localSpec =
+    task4({
+        inSpec: localSpec
+    });
+        </pre>
+
+            <p>
+                This is the fundamental pipeline behavior.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. Reduce-Based Execution</h2>
+
+            <p>
+                The same sequential behavior can be represented using
+                <code>reduce</code>.
+            </p>
+
+            <pre>
+const finalSpec =
+    pipeline.reduce(
+        (inSpec, task) => {
+
+            return task({
+                inSpec
+            });
+
+        },
+        godSpec
+    );
+        </pre>
+
+            <p>
+                The accumulator is the current specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>15. Reduce Mental Model</h2>
+
+            <pre>
+godSpec
+   |
+   v
+reduce
+   |
+   +-- task 1
+   |
+   +-- task 2
+   |
+   +-- task 3
+   |
+   +-- task 4
+   |
+   v
+finalSpec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>16. Middleware as Spec Mutation</h2>
+
+            <p>
+                A middleware can modify the current specification and return it.
+            </p>
+
+            <pre>
+const task = ({ inSpec }) => {
+
+    inSpec.children.push(...);
+
+    return inSpec;
+
+};
+        </pre>
+
+            <p>
+                In this model the same specification object can travel through
+                multiple stages.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>17. Middleware as Spec Replacement</h2>
+
+            <p>
+                A middleware can also create and return a new specification.
+            </p>
+
+            <pre>
+const task = ({ inSpec }) => {
+
+    return {
+        ...inSpec,
+
+        attributes: {
+            ...
+        }
+    };
+
+};
+        </pre>
+
+            <p>
+                The pipeline does not fundamentally require mutation or
+                replacement; the task contract determines which approach is used.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>18. Mutation vs Replacement</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Mutation</th>
+                        <th>Replacement</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Changes existing object.</td>
+                        <td>Returns another object.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Can be efficient.</td>
+                        <td>Can make state transitions clearer.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Must consider shared references.</td>
+                        <td>Can require more object creation.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>19. The Project's Middleware Idea</h2>
+
+            <p>
+                The important conceptual point is that the specification is
+                being transformed rather than directly rendered at every stage.
+            </p>
+
+            <pre>
+God JSON
+   |
+   v
+mutate / transform
+   |
+   v
+God JSON + changes
+   |
+   v
+mutate / transform
+   |
+   v
+God JSON + more changes
+        </pre>
+
+            <p>
+                The resulting object remains within the same specification model.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>20. Structural Middleware</h2>
+
+            <p>
+                Some middleware changes structure.
+            </p>
+
+            <pre>
+Columns
+   |
+   v
+Header Generation
+   |
+   v
+thead populated
+        </pre>
+
+            <p>
+                Another middleware can populate the body:
+            </p>
+
+            <pre>
+Data
+   |
+   v
+Body Generation
+   |
+   v
+tbody populated
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>21. Presentation Middleware</h2>
+
+            <p>
+                Theme transformation primarily changes presentation information.
+            </p>
+
+            <pre>
+Spec
+ |
+ v
+Theme
+ |
+ v
+class attributes
+ |
+ v
+Themed Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>22. Data Middleware</h2>
+
+            <pre>
+Rows
+ |
+ v
+Data Task
+ |
+ v
+tr specifications
+ |
+ v
+tbody
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>23. Column Middleware</h2>
+
+            <pre>
+Column Configuration
+ |
+ v
+Column Task
+ |
+ v
+Resolved Columns
+        </pre>
+
+            <p>
+                This can establish the column definitions used by both the header
+                and body stages.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. Header Middleware</h2>
+
+            <pre>
+Resolved Columns
+ |
+ v
+Header Task
+ |
+ v
+thead
+ |
+ v
+th + th + th + ...
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>25. Body Middleware</h2>
+
+            <pre>
+Resolved Columns
+       +
+Rows
+       |
+       v
+Body Task
+       |
+       v
+tbody
+       |
+       +-- tr
+       +-- tr
+       +-- tr
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>26. Theme Middleware</h2>
+
+            <pre>
+Resolved Spec
+      +
+Theme Spec
+      |
+      v
+Theme Task
+      |
+      v
+Themed Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>27. Complete Table Pipeline</h2>
+
+            <pre>
+             GOD SPEC
+                 |
+                 v
+        COLUMN RESOLUTION
+                 |
+                 v
+        HEADER GENERATION
+                 |
+                 v
+          DATA TRANSFORM
+                 |
+                 v
+        CELL RENDERING
+                 |
+                 v
+       THEME TRANSFORMATION
+                 |
+                 v
+          FINAL SPEC
+                 |
+                 v
+         DOM BUILDER
+                 |
+                 v
+                DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>28. Pipeline Configuration</h2>
+
+            <p>
+                A component can construct the pipeline from the options supplied
+                by the consumer.
+            </p>
+
+            <pre>
+const pipeline = [
+
+    createColumnTask({
+        columns
+    }),
+
+    createHeaderTask({
+        columns
+    }),
+
+    createDataTask({
+        rows,
+        columns
+    }),
+
+    createThemeTask({
+        theme
+    })
+
+];
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>29. Configuration vs Runtime Data</h2>
+
+            <p>
+                It is useful to distinguish configuration from the current
+                specification.
+            </p>
+
+            <pre>
+Configuration
+     |
+     +-- rows
+     +-- columns
+     +-- theme
+     |
+     v
+Task Factory
+     |
+     v
+Configured Task
+     |
+     v
+Current Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>30. Pipeline Context</h2>
+
+            <p>
+                As the system becomes more complex, tasks may need access to
+                shared information.
+            </p>
+
+            <pre>
+{
+    spec,
+    rows,
+    columns,
+    theme,
+    options
+}
+        </pre>
+
+            <p>
+                A shared context can prevent repeatedly passing the same
+                configuration into every task.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>31. Context-Based Pipeline</h2>
+
+            <pre>
+const context = {
+
+    inSpec: godSpec,
+
+    rows,
+
+    columns,
+
+    theme,
+
+    options
+
+};
+        </pre>
+
+            <p>
+                Each middleware can read the information it needs and update the
+                working specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>32. Spec as Context Property</h2>
+
+            <pre>
+context.inSpec
+        </pre>
+
+            <p>
+                A task can transform it:
+            </p>
+
+            <pre>
+context.inSpec =
+    transform(context.inSpec);
+        </pre>
+
+            <p>
+                This makes the changing specification explicit.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>33. Functional Pipeline</h2>
+
+            <p>
+                Another approach keeps the specification itself as the pipeline
+                value.
+            </p>
+
+            <pre>
+spec
+ |
+ v
+task(spec)
+ |
+ v
+spec
+ |
+ v
+task(spec)
+ |
+ v
+spec
+        </pre>
+
+            <p>
+                This is especially simple when tasks only need configuration
+                captured during task creation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>34. Pipeline Contract</h2>
+
+            <p>
+                A useful contract is:
+            </p>
+
+            <pre>
+Task:
+    specification
+        |
+        v
+    specification
+        </pre>
+
+            <p>
+                The input and output remain compatible with each other.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>35. Why Compatibility Matters</h2>
+
+            <p>
+                If Task A returns something Task B cannot understand, the
+                pipeline breaks.
+            </p>
+
+            <pre>
+Task A
+  |
+  v
+?????
+  |
+  v
+Task B
+        </pre>
+
+            <p>
+                Therefore middleware should preserve the specification contract.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>36. Specification Contract</h2>
+
+            <pre>
+{
+    tagName: "...",
+
+    attributes: {
+        ...
+    },
+
+    children: [
+        ...
+    ]
+}
+        </pre>
+
+            <p>
+                Individual transformations may add fields, but they should not
+                unexpectedly destroy fields required by downstream stages.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>37. Pipeline and Deep Trees</h2>
+
+            <p>
+                A middleware does not need to understand every node in the God
+                Spec.
+            </p>
+
+            <pre>
+Deep God Spec
+      |
+      v
+Targeted Transformation
+      |
+      v
+Same Deep Spec
+        </pre>
+
+            <p>
+                For example, the data task can locate and populate
+                <code>tbody</code> without rebuilding the toolbar or outer
+                wrapper.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>38. Targeted Transformation</h2>
+
+            <pre>
+God Spec
+ |
+ +-- toolbar       unchanged
+ |
+ +-- table         unchanged
+      |
+      +-- thead    unchanged
+      |
+      +-- tbody    transformed
+        </pre>
+
+            <p>
+                This is one of the major advantages of the middleware model.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>39. Pipeline Does Not Mean Multiple DOM Builds</h2>
+
+            <p>
+                The pipeline should not create DOM after every stage.
+            </p>
+
+            <pre>
+Wrong conceptual flow:
+
+Spec
+ |
+ v
+DOM
+ |
+ v
+DOM
+ |
+ v
+DOM
+        </pre>
+
+            <p>
+                Instead:
+            </p>
+
+            <pre>
+Spec
+ |
+ v
+Spec
+ |
+ v
+Spec
+ |
+ v
+Final Spec
+ |
+ v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>40. One DOM Materialization</h2>
+
+            <pre>
+All transformations
+        |
+        v
+Final Specification
+        |
+        v
+Recursive DOM Builder
+        |
+        v
+DOM
+        </pre>
+
+            <p>
+                This preserves the separation between specification processing
+                and DOM construction.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>41. Pipeline and Recursive Builder</h2>
+
+            <p>
+                The recursive builder is downstream of the pipeline.
+            </p>
+
+            <pre>
+Pipeline
+ |
+ v
+Resolved Spec
+ |
+ v
+Recursive Builder
+ |
+ v
+DOM
+        </pre>
+
+            <p>
+                The builder does not need to know how the specification was
+                produced.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>42. Pipeline and Themes</h2>
+
+            <pre>
+God Spec
+   |
+   v
+Data
+   |
+   v
+Table Spec
+   |
+   v
+Theme
+   |
+   v
+Themed Table Spec
+        </pre>
+
+            <p>
+                This lets the same structural Table specification work with
+                multiple themes.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>43. Multiple Theme Selection</h2>
+
+            <pre>
+theme = "dark"
+        |
+        v
+resolveThemeSpec()
+        |
+        v
+dark.json
+        |
+        v
+Theme Task
+        |
+        v
+Final Spec
+        </pre>
+
+            <p>
+                Changing the Theme can therefore change presentation without
+                requiring a different God Spec.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>44. Custom Theme Selection</h2>
+
+            <pre>
+theme = {
+    tagName: "div",
+
+    attributes: {
+        class: "my-table"
+    }
+}
+        |
+        v
+Theme Task
+        |
+        v
+Final Spec
+        </pre>
+
+            <p>
+                A supplied Theme object can participate in the same pipeline.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>45. Pipeline and Columns</h2>
+
+            <p>
+                Columns are another form of configuration that can drive
+                multiple stages.
+            </p>
+
+            <pre>
+Columns
+   |
+   +----------+
+   |          |
+   v          v
+Header      Body
+   |          |
+   v          v
+thead       tbody
+        </pre>
+
+            <p>
+                Keeping one resolved column collection avoids discrepancies
+                between the header and body.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>46. Pipeline and Dynamic Data</h2>
+
+            <pre>
+God Spec
+   |
+   v
+Rows arrive
+   |
+   v
+Data Task
+   |
+   v
+tbody generated
+   |
+   v
+Final Spec
+        </pre>
+
+            <p>
+                The God Spec itself does not need to contain the actual runtime
+                records.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>47. Pipeline and Empty Data</h2>
+
+            <pre>
+Rows = []
+
+        |
+
+        v
+
+Data Task
+
+        |
+
+        v
+
+tbody.children = []
+        </pre>
+
+            <p>
+                Additional middleware can decide whether an empty-state row
+                should be inserted.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>48. Pipeline and Filtering</h2>
+
+            <pre>
+Raw Rows
+   |
+   v
+Filter Task
+   |
+   v
+Visible Rows
+   |
+   v
+Data Task
+   |
+   v
+tbody
+        </pre>
+
+            <p>
+                Filtering can therefore be another independent stage.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>49. Pipeline and Sorting</h2>
+
+            <pre>
+Raw Rows
+   |
+   v
+Sort Task
+   |
+   v
+Ordered Rows
+   |
+   v
+Data Task
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>50. Pipeline and Pagination</h2>
+
+            <pre>
+All Rows
+   |
+   v
+Pagination Task
+   |
+   v
+Current Page
+   |
+   v
+Data Task
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>51. Pipeline Ordering Example</h2>
+
+            <pre>
+1. Resolve Columns
+2. Filter Rows
+3. Sort Rows
+4. Paginate Rows
+5. Generate Header
+6. Generate Body
+7. Apply Theme
+8. Build DOM
+        </pre>
+
+            <p>
+                The exact order is a component design decision, but dependent
+                transformations should occur after the information they require
+                has been established.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>52. Dependency Example</h2>
+
+            <p>
+                If the body task requires resolved columns:
+            </p>
+
+            <pre>
+Resolve Columns
+       |
+       v
+Body Task
+        </pre>
+
+            <p>
+                Reversing them would mean the body task does not yet have its
+                required column definition.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>53. Dependency Example: Theme</h2>
+
+            <p>
+                If the Theme mirrors the final component structure, applying it
+                before dynamically creating required nodes may result in those
+                new nodes having no corresponding Theme node.
+            </p>
+
+            <pre>
+Create Structure
+       |
+       v
+Apply Theme
+        </pre>
+
+            <p>
+                This is one reason pipeline ordering must be deliberate.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>54. Pipeline as a Transformation Chain</h2>
+
+            <pre>
+S0
+ |
+ | Task 1
+ v
+S1
+ |
+ | Task 2
+ v
+S2
+ |
+ | Task 3
+ v
+S3
+ |
+ | Task 4
+ v
+S4
+        </pre>
+
+            <p>
+                Every intermediate state is still a valid specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>55. Intermediate Specifications</h2>
+
+            <p>
+                Intermediate states are useful for debugging.
+            </p>
+
+            <pre>
+console.log("After columns", spec);
+
+console.log("After header", spec);
+
+console.log("After body", spec);
+
+console.log("After theme", spec);
+        </pre>
+
+            <p>
+                This makes it possible to identify exactly which stage produced
+                an unexpected result.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>56. Pipeline Debugging</h2>
+
+            <pre>
+Input
+ |
+ v
+Task 1  <-- inspect
+ |
+ v
+Task 2  <-- inspect
+ |
+ v
+Task 3  <-- inspect
+ |
+ v
+Task 4  <-- inspect
+ |
+ v
+Output
+        </pre>
+
+            <p>
+                A complex transformation can therefore be debugged stage by
+                stage rather than as one large operation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>57. Pipeline Logging</h2>
+
+            <pre>
+const runTask = (task, spec) => {
+
+    console.log(
+        "Before task:",
+        spec
+    );
+
+    const result = task({
+        inSpec: spec
+    });
+
+    console.log(
+        "After task:",
+        result
+    );
+
+    return result;
+};
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>58. Error Boundary</h2>
+
+            <p>
+                A pipeline runner can also provide a common location for error
+                handling.
+            </p>
+
+            <pre>
+try {
+
+    spec = task({
+        inSpec: spec
+    });
+
+} catch (error) {
+
+    // handle or propagate
+
+}
+        </pre>
+
+            <p>
+                Whether errors are swallowed or propagated should be an explicit
+                application policy.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>59. Task Independence</h2>
+
+            <p>
+                A good task should know only what it needs.
+            </p>
+
+            <pre>
+Theme Task
+   |
+   +-- Theme
+   +-- Spec
+
+Data Task
+   |
+   +-- Rows
+   +-- Columns
+   +-- Spec
+        </pre>
+
+            <p>
+                Neither task needs to understand the implementation of the other.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>60. Task Reuse</h2>
+
+            <p>
+                Once a task has a clear contract, it can be reused.
+            </p>
+
+            <pre>
+Theme Task
+   |
+   +-- Table
+   +-- Another component
+   +-- Another component
+        </pre>
+
+            <p>
+                Reuse depends on the specification contract being compatible.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>61. Component-Specific Tasks</h2>
+
+            <p>
+                Not every task needs to be globally generic.
+            </p>
+
+            <pre>
+table/
+ |
+ +-- table-data-task
+ +-- table-column-task
+ +-- table-header-task
+        </pre>
+
+            <p>
+                The generic infrastructure can still execute them.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>62. Generic Pipeline Runner</h2>
+
+            <pre>
+const runPipeline = ({
+    inSpec,
+    inTasks
+}) => {
+
+    return inTasks.reduce(
+        (spec, task) => {
+
+            return task({
+                inSpec: spec
+            });
+
+        },
+        inSpec
+    );
+
+};
+        </pre>
+
+            <p>
+                The runner does not need to understand Tables, Forms, Themes, or
+                Columns.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>63. Generic Runner Responsibility</h2>
+
+            <pre>
+Runner
+ |
+ +-- receive initial spec
+ |
+ +-- execute task
+ |
+ +-- receive returned spec
+ |
+ +-- execute next task
+ |
+ +-- return final spec
+        </pre>
+
+            <p>
+                Everything else belongs to the individual tasks.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>64. Generic Runner Does Not Build DOM</h2>
+
+            <pre>
+Pipeline Runner
+       |
+       v
+Final Spec
+       |
+       v
+DOM Builder
+        </pre>
+
+            <p>
+                Keeping the final DOM operation outside the pipeline runner
+                preserves the specification-first architecture.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>65. Pipeline and Recursive DOM Builder</h2>
+
+            <pre>
+              PIPELINE
+                  |
+                  v
+          FINAL SPECIFICATION
+                  |
+                  v
+        RECURSIVE DOM BUILDER
+                  |
+                  v
+                  DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>66. Pipeline and Forms</h2>
+
+            <p>
+                The same pipeline architecture can be reused for a Form.
+            </p>
+
+            <pre>
+Form God Spec
+     |
+     v
+Field Transformation
+     |
+     v
+Validation Transformation
+     |
+     v
+Theme Transformation
+     |
+     v
+Final Form Spec
+     |
+     v
+DOM
+        </pre>
+
+            <p>
+                The pipeline mechanism remains generic while the tasks become
+                component-specific.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>67. Component Folder Model</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ |
+ +-- themes/
+ |
+ +-- pipeline/
+ |
+ +-- renderers/
+ |
+ +-- columns/
+ |
+ +-- index.js
+        </pre>
+
+            <p>
+                A similar organization can be used for a Form:
+            </p>
+
+            <pre>
+form/
+ |
+ +-- god.json
+ |
+ +-- themes/
+ |
+ +-- pipeline/
+ |
+ +-- renderers/
+ |
+ +-- index.js
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>68. One Generic Engine</h2>
+
+            <pre>
+                    GENERIC ENGINE
+                          |
+              +-----------+-----------+
+              |                       |
+              v                       v
+            TABLE                    FORM
+              |                       |
+              v                       v
+          Task List               Task List
+              |                       |
+              v                       v
+           Spec                     Spec
+              |                       |
+              +-----------+-----------+
+                          |
+                          v
+                    DOM BUILDER
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>69. Pipeline as an Internal API</h2>
+
+            <p>
+                The pipeline can become an internal contract between component
+                logic and the generic specification engine.
+            </p>
+
+            <pre>
+Component Logic
+      |
+      v
+Task Definitions
+      |
+      v
+Pipeline Runner
+      |
+      v
+Final Spec
+      |
+      v
+DOM Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>70. Pipeline Extensibility</h2>
+
+            <p>
+                New behavior can be introduced by adding another transformation.
+            </p>
+
+            <pre>
+Existing:
+
+Columns
+Header
+Body
+Theme
+
+
+New:
+
+Columns
+Header
+Body
+Selection
+Theme
+        </pre>
+
+            <p>
+                The generic runner does not need to change merely because another
+                task was introduced.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>71. Optional Middleware</h2>
+
+            <p>
+                Tasks can be conditionally included.
+            </p>
+
+            <pre>
+const pipeline = [
+
+    columnTask,
+
+    headerTask,
+
+    bodyTask,
+
+    enableSelection
+        ? selectionTask
+        : null,
+
+    themeTask
+
+].filter(Boolean);
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>72. Pipeline Composition</h2>
+
+            <p>
+                Smaller task groups can also be combined.
+            </p>
+
+            <pre>
+tableStructureTasks
+        +
+tableDataTasks
+        +
+themeTasks
+        |
+        v
+completePipeline
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>73. Pipeline Factory</h2>
+
+            <pre>
+const createTablePipeline = ({
+    columns,
+    rows,
+    theme
+}) => {
+
+    return [
+
+        createColumnTask({
+            columns
+        }),
+
+        createHeaderTask({
+            columns
+        }),
+
+        createDataTask({
+            rows,
+            columns
+        }),
+
+        createThemeTask({
+            theme
+        })
+
+    ];
+
+};
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>74. Running the Table Pipeline</h2>
+
+            <pre>
+const tasks =
+    createTablePipeline({
+        columns,
+        rows,
+        theme
+    });
+
+const finalSpec =
+    runPipeline({
+        inSpec: godSpec,
+        inTasks: tasks
+    });
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>75. Final DOM Construction</h2>
+
+            <pre>
+const finalSpec =
+    runPipeline({
+        inSpec: godSpec,
+        inTasks: tasks
+    });
+
+const element =
+    recursiveDomBuilder({
+        inSpec: finalSpec
+    });
+        </pre>
+
+            <p>
+                At this point the transformation phase is complete.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>76. Important Boundary</h2>
+
+            <pre>
+TRANSFORMATION WORLD
+--------------------
+
+God Spec
+Columns
+Data
+Renderers
+Themes
+Middleware
+Pipeline
+
+
+             |
+             | final specification
+             v
+
+
+DOM WORLD
+---------
+
+Recursive DOM Builder
+        </pre>
+
+            <p>
+                This boundary is one of the most important architectural
+                boundaries in the system.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>77. No Theme Logic in Pipeline Runner</h2>
+
+            <p>
+                The runner should not contain:
+            </p>
+
+            <pre>
+if (theme === "dark") ...
+if (theme === "light") ...
+        </pre>
+
+            <p>
+                Theme behavior belongs to the Theme task.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>78. No Data Logic in Pipeline Runner</h2>
+
+            <p>
+                The runner should not contain:
+            </p>
+
+            <pre>
+for each row ...
+for each column ...
+create td ...
+        </pre>
+
+            <p>
+                Those are responsibilities of the Data/Column tasks.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>79. No DOM Logic in Pipeline Runner</h2>
+
+            <p>
+                The runner should not contain:
+            </p>
+
+            <pre>
+document.createElement(...)
+appendChild(...)
+        </pre>
+
+            <p>
+                DOM creation belongs to the DOM builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>80. Pipeline as a Small Engine</h2>
+
+            <pre>
+                PIPELINE ENGINE
+
+Input
+  |
+  v
++-----------------------+
+| Task 1                |
++-----------------------+
+  |
+  v
++-----------------------+
+| Task 2                |
++-----------------------+
+  |
+  v
++-----------------------+
+| Task 3                |
++-----------------------+
+  |
+  v
++-----------------------+
+| Task N                |
++-----------------------+
+  |
+  v
+Output
+        </pre>
+
+            <p>
+                The engine itself remains intentionally unaware of the meaning
+                of each task.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>81. Data Flow Through the Pipeline</h2>
+
+            <pre>
+Rows
+ |
+ v
+Data Task
+ |
+ v
+tbody
+ |
+ v
+Theme Task
+ |
+ v
+themed tbody
+        </pre>
+
+            <p>
+                The data does not bypass the specification layer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>82. Theme Flow Through the Pipeline</h2>
+
+            <pre>
+Theme Name
+ |
+ v
+Theme Resolver
+ |
+ v
+Theme Spec
+ |
+ v
+Theme Task
+ |
+ v
+Final Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>83. Column Flow Through the Pipeline</h2>
+
+            <pre>
+Column Configuration
+ |
+ v
+Column Resolution
+ |
+ +----------------------+
+ |                      |
+ v                      v
+Header                Body
+ |                      |
+ v                      v
+thead                  tbody
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>84. Pipeline and the God Spec</h2>
+
+            <p>
+                The God Spec gives the pipeline something concrete to transform.
+            </p>
+
+            <pre>
+God Spec
+ |
+ +-- wrapper
+      |
+      +-- toolbar
+      |
+      +-- table
+           |
+           +-- thead
+           |
+           +-- tbody
+        </pre>
+
+            <p>
+                Tasks can then operate on this existing tree.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>85. Pipeline and Dynamic Structure</h2>
+
+            <p>
+                The God Spec can contain placeholders for dynamic regions.
+            </p>
+
+            <pre>
+tbody
+ |
+ +-- children: []
+        </pre>
+
+            <p>
+                The Data Task fills that region.
+            </p>
+
+            <pre>
+tbody
+ |
+ +-- tr
+ +-- tr
+ +-- tr
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>86. Pipeline and Theme Twin</h2>
+
+            <p>
+                If the Theme Spec mirrors the God Spec, the Theme Task can
+                recursively map one tree onto the other.
+            </p>
+
+            <pre>
+God Tree
+   +
+Theme Tree
+   |
+   v
+Theme Transformation
+   |
+   v
+Themed God Tree
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>87. Pipeline State Example</h2>
+
+            <pre>
+STATE 0
+
+God Spec
+        |
+        v
+
+STATE 1
+
+Columns resolved
+        |
+        v
+
+STATE 2
+
+Header generated
+        |
+        v
+
+STATE 3
+
+Body generated
+        |
+        v
+
+STATE 4
+
+Theme applied
+        |
+        v
+
+STATE 5
+
+Final Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>88. Pipeline State Should Remain Valid</h2>
+
+            <p>
+                Every intermediate state should remain recognizable as a valid
+                specification.
+            </p>
+
+            <pre>
+Task 1 output
+      |
+      v
+valid Spec
+      |
+      v
+Task 2
+      |
+      v
+valid Spec
+        </pre>
+
+            <p>
+                This makes tasks composable.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>89. Pipeline Contract and JSON</h2>
+
+            <p>
+                Since the specification is plain JSON-like data, it can be
+                serialized and inspected at any stage.
+            </p>
+
+            <pre>
+JSON
+ |
+ v
+Task
+ |
+ v
+JSON
+ |
+ v
+Task
+ |
+ v
+JSON
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>90. Final Mental Model</h2>
+
+            <pre>
+                    GOD JSON
+                        |
+                        v
+                +---------------+
+                | COLUMN TASK   |
+                +---------------+
+                        |
+                        v
+                +---------------+
+                | HEADER TASK   |
+                +---------------+
+                        |
+                        v
+                +---------------+
+                | DATA TASK     |
+                +---------------+
+                        |
+                        v
+                +---------------+
+                | RENDER TASK   |
+                +---------------+
+                        |
+                        v
+                +---------------+
+                | THEME TASK    |
+                +---------------+
+                        |
+                        v
+                 FINAL JSON SPEC
+                        |
+                        v
+               RECURSIVE BUILDER
+                        |
+                        v
+                       DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>91. The Core Idea</h2>
+
+            <p>
+                The pipeline should be understood as a sequence of controlled
+                transformations of one component specification.
+            </p>
+
+            <pre>
+                ONE SPECIFICATION
+                       |
+                       v
+                  transform()
+                       |
+                       v
+                SAME SPEC MODEL
+                       |
+                       v
+                  transform()
+                       |
+                       v
+                SAME SPEC MODEL
+                       |
+                       v
+                  transform()
+                       |
+                       v
+                FINAL SPECIFICATION
+                       |
+                       v
+                       DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The pipeline is not the renderer.
+                    </strong>
+                </p>
+
+                <p>
+                    It is the mechanism that coordinates the transformations.
+                    Column logic knows columns. Data logic knows rows. Renderers
+                    know how values become cell specifications. Theme logic knows
+                    presentation. The recursive DOM builder knows how a
+                    specification becomes DOM.
+                </p>
+
+                <p>
+                    The pipeline connects these responsibilities while keeping
+                    the specification as the common language between them.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

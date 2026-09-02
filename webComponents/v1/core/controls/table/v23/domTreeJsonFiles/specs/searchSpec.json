@@ -1,0 +1,47 @@
+{
+  "tagName": "div",
+  "attributes": {
+    "class": "searchSpec"
+  },
+  "children": [
+    {
+      "tagName": "div",
+      "attributes": {
+        "class": "flex items-center space-x-2"
+      },
+      "children": [
+        {
+          "tagName": "span",
+          "attributes": {
+            "class": "text-sm font-semibold text-gray-700"
+          },
+          "textContent": "Data Items"
+        }
+      ]
+    },
+    {
+      "tagName": "div",
+      "attributes": {
+        "class": "relative flex items-center"
+      },
+      "children": [
+        {
+          "tagName": "span",
+          "attributes": {
+            "class": "absolute left-2.5 text-gray-400 pointer-events-none text-sm"
+          },
+          "textContent": "🔍"
+        },
+        {
+          "tagName": "input",
+          "attributes": {
+            "type": "text",
+            "id": "tableSearchInput",
+            "placeholder": "Search items...",
+            "class": "border border-gray-300 rounded pl-8 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Developer Guide: in-* and local-* Conventions</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background: #f9fafb;
+            color: #333;
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #1f2937;
+        }
+
+        .highlight {
+            background: #e0f2fe;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .code-block {
+            position: relative;
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: Consolas, monospace;
+            font-size: 0.95rem;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: #2563eb;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #d1d5db;
+            padding: 0.6rem;
+            text-align: left;
+        }
+
+        table th {
+            background: #f3f4f6;
+        }
+
+        .note {
+            background: #fef9c3;
+            padding: 0.8rem;
+            border-left: 4px solid #facc15;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>📘 Developer Guide: Understanding <span class="highlight">in-*</span> and <span class="highlight">local-*</span>
+        Naming Conventions</h1>
+
+    <p>This project enforces a strict naming convention to make code <strong>clear, maintainable, and scalable</strong>:
+    </p>
+    <ul>
+        <li><span class="highlight">in-*</span> → External inputs (parameters, props, API data)</li>
+        <li><span class="highlight">local-*</span> → Internal state or derived variables</li>
+    </ul>
+
+    <h2>🔑 Why This Matters for Developers</h2>
+
+    <h3>1. Clear Data Flow</h3>
+    <p>Prefixes immediately tell you whether a variable is <strong>coming from outside</strong> or <strong>computed
+            inside</strong>.</p>
+
+    <div class="code-block">
+        <pre><code>
+// Example: Using in-* and local-* conventions
+
+function renderTable(in-data, in-config) {
+  let local-rows = normalizeData(in-data);
+  let local-theme = applyTheme(in-config.theme);
+
+  // - in-data: external dataset
+  // - in-config: external configuration
+  // - local-rows: internal transformation
+  // - local-theme: derived state
+}
+    </code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    </div>
+
+    <h3>2. Easier Debugging</h3>
+    <p>
+        - Check <span class="highlight">in-*</span> when external data looks wrong (API, props, user input).<br>
+        - Check <span class="highlight">local-*</span> when internal logic or transformations misbehave.
+    </p>
+
+    <h3>3. Scalable Codebases</h3>
+    <p>Prefixes act like lightweight namespaces, preventing collisions and keeping large projects organized.</p>
+
+    <h3>4. Better Collaboration</h3>
+    <p>New contributors instantly understand variable roles, reducing onboarding friction and speeding up code reviews.
+    </p>
+
+    <h2>📊 Comparison</h2>
+    <table>
+        <tr>
+            <th>Style</th>
+            <th>Developer Experience</th>
+            <th>Risks</th>
+        </tr>
+        <tr>
+            <td><strong>Strict (in-*, local-*)</strong></td>
+            <td>Clear data flow, easy debugging, scalable</td>
+            <td>Slightly verbose</td>
+        </tr>
+        <tr>
+            <td>Generic (data, config)</td>
+            <td>Short names, familiar</td>
+            <td>Ambiguous, error-prone</td>
+        </tr>
+        <tr>
+            <td>No convention</td>
+            <td>Flexible, fast prototyping</td>
+            <td>Chaos in large teams</td>
+        </tr>
+    </table>
+
+    <div class="note">
+        ✅ <strong>Developer Takeaway:</strong> This convention is not a burden—it’s a safeguard. It ensures clarity in
+        data flow, confidence in debugging, consistency across teams, and scalability for long-term projects.
+    </div>
+
+    <script>
+        function copyCode(button) {
+            const code = button.parentElement.querySelector("code").innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = "Copied!";
+                setTimeout(() => button.textContent = "Copy", 2000);
+            });
+        }
+    </script>
+
+</body>
+
+</html>

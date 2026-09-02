@@ -1,0 +1,6 @@
+{
+  "tagName": "tr",
+  "attributes": {
+    "class": "text-left text-xs font-bold text-gray-700 uppercase tracking-wider hover:bg-gray-100 transition-colors"
+  }
+}

@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DOM Element Builder | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        .important {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>DOM Element Builder</h1>
+
+        <div>
+            The low-level layer responsible for materializing one specification node
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                The DOM Element Builder is the low-level rendering layer that
+                converts an individual JSON specification node into an actual
+                DOM element.
+            </p>
+
+            <pre>
+Specification Node
+        |
+        v
+DOM Element Builder
+        |
+        v
+DOM Element
+        </pre>
+
+            <p>
+                The recursive DOM builder understands the tree.
+                The DOM Element Builder handles the individual element.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>2. Position in the Architecture</h2>
+
+            <pre>
+God Spec
+    |
+    v
+Theme
+    |
+    v
+Transformation Pipeline
+    |
+    v
+Resolved Spec
+    |
+    v
+Recursive DOM Builder
+    |
+    v
+DOM Element Builder
+    |
+    v
+DOM Element
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The DOM Element Builder is downstream of the entire
+                    specification-transformation process.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>3. One Node vs Entire Tree</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Responsibility</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Recursive DOM Builder</td>
+                        <td>
+                            Understands the hierarchy and recursively processes
+                            children.
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>DOM Element Builder</td>
+                        <td>
+                            Creates/configures the DOM representation of an
+                            individual specification node.
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>4. Basic Input</h2>
+
+            <p>
+                A specification node may look like:
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+    "attributes": {
+        "class": "table-wrapper"
+    }
+}
+        </pre>
+
+            <p>
+                The DOM Element Builder converts this into the corresponding
+                browser element.
+            </p>
+
+            <pre>
+&lt;div class="table-wrapper"&gt;&lt;/div&gt;
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>5. tagName</h2>
+
+            <p>
+                The <code>tagName</code> identifies the type of DOM element to
+                create.
+            </p>
+
+            <pre>
+{
+    "tagName": "button"
+}
+        </pre>
+
+            <p>
+                Conceptually:
+            </p>
+
+            <pre>
+document.createElement("button")
+        </pre>
+
+            <p>
+                The builder should use the specification rather than hard-code
+                individual HTML element types.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>6. Attributes</h2>
+
+            <p>
+                Attributes are represented by the specification's
+                <code>attributes</code> object.
+            </p>
+
+            <pre>
+{
+    "tagName": "input",
+    "attributes": {
+        "type": "text",
+        "name": "search",
+        "placeholder": "Search"
+    }
+}
+        </pre>
+
+            <p>
+                The builder translates these into actual HTML attributes.
+            </p>
+
+            <pre>
+&lt;input
+    type="text"
+    name="search"
+    placeholder="Search"
+&gt;
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>7. Classes</h2>
+
+            <p>
+                Classes are normally represented through the
+                <code>class</code> attribute.
+            </p>
+
+            <pre>
+{
+    "tagName": "div",
+    "attributes": {
+        "class": "table-wrapper space-y-3"
+    }
+}
+        </pre>
+
+            <p>
+                By the time the specification reaches this layer, theme
+                transformations may already have supplied the desired classes.
+            </p>
+
+            <pre>
+Theme
+  |
+  v
+class information
+  |
+  v
+Resolved Spec
+  |
+  v
+DOM Element Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>8. Theme Responsibility Ends Before This Layer</h2>
+
+            <p>
+                The DOM Element Builder should not resolve theme names.
+            </p>
+
+            <p>
+                It should not contain logic such as:
+            </p>
+
+            <pre>
+if (theme === "dark") {
+    element.classList.add(...);
+}
+        </pre>
+
+            <p>
+                Instead:
+            </p>
+
+            <pre>
+Theme Name
+    |
+    v
+Theme Resolver
+    |
+    v
+Theme Spec
+    |
+    v
+Theme Transformation
+    |
+    v
+Resolved Spec
+    |
+    v
+DOM Element Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>9. Properties</h2>
+
+            <p>
+                A specification can distinguish DOM properties from HTML
+                attributes.
+            </p>
+
+            <pre>
+{
+    "tagName": "input",
+    "properties": {
+        "value": "Keshav",
+        "disabled": false
+    }
+}
+        </pre>
+
+            <p>
+                These values can be applied directly to the DOM element as
+                JavaScript properties.
+            </p>
+
+            <pre>
+element.value = "Keshav";
+element.disabled = false;
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>10. Attribute vs Property</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Specification</th>
+                        <th>Meaning</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td><code>attributes</code></td>
+                        <td>HTML attributes.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>properties</code></td>
+                        <td>JavaScript DOM properties.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+            <pre>
+{
+    "attributes": {
+        "type": "text"
+    },
+
+    "properties": {
+        "value": "Hello"
+    }
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Text Content</h2>
+
+            <p>
+                Text can be represented declaratively.
+            </p>
+
+            <pre>
+{
+    "tagName": "span",
+    "textContent": "Hello World"
+}
+        </pre>
+
+            <p>
+                The resulting element contains:
+            </p>
+
+            <pre>
+&lt;span&gt;Hello World&lt;/span&gt;
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>12. Events</h2>
+
+            <p>
+                If the specification supports event definitions, the DOM Element
+                Builder can translate those definitions into event listeners.
+            </p>
+
+            <pre>
+{
+    "tagName": "button",
+    "textContent": "Save",
+    "events": {
+        "click": handleSave
+    }
+}
+        </pre>
+
+            <p>
+                Conceptually:
+            </p>
+
+            <pre>
+element.addEventListener(
+    "click",
+    handleSave
+);
+        </pre>
+
+            <p>
+                The important architectural point is that the event definition
+                arrives through the specification rather than being hard-coded
+                into the generic element creation process.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>13. Children Are a Separate Responsibility</h2>
+
+            <p>
+                The DOM Element Builder should not need to understand arbitrary
+                recursive depth.
+            </p>
+
+            <pre>
+Parent Spec
+     |
+     v
+DOM Element Builder
+     |
+     v
+Parent Element
+        </pre>
+
+            <p>
+                The recursive builder handles:
+            </p>
+
+            <pre>
+Child Spec
+     |
+     v
+Recursive Builder
+     |
+     v
+DOM Element Builder
+     |
+     v
+Child Element
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>14. Recursive Builder + Element Builder</h2>
+
+            <pre>
+              SPEC TREE
+                  |
+                  v
+        Recursive DOM Builder
+                  |
+        +---------+---------+
+        |                   |
+        v                   v
+     Node A              Node B
+        |                   |
+        v                   v
+DOM Element Builder  DOM Element Builder
+        |                   |
+        v                   v
+   Element A            Element B
+        \                   /
+         \                 /
+          +-------+-------+
+                  |
+                  v
+              DOM Tree
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>15. Example: Table</h2>
+
+            <p>
+                Consider a small Table specification:
+            </p>
+
+            <pre>
+{
+    "tagName": "table",
+    "attributes": {
+        "class": "w-full"
+    },
+    "children": [
+        {
+            "tagName": "thead"
+        },
+        {
+            "tagName": "tbody"
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                The recursive builder visits:
+            </p>
+
+            <pre>
+table
+ |
+ +-- thead
+ |
+ +-- tbody
+        </pre>
+
+            <p>
+                Each node eventually passes through the element builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>16. Example: Input</h2>
+
+            <pre>
+{
+    "tagName": "input",
+
+    "attributes": {
+        "type": "text",
+        "class": "search-input"
+    },
+
+    "properties": {
+        "value": ""
+    }
+}
+        </pre>
+
+            <p>
+                The element builder produces the equivalent DOM element.
+            </p>
+
+            <pre>
+&lt;input
+    type="text"
+    class="search-input"
+&gt;
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>17. Example: Button</h2>
+
+            <pre>
+{
+    "tagName": "button",
+
+    "attributes": {
+        "type": "button",
+        "class": "btn"
+    },
+
+    "textContent": "Save"
+}
+        </pre>
+
+            <p>
+                Result:
+            </p>
+
+            <pre>
+&lt;button
+    type="button"
+    class="btn"
+&gt;
+    Save
+&lt;/button&gt;
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>18. Example: Nested Specification</h2>
+
+            <pre>
+{
+    "tagName": "div",
+
+    "attributes": {
+        "class": "toolbar"
+    },
+
+    "children": [
+        {
+            "tagName": "span",
+            "textContent": "Orders"
+        },
+
+        {
+            "tagName": "button",
+            "textContent": "Add"
+        }
+    ]
+}
+        </pre>
+
+            <p>
+                The recursive builder handles the hierarchy while the element
+                builder handles each individual node.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>19. Separation of Responsibilities</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Responsibility</th>
+                        <th>Layer</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Describe structure</td>
+                        <td>God Spec</td>
+                    </tr>
+
+                    <tr>
+                        <td>Apply classes/theme</td>
+                        <td>Theme Transformation</td>
+                    </tr>
+
+                    <tr>
+                        <td>Change structure</td>
+                        <td>Pipeline Tasks</td>
+                    </tr>
+
+                    <tr>
+                        <td>Understand hierarchy</td>
+                        <td>Recursive DOM Builder</td>
+                    </tr>
+
+                    <tr>
+                        <td>Create/configure one element</td>
+                        <td>DOM Element Builder</td>
+                    </tr>
+
+                    <tr>
+                        <td>Produce browser DOM</td>
+                        <td>DOM Layer</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>20. The Element Builder Should Be Generic</h2>
+
+            <p>
+                The element builder should not know whether an element belongs to
+                a Table, Form, Card, Toolbar, or another component.
+            </p>
+
+            <pre>
+Table
+Form
+Card
+Dialog
+Toolbar
+List
+     |
+     v
+Generic DOM Element Builder
+        </pre>
+
+            <p>
+                Its input is the specification node, not the business meaning of
+                the component.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. No Table Logic</h2>
+
+            <p>
+                The generic element builder should not contain logic such as:
+            </p>
+
+            <pre>
+if (tagName === "table") {
+    // Table-specific behavior
+}
+
+if (isSerialColumn) {
+    // Serial-specific behavior
+}
+        </pre>
+
+            <p>
+                Such behavior belongs in the Table's specification transformations.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>22. No Form Logic</h2>
+
+            <p>
+                Likewise, it should not contain:
+            </p>
+
+            <pre>
+if (isFormField) {
+    // Form-specific behavior
+}
+        </pre>
+
+            <p>
+                A Form transformation should produce the correct specification.
+                The generic builder then materializes it.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. No Theme Resolution</h2>
+
+            <p>
+                Theme resolution belongs upstream.
+            </p>
+
+            <pre>
+Theme Name
+    |
+    v
+resolveThemeSpec()
+    |
+    v
+Theme Spec
+    |
+    v
+applyTheme()
+    |
+    v
+Resolved Spec
+    |
+    v
+DOM Element Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>24. The Builder Receives Final Decisions</h2>
+
+            <p>
+                By the time a specification node reaches the DOM Element Builder,
+                decisions such as the following should already have been made:
+            </p>
+
+            <ul>
+                <li>which node exists</li>
+                <li>which classes it has</li>
+                <li>which attributes it has</li>
+                <li>which properties it has</li>
+                <li>what text it contains</li>
+                <li>which event definitions apply</li>
+            </ul>
+
+            <p>
+                The builder's job is to materialize those decisions.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. A Typical Element-Building Sequence</h2>
+
+            <pre>
+Specification Node
+        |
+        v
+Validate Node
+        |
+        v
+Create Element
+        |
+        v
+Apply Attributes
+        |
+        v
+Apply Properties
+        |
+        v
+Apply Text
+        |
+        v
+Apply Event Definitions
+        |
+        v
+Return Element
+        </pre>
+
+            <p>
+                Child processing can remain with the recursive layer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>26. Conceptual Implementation</h2>
+
+            <pre>
+const domElementBuilder = ({ inSpec }) => {
+
+    if (
+        !inSpec ||
+        typeof inSpec !== "object" ||
+        !inSpec.tagName
+    ) {
+        return null;
+    }
+
+    const element =
+        document.createElement(
+            inSpec.tagName
+        );
+
+    // Apply attributes.
+
+    // Apply properties.
+
+    // Apply text.
+
+    // Apply events.
+
+    return element;
+};
+        </pre>
+
+            <p>
+                The actual implementation may contain additional behavior,
+                validation, normalization, or helper functions.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>27. Attribute Application</h2>
+
+            <p>
+                A generic attribute loop can conceptually look like:
+            </p>
+
+            <pre>
+Object.entries(
+    inSpec.attributes || {}
+).forEach(([name, value]) => {
+
+    element.setAttribute(
+        name,
+        value
+    );
+
+});
+        </pre>
+
+            <p>
+                The real implementation may need special handling for boolean
+                attributes or other cases.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>28. Property Application</h2>
+
+            <pre>
+Object.entries(
+    inSpec.properties || {}
+).forEach(([name, value]) => {
+
+    element[name] = value;
+
+});
+        </pre>
+
+            <p>
+                This is different from <code>setAttribute()</code>.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>29. Event Application</h2>
+
+            <pre>
+Object.entries(
+    inSpec.events || {}
+).forEach(([eventName, handler]) => {
+
+    if (typeof handler === "function") {
+
+        element.addEventListener(
+            eventName,
+            handler
+        );
+
+    }
+
+});
+        </pre>
+
+            <p>
+                Event handling remains declarative at the specification level,
+                while actual listener registration occurs during materialization.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>30. Text Application</h2>
+
+            <pre>
+if (
+    typeof inSpec.textContent === "string"
+) {
+    element.textContent =
+        inSpec.textContent;
+}
+        </pre>
+
+            <p>
+                The exact rules can be expanded if the specification supports
+                additional content types.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>31. Why the Builder Should Be Small</h2>
+
+            <p>
+                The element builder sits at the foundation of the DOM layer.
+                If it starts containing component-specific rules, every
+                component becomes coupled to the same implementation.
+            </p>
+
+            <pre>
+Generic Builder
+       |
+       +-- Table rules
+       +-- Form rules
+       +-- Card rules
+       +-- Dialog rules
+       +-- Theme rules
+       +-- Data rules
+        </pre>
+
+            <p>
+                This is precisely the coupling the architecture is intended to
+                avoid.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>32. Preferred Direction</h2>
+
+            <pre>
+Component Logic
+       |
+       v
+Specification Transformation
+       |
+       v
+Resolved Specification
+       |
+       v
+Generic DOM Builder
+       |
+       v
+Browser DOM
+        </pre>
+
+            <p>
+                Component-specific intelligence stays upstream.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>33. Testing</h2>
+
+            <p>
+                The DOM Element Builder can be tested independently with small
+                specification nodes.
+            </p>
+
+            <pre>
+Input:
+{
+    "tagName": "div",
+    "attributes": {
+        "class": "box"
+    }
+}
+
+Expected:
+div.box
+        </pre>
+
+            <p>
+                More complete tests can verify properties, attributes, text,
+                events, and other supported specification features.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>34. Testing the Recursive Layer Separately</h2>
+
+            <p>
+                The recursive builder can then be tested using nested
+                specifications.
+            </p>
+
+            <pre>
+Root
+ |
+ +-- Child
+ |    |
+ |    +-- Grandchild
+ |
+ +-- Child
+        </pre>
+
+            <p>
+                This separates testing of:
+            </p>
+
+            <pre>
+Tree traversal
+        from
+Individual element construction
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>35. Table Rendering</h2>
+
+            <p>
+                For a Table, the flow is:
+            </p>
+
+            <pre>
+Table God Spec
+       |
+       v
+Table Pipeline
+       |
+       v
+Resolved Table Spec
+       |
+       v
+Recursive Builder
+       |
+       v
+DOM Element Builder
+       |
+       v
+Table DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>36. Form Rendering</h2>
+
+            <p>
+                For a Form, the same generic builder can be reused:
+            </p>
+
+            <pre>
+Form God Spec
+       |
+       v
+Form Pipeline
+       |
+       v
+Resolved Form Spec
+       |
+       v
+Recursive Builder
+       |
+       v
+DOM Element Builder
+       |
+       v
+Form DOM
+        </pre>
+
+            <p>
+                No second low-level DOM element builder is necessary.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>37. The Reusable Foundation</h2>
+
+            <pre>
+                 GENERIC FOUNDATION
+                        |
+          +-------------+-------------+
+          |             |             |
+          v             v             v
+    runPipeline()  Recursive     DOM Element
+                    Builder         Builder
+          |             |             |
+          +-------------+-------------+
+                        |
+                        v
+                   Components
+                        |
+             +----------+----------+
+             |                     |
+             v                     v
+           Table                 Form
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>38. Materialization Boundary</h2>
+
+            <p>
+                The specification world ends at the point where the DOM
+                materialization begins.
+            </p>
+
+            <pre>
+             SPECIFICATION WORLD
+                     |
+                     |
+                     v
+              Resolved Spec
+                     |
+                     |
+             MATERIALIZATION
+                     |
+                     v
+                 DOM WORLD
+        </pre>
+
+            <p>
+                The DOM Element Builder operates on the DOM side of this
+                boundary.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>39. What the Element Builder Should Know</h2>
+
+            <p>
+                It should understand the generic specification contract:
+            </p>
+
+            <pre>
+tagName
+attributes
+properties
+textContent
+events
+        </pre>
+
+            <p>
+                It should not need to understand:
+            </p>
+
+            <pre>
+Table
+Form
+Theme Name
+Columns
+Rows
+Serial Numbers
+Filtering
+Sorting
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>40. What the Element Builder Should Not Know</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Concern</th>
+                        <th>Handled By</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Theme selection</td>
+                        <td>Theme resolver</td>
+                    </tr>
+
+                    <tr>
+                        <td>Theme application</td>
+                        <td>Theme transformation</td>
+                    </tr>
+
+                    <tr>
+                        <td>Header visibility</td>
+                        <td>Header task</td>
+                    </tr>
+
+                    <tr>
+                        <td>Body generation</td>
+                        <td>Body/data transformations</td>
+                    </tr>
+
+                    <tr>
+                        <td>Footer behavior</td>
+                        <td>Footer task</td>
+                    </tr>
+
+                    <tr>
+                        <td>Serial column</td>
+                        <td>Serial task</td>
+                    </tr>
+
+                    <tr>
+                        <td>Column definition</td>
+                        <td>Column layer</td>
+                    </tr>
+
+                    <tr>
+                        <td>Component state</td>
+                        <td>Component/store layer</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>41. Final Architecture</h2>
+
+            <pre>
+                    GOD SPEC
+                       |
+                       v
+              THEME TRANSFORMATION
+                       |
+                       v
+             COMPONENT TASKS
+                       |
+                       v
+                 RESOLVED SPEC
+                       |
+                       v
+             RECURSIVE BUILDER
+                       |
+                       v
+            DOM ELEMENT BUILDER
+                       |
+                       v
+                   DOM TREE
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>42. Final Mental Model</h2>
+
+            <pre>
+Specification Node
+        |
+        v
+"Tell me what element this is."
+        |
+        v
+tagName
+        |
+        v
+"Tell me how it is configured."
+        |
+        +---- attributes
+        +---- properties
+        +---- text
+        +---- events
+        |
+        v
+DOM Element
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The DOM Element Builder should be deliberately boring.
+                    </strong>
+                </p>
+
+                <p>
+                    The intelligence belongs in the specification and its
+                    transformation pipeline. The element builder's job is to
+                    faithfully materialize that final specification into a DOM
+                    element.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

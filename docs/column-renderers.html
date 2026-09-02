@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Column Renderers | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Column Renderers</h1>
+
+        <div>
+            Turning a column's data into a specification subtree
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="transformation-pipeline.html">Pipeline</a>
+            <a href="data-to-tbody.html">Data to Tbody</a>
+            <a href="columns-and-header.html">Columns and Header</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+            <a href="dom-element-builder.html">Element Builder</a>
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                A Column Renderer determines how one column's value should be
+                represented in the Table body.
+            </p>
+
+            <pre>
+Data Row
+   |
+   v
+Column
+   |
+   v
+Column Renderer
+   |
+   v
+Cell Specification
+   |
+   v
+Recursive DOM Builder
+   |
+   v
+DOM
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The Column Renderer produces a specification. It does not
+                    need to directly create DOM elements.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. Why Column Renderers Exist</h2>
+
+            <p>
+                A simple data field can be displayed directly:
+            </p>
+
+            <pre>
+John
+        </pre>
+
+            <p>
+                But real Tables frequently need richer representations:
+            </p>
+
+            <pre>
+John
+$12,450.50
+30 Aug 2026
+[ Edit ]
+[ Delete ]
+☑ Selected
+        </pre>
+
+            <p>
+                A Column Renderer provides the mechanism for converting the raw
+                value into the desired UI specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>3. Simple Column Without a Renderer</h2>
+
+            <pre>
+{
+    "key": "name",
+    "label": "Name"
+}
+        </pre>
+
+            <p>
+                The default behavior can be simple value extraction:
+            </p>
+
+            <pre>
+row[column.key]
+        </pre>
+
+            <p>
+                resulting in:
+            </p>
+
+            <pre>
+{
+    "tagName": "td",
+    "textContent": "John"
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>4. Column With a Renderer</h2>
+
+            <pre>
+{
+    "key": "name",
+
+    "label": "Name",
+
+    "render": ({ value }) => {
+
+        return {
+            "tagName": "strong",
+            "textContent": String(value)
+        };
+
+    }
+}
+        </pre>
+
+            <p>
+                The renderer changes the internal representation of the cell.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. Renderer Input</h2>
+
+            <p>
+                A useful renderer context can contain:
+            </p>
+
+            <pre>
+{
+    value,
+    row,
+    column,
+    rowIndex
+}
+        </pre>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Value</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td><code>value</code></td>
+                        <td>Value associated with the current column.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>row</code></td>
+                        <td>Complete data object for the current row.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>column</code></td>
+                        <td>Current column definition.</td>
+                    </tr>
+
+                    <tr>
+                        <td><code>rowIndex</code></td>
+                        <td>Position of the row being rendered.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>6. Value</h2>
+
+            <p>
+                The value is the most common renderer input.
+            </p>
+
+            <pre>
+{
+    name: "John",
+    age: 30
+}
+        </pre>
+
+            <p>
+                For the <code>age</code> column:
+            </p>
+
+            <pre>
+value === 30
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>7. Complete Row Context</h2>
+
+            <pre>
+const row = {
+    name: "John",
+    age: 30,
+    city: "London"
+};
+        </pre>
+
+            <p>
+                A renderer can access the complete row:
+            </p>
+
+            <pre>
+render({
+    value,
+    row,
+    column,
+    rowIndex
+})
+        </pre>
+
+            <p>
+                This is useful when the displayed result depends on multiple
+                fields.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>8. Simple Text Renderer</h2>
+
+            <pre>
+render: ({ value }) => {
+
+    return {
+        "tagName": "span",
+        "textContent": String(value)
+    };
+
+}
+        </pre>
+
+            <p>
+                Result:
+            </p>
+
+            <pre>
+td
+ |
+ +-- span
+       |
+       +-- John
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>9. Formatted Number</h2>
+
+            <pre>
+{
+    "key": "amount",
+    "label": "Amount",
+
+    "render": ({ value }) => {
+
+        return {
+            "tagName": "span",
+            "textContent":
+                Number(value).toLocaleString()
+        };
+
+    }
+}
+        </pre>
+
+            <p>
+                Raw:
+            </p>
+
+            <pre>
+12450
+        </pre>
+
+            <p>
+                Display:
+            </p>
+
+            <pre>
+12,450
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>10. Currency Renderer</h2>
+
+            <pre>
+render: ({ value }) => {
+
+    return {
+        "tagName": "span",
+        "textContent":
+            "$" +
+            Number(value).toFixed(2)
+    };
+
+}
+        </pre>
+
+            <p>
+                Raw:
+            </p>
+
+            <pre>
+12450.5
+        </pre>
+
+            <p>
+                Display:
+            </p>
+
+            <pre>
+$12450.50
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Date Renderer</h2>
+
+            <pre>
+render: ({ value }) => {
+
+    const date =
+        new Date(value);
+
+    return {
+        "tagName": "span",
+        "textContent":
+            date.toLocaleDateString()
+    };
+
+}
+        </pre>
+
+            <p>
+                The raw data remains unchanged.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>12. Boolean Renderer</h2>
+
+            <pre>
+render: ({ value }) => {
+
+    return {
+        "tagName": "span",
+
+        "textContent":
+            value ? "Yes" : "No"
+    };
+
+}
+        </pre>
+
+            <p>
+                This converts a boolean into a human-readable representation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>13. Complex Specification</h2>
+
+            <p>
+                A renderer is not limited to returning one simple element.
+            </p>
+
+            <pre>
+render: ({ value }) => {
+
+    return {
+        "tagName": "div",
+
+        "attributes": {
+            "class": "value-wrapper"
+        },
+
+        "children": [
+
+            {
+                "tagName": "span",
+                "textContent": String(value)
+            }
+
+        ]
+    };
+
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>14. Nested Renderer Output</h2>
+
+            <pre>
+td
+ |
+ +-- div
+      |
+      +-- span
+      |
+      +-- button
+        </pre>
+
+            <p>
+                The renderer can therefore produce arbitrarily complex
+                specification subtrees supported by the generic builder.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>15. Action Renderer</h2>
+
+            <pre>
+{
+    "key": "actions",
+
+    "label": "Actions",
+
+    "render": ({ row }) => {
+
+        return {
+            "tagName": "button",
+
+            "attributes": {
+                "type": "button"
+            },
+
+            "textContent": "Edit"
+        };
+
+    }
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>16. Row-Aware Rendering</h2>
+
+            <p>
+                A renderer can use another field in the row.
+            </p>
+
+            <pre>
+{
+    id: 15,
+    name: "John",
+    active: true
+}
+        </pre>
+
+            <p>
+                The action renderer can use <code>id</code> or
+                <code>active</code> to determine what specification to return.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>17. Conditional Rendering</h2>
+
+            <pre>
+render: ({ row }) => {
+
+    if (row.active) {
+
+        return {
+            "tagName": "button",
+            "textContent": "Disable"
+        };
+
+    }
+
+    return {
+        "tagName": "button",
+        "textContent": "Enable"
+    };
+
+}
+        </pre>
+
+            <p>
+                The decision happens while producing the specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>18. Checkbox Renderer</h2>
+
+            <pre>
+{
+    "key": "selected",
+
+    "label": "",
+
+    "render": ({ value }) => {
+
+        return {
+            "tagName": "input",
+
+            "attributes": {
+                "type": "checkbox"
+            },
+
+            "properties": {
+                "checked": Boolean(value)
+            }
+        };
+
+    }
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>19. Input Renderer</h2>
+
+            <pre>
+{
+    "key": "name",
+
+    "label": "Name",
+
+    "render": ({ value }) => {
+
+        return {
+            "tagName": "input",
+
+            "attributes": {
+                "type": "text"
+            },
+
+            "properties": {
+                "value": value ?? ""
+            }
+        };
+
+    }
+}
+        </pre>
+
+            <p>
+                This provides an editable representation of the value.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>20. Renderer and Events</h2>
+
+            <p>
+                A renderer can produce a specification containing event
+                definitions if the specification contract supports them.
+            </p>
+
+            <pre>
+render: ({ row }) => {
+
+    return {
+        "tagName": "button",
+
+        "textContent": "Edit",
+
+        "events": {
+            "click": () => {
+                console.log(row);
+            }
+        }
+    };
+
+}
+        </pre>
+
+            <p>
+                The event is eventually materialized by the DOM layer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. Renderer Output Is Not DOM</h2>
+
+            <p>
+                This distinction is fundamental.
+            </p>
+
+            <pre>
+Renderer
+   |
+   v
+{
+    tagName: "button",
+    textContent: "Edit"
+}
+        </pre>
+
+            <p>
+                This is a JavaScript object describing the desired element.
+            </p>
+
+            <pre>
+Specification
+      |
+      v
+DOM Builder
+      |
+      v
+document.createElement(...)
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>22. Renderer and Recursive Builder</h2>
+
+            <pre>
+Column Renderer
+      |
+      v
+Specification Subtree
+      |
+      v
+Recursive Builder
+      |
+      +-- element
+      +-- children
+      +-- grandchildren
+      |
+      v
+DOM Subtree
+        </pre>
+
+            <p>
+                The Column Renderer does not need to know how the recursive
+                builder walks the resulting tree.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Renderer and Theme</h2>
+
+            <p>
+                Column renderers should generally describe what the cell is,
+                while the Theme layer can determine presentation classes.
+            </p>
+
+            <pre>
+Column Renderer
+       |
+       v
+Cell Structure
+       |
+       v
+Theme Transformation
+       |
+       v
+Final Classes
+       |
+       v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>24. Avoid Hard-Coding Theme Classes</h2>
+
+            <p>
+                Instead of making every renderer know every theme:
+            </p>
+
+            <pre>
+render: () => ({
+    tagName: "span",
+    attributes: {
+        class: "dark:text-white ..."
+    }
+})
+        </pre>
+
+            <p>
+                the architecture can keep theme decisions in the theme layer
+                where practical.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. Renderer and Column Metadata</h2>
+
+            <p>
+                The renderer receives the column definition and can use its
+                metadata.
+            </p>
+
+            <pre>
+render({
+    value,
+    row,
+    column,
+    rowIndex
+})
+        </pre>
+
+            <p>
+                This makes renderers reusable across columns with similar
+                behavior.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>26. Renderer Factory</h2>
+
+            <p>
+                Instead of storing only an inline function, a column can refer
+                to a renderer factory.
+            </p>
+
+            <pre>
+createCurrencyRenderer({
+    currency: "USD"
+})
+        </pre>
+
+            <p>
+                The resulting function can then be used for multiple columns.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>27. Reusable Currency Renderer</h2>
+
+            <pre>
+const currencyRenderer =
+    ({ value }) => {
+
+        return {
+            "tagName": "span",
+
+            "textContent":
+                "$" +
+                Number(value).toFixed(2)
+        };
+
+    };
+        </pre>
+
+            <p>
+                It can then be assigned to any suitable column.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>28. Renderer Composition</h2>
+
+            <p>
+                Rendering can also be composed from smaller functions.
+            </p>
+
+            <pre>
+value
+ |
+ v
+formatValue()
+ |
+ v
+createValueSpec()
+ |
+ v
+cell spec
+        </pre>
+
+            <p>
+                This prevents large render functions from becoming difficult to
+                maintain.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>29. Value Formatter vs Renderer</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Formatter</th>
+                        <th>Renderer</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Usually changes the value representation.</td>
+                        <td>Creates a specification subtree.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Often returns a string.</td>
+                        <td>Can return a complex object tree.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Example: number formatting.</td>
+                        <td>Example: button + icon + text.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>30. Example Formatter</h2>
+
+            <pre>
+const formatAmount = value => {
+
+    return Number(value)
+        .toLocaleString();
+
+};
+        </pre>
+
+            <p>
+                The renderer can then use it:
+            </p>
+
+            <pre>
+render: ({ value }) => {
+
+    return {
+        "tagName": "span",
+        "textContent":
+            formatAmount(value)
+    };
+
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>31. Renderer Returning Null</h2>
+
+            <p>
+                A renderer may intentionally return no content if the
+                specification contract allows it.
+            </p>
+
+            <pre>
+render: ({ row }) => {
+
+    if (!row.visible) {
+        return null;
+    }
+
+    return {
+        "tagName": "span",
+        "textContent": "Visible"
+    };
+
+}
+        </pre>
+
+            <p>
+                The surrounding body-generation layer must define how null
+                results are handled.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>32. Renderer Error Handling</h2>
+
+            <p>
+                Renderer failures should be handled at an appropriate boundary.
+            </p>
+
+            <pre>
+Data
+ |
+ v
+Column Renderer
+ |
+ +-- success --> Cell Spec
+ |
+ +-- failure --> Error Strategy
+        </pre>
+
+            <p>
+                Possible strategies include logging, fallback content, or
+                propagating the error, depending on application requirements.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>33. Renderer and Missing Values</h2>
+
+            <p>
+                Columns should define how missing values are represented.
+            </p>
+
+            <pre>
+{
+    "name": "John"
+}
+        </pre>
+
+            <p>
+                For an <code>email</code> column:
+            </p>
+
+            <pre>
+value === undefined
+        </pre>
+
+            <p>
+                A renderer can produce:
+            </p>
+
+            <pre>
+"—"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>34. Missing Value Renderer</h2>
+
+            <pre>
+render: ({ value }) => {
+
+    return {
+        "tagName": "span",
+
+        "textContent":
+            value == null
+                ? "—"
+                : String(value)
+    };
+
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>35. Renderer and Security</h2>
+
+            <p>
+                Text content should normally be represented using
+                <code>textContent</code> rather than interpreting arbitrary
+                application data as HTML.
+            </p>
+
+            <pre>
+{
+    "tagName": "span",
+    "textContent": userValue
+}
+        </pre>
+
+            <p>
+                If a renderer deliberately produces HTML-like structure, it
+                should construct that structure through the specification model
+                rather than treating untrusted strings as markup.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>36. Renderer and Column Width</h2>
+
+            <p>
+                A renderer can concentrate on content while column-level
+                configuration controls layout.
+            </p>
+
+            <pre>
+Column
+ |
+ +-- width
+ +-- alignment
+ +-- visibility
+ |
+ +-- renderer
+        </pre>
+
+            <p>
+                This keeps content generation and layout configuration
+                conceptually separate.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>37. Renderer and Alignment</h2>
+
+            <pre>
+{
+    "key": "amount",
+
+    "label": "Amount",
+
+    "align": "right",
+
+    "render": ({ value }) => ({
+        "tagName": "span",
+        "textContent":
+            Number(value).toLocaleString()
+    })
+}
+        </pre>
+
+            <p>
+                Alignment can be translated by a separate column/theme
+                transformation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>38. Renderer and Sorting</h2>
+
+            <p>
+                Sorting generally operates on the underlying value rather than
+                the rendered specification.
+            </p>
+
+            <pre>
+Raw Data
+   |
+   +---------> Sorting
+   |
+   v
+Renderer
+   |
+   v
+Display Specification
+        </pre>
+
+            <p>
+                This prevents presentation formatting from accidentally becoming
+                the sorting source.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>39. Renderer and Filtering</h2>
+
+            <p>
+                Similarly, filtering can operate on the data model while the
+                renderer controls how the surviving values appear.
+            </p>
+
+            <pre>
+Data
+ |
+ +----> Filter
+ |
+ v
+Renderer
+ |
+ v
+Cell Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>40. Renderer and Row Index</h2>
+
+            <p>
+                The row index can be used for display logic.
+            </p>
+
+            <pre>
+render: ({ rowIndex, value }) => {
+
+    return {
+        "tagName": "span",
+
+        "textContent":
+            `${rowIndex + 1}. ${value}`
+    };
+
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>41. Renderer and Serial Numbers</h2>
+
+            <p>
+                A dedicated serial column may use the row index.
+            </p>
+
+            <pre>
+render: ({ rowIndex }) => {
+
+    return {
+        "tagName": "span",
+        "textContent":
+            String(rowIndex + 1)
+    };
+
+}
+        </pre>
+
+            <p>
+                This avoids requiring the serial value in the original data.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>42. Renderer With Multiple Values</h2>
+
+            <p>
+                A renderer can combine several fields.
+            </p>
+
+            <pre>
+{
+    firstName: "John",
+    lastName: "Smith"
+}
+        </pre>
+
+            <pre>
+render: ({ row }) => {
+
+    return {
+        "tagName": "span",
+
+        "textContent":
+            `${row.firstName} ${row.lastName}`
+    };
+
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>43. Renderer Producing Multiple Children</h2>
+
+            <pre>
+render: ({ row }) => {
+
+    return {
+
+        "tagName": "div",
+
+        "children": [
+
+            {
+                "tagName": "strong",
+                "textContent":
+                    row.firstName
+            },
+
+            {
+                "tagName": "span",
+                "textContent":
+                    row.lastName
+            }
+
+        ]
+
+    };
+
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>44. Renderer and Conditional Children</h2>
+
+            <pre>
+render: ({ row }) => {
+
+    const children = [];
+
+    children.push({
+        "tagName": "span",
+        "textContent": row.name
+    });
+
+    if (row.active) {
+
+        children.push({
+            "tagName": "span",
+            "textContent": "Active"
+        });
+
+    }
+
+    return {
+        "tagName": "div",
+        "children": children
+    };
+
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>45. Renderer and Custom Elements</h2>
+
+            <p>
+                Because the output is specification-driven, a renderer can
+                produce custom elements when the generic DOM builder supports
+                them.
+            </p>
+
+            <pre>
+{
+    "tagName": "ks-status",
+    "attributes": {
+        "value": "active"
+    }
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>46. Renderer and Web Components</h2>
+
+            <pre>
+Column Renderer
+      |
+      v
+ks-custom-element Spec
+      |
+      v
+DOM Builder
+      |
+      v
+Custom Element
+        </pre>
+
+            <p>
+                The Table renderer does not need special recursive DOM logic for
+                the custom element.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>47. Renderer Is a Specification Factory</h2>
+
+            <pre>
+                    COLUMN
+                      |
+                      v
+               COLUMN RENDERER
+                      |
+                      v
+              SPECIFICATION FACTORY
+                      |
+          +-----------+-----------+
+          |                       |
+          v                       v
+       Simple                  Complex
+        Cell                     Cell
+          |                       |
+          v                       v
+         td                    subtree
+        </pre>
+
+            <p>
+                This is the most useful abstraction for understanding a column
+                renderer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>48. Renderer Does Not Own the Cell</h2>
+
+            <p>
+                The renderer produces the content specification. The surrounding
+                body-generation layer can wrap it in the appropriate
+                <code>td</code>.
+            </p>
+
+            <pre>
+Column Renderer
+      |
+      v
+Content Spec
+      |
+      v
+Cell Builder
+      |
+      v
+td
+      |
+      v
+tbody
+        </pre>
+
+            <p>
+                Whether the renderer itself returns the <code>td</code> or only
+                its content is an implementation decision; the architecture
+                should keep the responsibility explicit.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>49. Recommended Separation</h2>
+
+            <pre>
+Column
+  |
+  v
+Value Resolution
+  |
+  v
+Column Renderer
+  |
+  v
+Cell Content Spec
+  |
+  v
+Cell Spec
+  |
+  v
+tbody Spec
+  |
+  v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>50. Renderer and the Pipeline</h2>
+
+            <pre>
+God Spec
+   |
+   v
+Column Transformation
+   |
+   v
+Data Transformation
+   |
+   v
+Column Renderer
+   |
+   v
+Cell Specifications
+   |
+   v
+Final Table Spec
+   |
+   v
+DOM
+        </pre>
+
+            <p>
+                The renderer is therefore one of the mechanisms used by the
+                data-to-specification transformation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>51. Renderer Reuse</h2>
+
+            <p>
+                The same renderer can be assigned to multiple columns.
+            </p>
+
+            <pre>
+currencyRenderer
+      |
+      +---- Amount
+      |
+      +---- Price
+      |
+      +---- Total
+        </pre>
+
+            <p>
+                This avoids duplicating formatting logic.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>52. Renderer Factories and Configuration</h2>
+
+            <pre>
+createCurrencyRenderer({
+    currency: "USD",
+    minimumFractionDigits: 2
+})
+        </pre>
+
+            <p>
+                The factory can return a renderer configured for those
+                requirements.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>53. Example Renderer Factory</h2>
+
+            <pre>
+const createCurrencyRenderer =
+    ({ currency }) => {
+
+        return ({ value }) => {
+
+            return {
+                "tagName": "span",
+                "textContent":
+                    `${currency} ${value}`
+            };
+
+        };
+
+    };
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>54. Renderer Testing</h2>
+
+            <p>
+                Because renderers return specifications, they can be tested
+                without a browser DOM.
+            </p>
+
+            <pre>
+Input:
+
+{
+    value: 100,
+    row: {},
+    column: {},
+    rowIndex: 0
+}
+
+Expected:
+
+{
+    tagName: "span",
+    textContent: "100"
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>55. Renderer Testing vs DOM Testing</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>Checks</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Renderer test</td>
+                        <td>Correct specification is produced.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Recursive builder test</td>
+                        <td>Specification becomes correct DOM.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Integration test</td>
+                        <td>Complete Table behaves correctly.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>56. Debugging Renderer Output</h2>
+
+            <pre>
+const spec = column.render({
+    value,
+    row,
+    column,
+    rowIndex
+});
+
+console.log(
+    JSON.stringify(
+        spec,
+        null,
+        4
+    )
+);
+        </pre>
+
+            <p>
+                This makes renderer output directly inspectable.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>57. Debugging the Complete Body</h2>
+
+            <pre>
+Data
+ |
+ v
+Column Renderer
+ |
+ v
+Cell Spec
+ |
+ v
+Row Spec
+ |
+ v
+tbody Spec
+ |
+ v
+Resolved Table Spec
+        </pre>
+
+            <p>
+                Each stage can be inspected independently.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>58. Renderer Should Remain Focused</h2>
+
+            <p>
+                A column renderer should primarily answer:
+            </p>
+
+            <pre>
+"Given this row and column,
+what should this cell contain?"
+        </pre>
+
+            <p>
+                It should not become responsible for:
+            </p>
+
+            <pre>
+Theme resolution
+Table construction
+tbody creation
+Pipeline execution
+Global state management
+Recursive DOM traversal
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>59. Complete Rendering Flow</h2>
+
+            <pre>
+                 APPLICATION DATA
+                         |
+                         v
+                     COLUMNS
+                         |
+                         v
+                  VALUE RESOLUTION
+                         |
+                         v
+                 COLUMN RENDERER
+                         |
+                         v
+                  CELL SPECIFICATION
+                         |
+                         v
+                    ROW SPEC
+                         |
+                         v
+                   TBODY SPEC
+                         |
+                         v
+                  TABLE SPEC
+                         |
+                         v
+                 THEME / PIPELINE
+                         |
+                         v
+                 FINAL SPEC
+                         |
+                         v
+               RECURSIVE DOM BUILDER
+                         |
+                         v
+                        DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>60. Final Mental Model</h2>
+
+            <pre>
+                COLUMN
+                  |
+                  v
+          "Here is the value."
+                  |
+                  v
+         COLUMN RENDERER
+                  |
+                  v
+        "Here is how this value
+             should appear."
+                  |
+                  v
+          SPECIFICATION TREE
+                  |
+                  v
+          RECURSIVE BUILDER
+                  |
+                  v
+                 DOM
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        A Column Renderer is a bridge between raw application
+                        data and declarative UI structure.
+                    </strong>
+                </p>
+
+                <p>
+                    It does not need to know how the complete Table is built,
+                    how themes are resolved, or how recursive DOM construction
+                    works. Its focused responsibility is to turn the current
+                    column/row context into the specification required for that
+                    cell.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

@@ -1,0 +1,2636 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Table Lifecycle | ks-table-builder-from-json</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f6f7f9;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            padding: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        nav {
+            margin-top: 16px;
+        }
+
+        nav a {
+            color: #9ec5ff;
+            margin-right: 16px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin-top: 28px;
+        }
+
+        a {
+            color: #175cd3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #181818;
+            color: #eee;
+            padding: 18px;
+            overflow-x: auto;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .note {
+            border-left: 4px solid #555;
+            padding: 12px 16px;
+            background: #f1f1f1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .flow {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Table Lifecycle</h1>
+
+        <div>
+            From configuration and God Spec to transformed specification and DOM
+        </div>
+
+        <nav>
+            <a href="index.html">Documentation Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="god-spec.html">God Spec</a>
+            <a href="themes.html">Themes</a>
+            <a href="theme-transformation.html">Theme Transformation</a>
+            <a href="data-transformation.html">Data Transformation</a>
+            <a href="pipeline-execution.html">Pipeline Execution</a>
+            <a href="columns-and-header.html">Columns and Header</a>
+            <a href="column-renderers.html">Column Renderers</a>
+            <a href="recursive-dom-builder.html">Recursive Builder</a>
+            <a href="dom-element-builder.html">Element Builder</a>
+
+        </nav>
+
+    </header>
+
+    <main>
+
+        <section>
+
+            <h2>1. Purpose</h2>
+
+            <p>
+                This document describes the complete lifecycle of a Table from
+                its initial configuration to the final DOM.
+            </p>
+
+            <pre>
+Configuration
+      |
+      v
+God JSON
+      |
+      v
+Pipeline
+      |
+      v
+Transformed JSON
+      |
+      v
+Recursive DOM Builder
+      |
+      v
+DOM
+      |
+      v
+Browser
+        </pre>
+
+            <div class="note">
+                <strong>
+                    The central idea is that DOM creation is the final stage,
+                    not the mechanism used by every earlier stage.
+                </strong>
+            </div>
+
+        </section>
+
+        <section>
+
+            <h2>2. The Complete Lifecycle</h2>
+
+            <pre>
+             TABLE CONFIGURATION
+                       |
+                       v
+                  GOD JSON
+                       |
+                       v
+              COLUMN RESOLUTION
+                       |
+                       v
+               HEADER GENERATION
+                       |
+                       v
+                DATA TRANSFORM
+                       |
+                       v
+                CELL RENDERING
+                       |
+                       v
+               THEME TRANSFORM
+                       |
+                       v
+                 FINAL JSON
+                       |
+                       v
+              RECURSIVE BUILDER
+                       |
+                       v
+                      DOM
+                       |
+                       v
+                    BROWSER
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>3. Stage 1 — Configuration</h2>
+
+            <p>
+                The lifecycle begins with the information supplied by the
+                consumer.
+            </p>
+
+            <pre>
+{
+    "columns": [...],
+
+    "data": [...],
+
+    "theme": "dark"
+}
+        </pre>
+
+            <p>
+                These values describe what the Table should contain and how it
+                should be presented.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>4. Configuration Is Not the DOM</h2>
+
+            <p>
+                Configuration does not directly describe browser elements.
+            </p>
+
+            <pre>
+Configuration
+      |
+      v
+Transformation
+      |
+      v
+Specification
+      |
+      v
+DOM
+        </pre>
+
+            <p>
+                This distinction allows the same configuration to participate in
+                a specification-driven rendering system.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>5. Stage 2 — God Specification</h2>
+
+            <p>
+                The God Spec provides the initial structural tree.
+            </p>
+
+            <pre>
+div
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+        </pre>
+
+            <p>
+                It can contain all of the static structure required by the
+                component.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>6. God Spec as Starting Point</h2>
+
+            <pre>
+const spec = godSpec;
+        </pre>
+
+            <p>
+                The pipeline begins with this specification.
+            </p>
+
+            <pre>
+spec
+ |
+ v
+Task 1
+ |
+ v
+Task 2
+ |
+ v
+Task 3
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>7. Stage 3 — Column Resolution</h2>
+
+            <p>
+                Column configuration determines the logical columns of the
+                Table.
+            </p>
+
+            <pre>
+Column Configuration
+       |
+       v
+Column Resolution
+       |
+       v
+Resolved Columns
+        </pre>
+
+            <p>
+                The resolved columns can then be used by both header and body
+                generation.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>8. Example Columns</h2>
+
+            <pre>
+[
+    {
+        "key": "name",
+        "label": "Name"
+    },
+
+    {
+        "key": "age",
+        "label": "Age"
+    },
+
+    {
+        "key": "city",
+        "label": "City"
+    }
+]
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>9. Stage 4 — Header Generation</h2>
+
+            <p>
+                The resolved columns can be transformed into the Table header.
+            </p>
+
+            <pre>
+Columns
+   |
+   v
+Header Transformation
+   |
+   v
+thead
+   |
+   +-- tr
+        |
+        +-- th
+        +-- th
+        +-- th
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>10. Header Specification</h2>
+
+            <pre>
+{
+    "tagName": "thead",
+
+    "children": [
+
+        {
+            "tagName": "tr",
+
+            "children": [
+
+                {
+                    "tagName": "th",
+                    "textContent": "Name"
+                },
+
+                {
+                    "tagName": "th",
+                    "textContent": "Age"
+                },
+
+                {
+                    "tagName": "th",
+                    "textContent": "City"
+                }
+
+            ]
+        }
+
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>11. Stage 5 — Data Arrival</h2>
+
+            <p>
+                Application data is supplied independently of the God Spec.
+            </p>
+
+            <pre>
+[
+    {
+        "name": "John",
+        "age": 30,
+        "city": "London"
+    },
+
+    {
+        "name": "Mary",
+        "age": 25,
+        "city": "Paris"
+    }
+]
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>12. Data Does Not Replace the God Spec</h2>
+
+            <pre>
+God Spec
+ |
+ +-- wrapper
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+        </pre>
+
+            <p>
+                The data only supplies the dynamic records.
+            </p>
+
+            <pre>
+Data
+ |
+ v
+tbody children
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>13. Stage 6 — Data Transformation</h2>
+
+            <pre>
+Rows
+ |
+ v
+map(row)
+ |
+ v
+Row Specification
+ |
+ v
+tbody.children
+        </pre>
+
+            <p>
+                Each data record becomes a row specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>14. One Data Row</h2>
+
+            <pre>
+{
+    "name": "John",
+    "age": 30,
+    "city": "London"
+}
+        </pre>
+
+            <p>
+                becomes:
+            </p>
+
+            <pre>
+{
+    "tagName": "tr",
+
+    "children": [
+        {
+            "tagName": "td",
+            "textContent": "John"
+        },
+
+        {
+            "tagName": "td",
+            "textContent": "30"
+        },
+
+        {
+            "tagName": "td",
+            "textContent": "London"
+        }
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>15. Multiple Rows</h2>
+
+            <pre>
+Data
+ |
+ +-- John  ------> tr
+ |
+ +-- Mary  ------> tr
+ |
+ +-- David ------> tr
+        |
+        v
+      tbody
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>16. Stage 7 — Cell Resolution</h2>
+
+            <p>
+                For every row, the transformation walks through the resolved
+                columns.
+            </p>
+
+            <pre>
+Row
+ |
+ +-- Column 1
+ |
+ +-- Column 2
+ |
+ +-- Column 3
+ |
+ v
+Cell Specifications
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>17. Cell Value Resolution</h2>
+
+            <pre>
+const value =
+    row[column.key];
+        </pre>
+
+            <p>
+                For:
+            </p>
+
+            <pre>
+row = {
+    name: "John"
+};
+
+column = {
+    key: "name"
+};
+        </pre>
+
+            <p>
+                the resolved value is:
+            </p>
+
+            <pre>
+"John"
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>18. Stage 8 — Column Renderer</h2>
+
+            <p>
+                If a column defines a renderer, the value can be converted into a
+                richer specification.
+            </p>
+
+            <pre>
+value
+ |
+ v
+Column Renderer
+ |
+ v
+Cell Content Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>19. Example Renderer</h2>
+
+            <pre>
+render: ({ value }) => {
+
+    return {
+        "tagName": "strong",
+        "textContent": String(value)
+    };
+
+}
+        </pre>
+
+            <p>
+                This produces a specification rather than directly creating a
+                DOM element.
+            </p>
+        </section>
+
+        <section>
+
+            <h2>20. Renderer Output</h2>
+
+            <pre>
+{
+    "tagName": "strong",
+
+    "textContent": "John"
+}
+        </pre>
+
+            <p>
+                The generic builder can later materialize this specification.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>21. Stage 9 — Cell Specification</h2>
+
+            <p>
+                The renderer result can be incorporated into the cell.
+            </p>
+
+            <pre>
+td
+ |
+ +-- strong
+      |
+      +-- John
+        </pre>
+
+            <p>
+                The complete cell is still only a specification at this point.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>22. Stage 10 — Row Specification</h2>
+
+            <pre>
+tr
+ |
+ +-- td
+ |
+ +-- td
+ |
+ +-- td
+        </pre>
+
+            <p>
+                The row is assembled from the cells generated from the columns.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>23. Stage 11 — tbody Specification</h2>
+
+            <pre>
+tbody
+ |
+ +-- tr
+ |    |
+ |    +-- td
+ |    +-- td
+ |    +-- td
+ |
+ +-- tr
+      |
+      +-- td
+      +-- td
+      +-- td
+        </pre>
+
+            <p>
+                At this point the dynamic Table body exists in specification form.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>24. God Spec After Data Transformation</h2>
+
+            <pre>
+div
+ |
+ +-- toolbar
+ |
+ +-- table
+      |
+      +-- thead
+      |
+      +-- tbody
+           |
+           +-- tr
+           |
+           +-- tr
+        </pre>
+
+            <p>
+                The original structural skeleton remains, while the dynamic body
+                has been populated.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>25. Stage 12 — Theme Resolution</h2>
+
+            <p>
+                The requested Theme is resolved independently.
+            </p>
+
+            <pre>
+"dark"
+  |
+  v
+resolveThemeSpec()
+  |
+  v
+dark.json
+        </pre>
+
+            <p>
+                A custom Theme object can also be supplied directly.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>26. Stage 13 — Theme Transformation</h2>
+
+            <pre>
+Current Spec
+     +
+Theme Spec
+     |
+     v
+Theme Transformation
+     |
+     v
+Themed Spec
+        </pre>
+
+            <p>
+                The Theme transformation walks the specification tree and applies
+                corresponding presentation information.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>27. Theme as a Parallel Tree</h2>
+
+            <pre>
+God Spec                    Theme Spec
+
+div                         div
+ |                           |
+ +-- table                   +-- table
+      |                           |
+      +-- thead                 +-- thead
+      |                           |
+      +-- tbody                 +-- tbody
+        </pre>
+
+            <p>
+                Corresponding nodes are transformed together.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>28. Theme Transformation Does Not Create a Second DOM</h2>
+
+            <pre>
+God Spec
+    +
+Theme Spec
+    |
+    v
+Resolved Spec
+    |
+    v
+One DOM
+        </pre>
+
+            <p>
+                The Theme is an input to specification transformation, not
+                another independently rendered tree.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>29. Stage 14 — Final Specification</h2>
+
+            <p>
+                After all required transformations:
+            </p>
+
+            <pre>
+Configuration
+      |
+      v
+God Spec
+      |
+      v
+Columns
+      |
+      v
+Header
+      |
+      v
+Data
+      |
+      v
+Body
+      |
+      v
+Renderers
+      |
+      v
+Theme
+      |
+      v
+FINAL SPEC
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>30. Final Specification Example</h2>
+
+            <pre>
+{
+    "tagName": "div",
+
+    "attributes": {
+        "class": "table-wrapper space-y-3"
+    },
+
+    "children": [
+
+        {
+            "tagName": "table",
+
+            "attributes": {
+                "class":
+                    "w-full bg-gray-900"
+            },
+
+            "children": [
+
+                {
+                    "tagName": "thead",
+
+                    "attributes": {
+                        "class":
+                            "bg-gray-800"
+                    },
+
+                    "children": [...]
+                },
+
+                {
+                    "tagName": "tbody",
+
+                    "attributes": {
+                        "class":
+                            "divide-y divide-gray-700"
+                    },
+
+                    "children": [
+                        ...
+                    ]
+                }
+
+            ]
+        }
+
+    ]
+}
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>31. Stage 15 — DOM Builder</h2>
+
+            <p>
+                Only after specification processing is complete does the
+                recursive DOM builder begin its work.
+            </p>
+
+            <pre>
+Final Spec
+     |
+     v
+Recursive DOM Builder
+     |
+     v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>32. Recursive DOM Construction</h2>
+
+            <pre>
+Specification
+ |
+ +-- create element
+ |
+ +-- apply attributes
+ |
+ +-- process children
+       |
+       +-- create child
+       |
+       +-- process grandchildren
+       |
+       +-- ...
+        </pre>
+
+            <p>
+                The same algorithm works at every level.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>33. Why Recursion Works</h2>
+
+            <p>
+                Every specification node has the same general shape:
+            </p>
+
+            <pre>
+{
+    tagName,
+    attributes,
+    children
+}
+        </pre>
+
+            <p>
+                Therefore the builder does not need separate code for
+                <code>div</code>, <code>table</code>, <code>thead</code>,
+                <code>tr</code>, or <code>td</code>.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>34. DOM Materialization</h2>
+
+            <pre>
+{
+    "tagName": "span",
+    "textContent": "John"
+}
+        </pre>
+
+            <p>
+                becomes conceptually:
+            </p>
+
+            <pre>
+const element =
+    document.createElement("span");
+
+element.textContent = "John";
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>35. The Final Table</h2>
+
+            <pre>
+<div class="table-wrapper">
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>City</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            <tr>
+                <td>John</td>
+                <td>30</td>
+                <td>London</td>
+            </tr>
+
+            <tr>
+                <td>Mary</td>
+                <td>25</td>
+                <td>Paris</td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>36. Lifecycle in One Diagram</h2>
+
+            <pre>
+                         CONFIGURATION
+                              |
+                              v
+                           GOD JSON
+                              |
+                              v
+                    +-------------------+
+                    | COLUMN RESOLUTION |
+                    +-------------------+
+                              |
+                              v
+                    +-------------------+
+                    | HEADER GENERATION |
+                    +-------------------+
+                              |
+                              v
+                    +-------------------+
+                    | DATA TRANSFORM    |
+                    +-------------------+
+                              |
+                              v
+                    +-------------------+
+                    | CELL RENDERING    |
+                    +-------------------+
+                              |
+                              v
+                    +-------------------+
+                    | THEME TRANSFORM   |
+                    +-------------------+
+                              |
+                              v
+                       FINAL JSON SPEC
+                              |
+                              v
+                    +-------------------+
+                    | RECURSIVE BUILDER |
+                    +-------------------+
+                              |
+                              v
+                             DOM
+                              |
+                              v
+                           BROWSER
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>37. Structural Information</h2>
+
+            <p>
+                Structural information primarily originates from the God Spec.
+            </p>
+
+            <pre>
+God Spec
+ |
+ +-- wrapper
+ +-- toolbar
+ +-- table
+ +-- thead
+ +-- tbody
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>38. Data Information</h2>
+
+            <p>
+                Dynamic record information originates from application data.
+            </p>
+
+            <pre>
+Data
+ |
+ +-- row 1
+ +-- row 2
+ +-- row 3
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>39. Presentation Information</h2>
+
+            <p>
+                Presentation information can originate from the Theme.
+            </p>
+
+            <pre>
+Theme
+ |
+ +-- wrapper classes
+ +-- table classes
+ +-- header classes
+ +-- body classes
+ +-- cell classes
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>40. Rendering Information</h2>
+
+            <p>
+                Column renderers determine how individual values become cell
+                content.
+            </p>
+
+            <pre>
+value
+ |
+ v
+renderer
+ |
+ v
+cell subtree
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>41. Five Sources</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Source</th>
+                        <th>Primary Responsibility</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>God Spec</td>
+                        <td>Structure.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Columns</td>
+                        <td>Column definition and mapping.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Data</td>
+                        <td>Runtime records.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Renderers</td>
+                        <td>Cell representation.</td>
+                    </tr>
+
+                    <tr>
+                        <td>Theme</td>
+                        <td>Presentation.</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>42. The Pipeline Connects Them</h2>
+
+            <pre>
+God Spec
+    |
+    +---- Columns
+    |
+    +---- Data
+    |
+    +---- Renderers
+    |
+    +---- Theme
+    |
+    v
+Pipeline
+    |
+    v
+Final Spec
+        </pre>
+
+            <p>
+                The pipeline provides the ordered transformation path.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>43. One Specification Language</h2>
+
+            <p>
+                All transformation stages communicate using the same
+                specification model.
+            </p>
+
+            <pre>
+Task A
+ |
+ v
+Spec
+ |
+ v
+Task B
+ |
+ v
+Spec
+ |
+ v
+Task C
+ |
+ v
+Spec
+        </pre>
+
+            <p>
+                This common representation is what allows the stages to be
+                composed.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>44. No Direct Coupling to the Browser</h2>
+
+            <p>
+                Most of the lifecycle can execute without constructing actual
+                browser elements.
+            </p>
+
+            <pre>
+God JSON
+   |
+   v
+Pipeline
+   |
+   v
+Final JSON
+        </pre>
+
+            <p>
+                The browser becomes relevant only when the final specification is
+                materialized.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>45. Lifecycle and Testing</h2>
+
+            <p>
+                Each stage can be tested independently.
+            </p>
+
+            <pre>
+God Spec Test
+       |
+       v
+Column Test
+       |
+       v
+Header Test
+       |
+       v
+Data Test
+       |
+       v
+Renderer Test
+       |
+       v
+Theme Test
+       |
+       v
+DOM Builder Test
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>46. Testing the Final Specification</h2>
+
+            <pre>
+Input
+ |
+ v
+Pipeline
+ |
+ v
+Final Spec
+ |
+ v
+assert finalSpec
+        </pre>
+
+            <p>
+                This can catch transformation errors before DOM construction.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>47. Testing DOM Separately</h2>
+
+            <pre>
+Final Spec
+ |
+ v
+DOM Builder
+ |
+ v
+DOM
+ |
+ v
+assert DOM
+        </pre>
+
+            <p>
+                This separates specification correctness from DOM materialization
+                correctness.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>48. Lifecycle and Debugging</h2>
+
+            <pre>
+God Spec
+   |
+   | inspect
+   v
+Columns
+   |
+   | inspect
+   v
+Header
+   |
+   | inspect
+   v
+Body
+   |
+   | inspect
+   v
+Theme
+   |
+   | inspect
+   v
+Final Spec
+   |
+   v
+DOM
+        </pre>
+
+            <p>
+                The intermediate specification states make debugging much easier.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>49. Changing the Theme</h2>
+
+            <p>
+                If only the Theme changes:
+            </p>
+
+            <pre>
+Same God Spec
+Same Data
+Same Columns
+Same Renderers
+        |
+        v
+Different Theme
+        |
+        v
+Different Final Presentation
+        </pre>
+
+            <p>
+                The structural component does not need to be rewritten.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>50. Changing the Data</h2>
+
+            <p>
+                If only the data changes:
+            </p>
+
+            <pre>
+Same God Spec
+Same Columns
+Same Theme
+        |
+        v
+New Data
+        |
+        v
+New tbody
+        |
+        v
+New Final Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>51. Changing the Columns</h2>
+
+            <p>
+                If the columns change:
+            </p>
+
+            <pre>
+New Columns
+      |
+      +----> New Header
+      |
+      +----> New Body Mapping
+        </pre>
+
+            <p>
+                The source data objects do not necessarily need to change.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>52. Changing a Renderer</h2>
+
+            <pre>
+Same Data
+Same Columns
+        |
+        v
+New Renderer
+        |
+        v
+Different Cell Specification
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>53. Changing the God Spec</h2>
+
+            <p>
+                Structural changes belong to the God Spec.
+            </p>
+
+            <pre>
+New God Spec
+     |
+     v
+Same transformation infrastructure
+     |
+     v
+New component structure
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>54. Adding a Toolbar</h2>
+
+            <pre>
+God Spec
+
+div
+ |
+ +-- toolbar
+ |
+ +-- table
+        </pre>
+
+            <p>
+                The toolbar can be part of the structural specification without
+                forcing the Data Task to understand toolbar construction.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>55. Adding a Footer</h2>
+
+            <pre>
+table
+ |
+ +-- thead
+ |
+ +-- tbody
+ |
+ +-- tfoot
+        </pre>
+
+            <p>
+                A footer transformation can be added independently if required.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>56. Adding Selection</h2>
+
+            <pre>
+Selection Task
+      |
+      v
+row specification
+      |
+      +-- checkbox cell
+        </pre>
+
+            <p>
+                Selection can therefore become another transformation stage.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>57. Adding Actions</h2>
+
+            <pre>
+Action Column
+      |
+      v
+Column Renderer
+      |
+      v
+button specification
+        </pre>
+
+            <p>
+                No change to the generic DOM builder is required.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>58. Lifecycle With Optional Features</h2>
+
+            <pre>
+God Spec
+   |
+   v
+Columns
+   |
+   v
+Header
+   |
+   v
+Data
+   |
+   +---- Selection
+   |
+   +---- Actions
+   |
+   +---- Formatting
+   |
+   v
+Theme
+   |
+   v
+Final Spec
+   |
+   v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>59. Dynamic Features as Middleware</h2>
+
+            <p>
+                Optional behavior does not necessarily need to be embedded into
+                the core DOM builder.
+            </p>
+
+            <pre>
+Feature
+   |
+   v
+Middleware
+   |
+   v
+Specification modification
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>60. The DOM Builder Remains Generic</h2>
+
+            <pre>
+Specification
+ |
+ +-- tagName
+ +-- attributes
+ +-- children
+ |
+ v
+Generic Builder
+ |
+ v
+DOM
+        </pre>
+
+            <p>
+                The builder does not need to understand:
+            </p>
+
+            <pre>
+Table
+Columns
+Rows
+Themes
+Sorting
+Filtering
+Pagination
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>61. Lifecycle as Compilation</h2>
+
+            <p>
+                The entire process can be viewed as a small compilation pipeline.
+            </p>
+
+            <pre>
+High-Level Configuration
+          |
+          v
+Component Specification
+          |
+          v
+Transformed Specification
+          |
+          v
+DOM
+        </pre>
+
+            <p>
+                The specification acts as an intermediate representation between
+                application configuration and browser elements.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>62. Intermediate Representation</h2>
+
+            <pre>
+Application Data
+       |
+       v
+      SPEC
+       |
+       v
+      DOM
+        </pre>
+
+            <p>
+                This is one of the strongest architectural properties of the
+                approach.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>63. Lifecycle and Reusability</h2>
+
+            <pre>
+              GENERIC ENGINE
+                     |
+        +------------+------------+
+        |            |            |
+        v            v            v
+      Table        Form          Card
+        |            |            |
+        v            v            v
+      Spec         Spec         Spec
+        |            |            |
+        +------------+------------+
+                     |
+                     v
+               DOM BUILDER
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>64. Table as a Specialized Pipeline</h2>
+
+            <p>
+                The Table does not need a special DOM construction engine.
+            </p>
+
+            <pre>
+Table-specific logic
+       |
+       v
+Table specification
+       |
+       v
+Generic DOM builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>65. Form as Another Pipeline</h2>
+
+            <pre>
+Form-specific logic
+       |
+       v
+Form specification
+       |
+       v
+Generic DOM builder
+        </pre>
+
+            <p>
+                The same architectural boundary can therefore support multiple
+                component types.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>66. Lifecycle and Folder Organization</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ |
+ +-- themes/
+ |    |
+ |    +-- index.js
+ |    +-- dark.json
+ |    +-- light.json
+ |    +-- medium.json
+ |
+ +-- pipeline/
+ |
+ +-- columns/
+ |
+ +-- renderers/
+ |
+ +-- index.js
+        </pre>
+
+            <p>
+                This organization keeps the pieces of one component together
+                while preserving their responsibilities.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>67. Theme Pairing</h2>
+
+            <p>
+                A component can conceptually consist of:
+            </p>
+
+            <pre>
+God JSON
+    +
+Theme JSON
+        </pre>
+
+            <p>
+                The God JSON describes the structural tree while the Theme JSON
+                provides the presentation counterpart.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>68. Table Pair</h2>
+
+            <pre>
+table/
+ |
+ +-- god.json
+ |
+ +-- themes/
+      |
+      +-- dark.json
+      +-- light.json
+      +-- medium.json
+        </pre>
+
+            <p>
+                The same God Spec can therefore be paired with different Theme
+                specifications.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>69. Lifecycle With a Custom Theme</h2>
+
+            <pre>
+God JSON
+   |
+   v
+Data
+   |
+   v
+Columns
+   |
+   v
+Body
+   |
+   v
+Custom Theme JSON
+   |
+   v
+Theme Transformation
+   |
+   v
+Final Spec
+   |
+   v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>70. Lifecycle With a Named Theme</h2>
+
+            <pre>
+"dark"
+  |
+  v
+Theme Resolver
+  |
+  v
+dark.json
+  |
+  v
+Theme Transformation
+  |
+  v
+Final Spec
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>71. Lifecycle and Default Theme</h2>
+
+            <pre>
+No Theme
+   |
+   v
+Theme Resolver
+   |
+   v
+Default Theme
+   |
+   v
+Theme Transformation
+        </pre>
+
+            <p>
+                The default Theme can therefore provide predictable presentation
+                when no explicit Theme is selected.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>72. Lifecycle and Missing Theme</h2>
+
+            <pre>
+Unknown Theme
+     |
+     v
+Theme Resolver
+     |
+     v
+Default Theme
+        </pre>
+
+            <p>
+                This behavior depends on the resolver's configured fallback
+                contract.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>73. Lifecycle and Deep Components</h2>
+
+            <p>
+                The architecture does not require the Table to be at the root of
+                the specification.
+            </p>
+
+            <pre>
+div
+ |
+ +-- section
+      |
+      +-- panel
+           |
+           +-- table
+                |
+                +-- tbody
+        </pre>
+
+            <p>
+                A targeted transformation can locate and modify the appropriate
+                subtree.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>74. Targeted Middleware</h2>
+
+            <pre>
+Entire Spec
+     |
+     v
+find target
+     |
+     v
+modify target
+     |
+     v
+return entire Spec
+        </pre>
+
+            <p>
+                This avoids reconstructing unrelated branches.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>75. Lifecycle and Mutation</h2>
+
+            <p>
+                If the pipeline uses mutation, the same working object can pass
+                through every stage.
+            </p>
+
+            <pre>
+God Spec
+   |
+   v
+mutate
+   |
+   v
+same object
+   |
+   v
+mutate
+   |
+   v
+same object
+   |
+   v
+final object
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>76. Lifecycle and Replacement</h2>
+
+            <p>
+                Alternatively, each stage can return a transformed object.
+            </p>
+
+            <pre>
+Spec A
+  |
+  v
+Task
+  |
+  v
+Spec B
+  |
+  v
+Task
+  |
+  v
+Spec C
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>77. The Important Invariant</h2>
+
+            <p>
+                Regardless of whether mutation or replacement is used, the
+                important invariant is:
+            </p>
+
+            <pre>
+Every stage receives
+a specification
+and produces a specification.
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>78. Lifecycle and Separation</h2>
+
+            <pre>
+STRUCTURE
+   |
+   +-- God Spec
+
+
+CONTENT
+   |
+   +-- Data
+   +-- Columns
+   +-- Renderers
+
+
+PRESENTATION
+   |
+   +-- Theme
+
+
+EXECUTION
+   |
+   +-- Pipeline
+
+
+MATERIALIZATION
+   |
+   +-- DOM Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>79. Why This Architecture Scales</h2>
+
+            <p>
+                New functionality can usually be introduced at the appropriate
+                layer instead of modifying the complete rendering mechanism.
+            </p>
+
+            <pre>
+New Requirement
+      |
+      v
+Identify responsibility
+      |
+      v
+Add / modify transformation
+      |
+      v
+Final Spec
+      |
+      v
+Existing DOM Builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>80. Example: Add Currency Formatting</h2>
+
+            <pre>
+Raw Value
+   |
+   v
+Currency Renderer
+   |
+   v
+Cell Spec
+        </pre>
+
+            <p>
+                No change to the recursive DOM builder is required.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>81. Example: Add Dark Theme</h2>
+
+            <pre>
+God Spec
+   |
+   v
+dark.json
+   |
+   v
+Theme Transformation
+   |
+   v
+Themed Spec
+        </pre>
+
+            <p>
+                No change to the Table data transformation is required.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>82. Example: Add Filtering</h2>
+
+            <pre>
+Rows
+   |
+   v
+Filter Task
+   |
+   v
+Visible Rows
+   |
+   v
+Data Task
+        </pre>
+
+            <p>
+                The DOM builder remains unchanged.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>83. Example: Add Pagination</h2>
+
+            <pre>
+All Rows
+   |
+   v
+Pagination Task
+   |
+   v
+Current Rows
+   |
+   v
+Data Task
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>84. Example: Add Selection</h2>
+
+            <pre>
+Rows
+   |
+   v
+Selection Transformation
+   |
+   v
+Checkbox Cell Specs
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>85. Lifecycle Is Not One Function</h2>
+
+            <p>
+                Conceptually, the complete lifecycle may look like one flow, but
+                it is better implemented as cooperating pieces.
+            </p>
+
+            <pre>
+Table
+ |
+ +-- Resolver
+ +-- Pipeline
+ +-- Column logic
+ +-- Data logic
+ +-- Renderers
+ +-- Theme
+ +-- DOM builder
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>86. Component Entry Point</h2>
+
+            <p>
+                The public component entry point can coordinate the process.
+            </p>
+
+            <pre>
+createTable(options)
+        |
+        +-- load God Spec
+        +-- resolve Theme
+        +-- resolve Columns
+        +-- create Pipeline
+        +-- execute Pipeline
+        +-- build DOM
+        |
+        v
+Table Element
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>87. Conceptual Entry Point</h2>
+
+            <pre>
+const createTable = options => {
+
+    const godSpec =
+        loadGodSpec();
+
+    const tasks =
+        createPipeline(options);
+
+    const finalSpec =
+        runPipeline({
+            inSpec: godSpec,
+            inTasks: tasks
+        });
+
+    return recursiveDomBuilder({
+        inSpec: finalSpec
+    });
+
+};
+        </pre>
+
+            <p>
+                This is a conceptual representation of the architecture; exact
+                implementation details can differ.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>88. Lifecycle Summary Table</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Stage</th>
+                        <th>Input</th>
+                        <th>Output</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>God Spec</td>
+                        <td>Component definition</td>
+                        <td>Initial specification</td>
+                    </tr>
+
+                    <tr>
+                        <td>Columns</td>
+                        <td>Column configuration</td>
+                        <td>Resolved columns</td>
+                    </tr>
+
+                    <tr>
+                        <td>Header</td>
+                        <td>Resolved columns</td>
+                        <td>thead specification</td>
+                    </tr>
+
+                    <tr>
+                        <td>Data</td>
+                        <td>Rows + columns</td>
+                        <td>tbody specification</td>
+                    </tr>
+
+                    <tr>
+                        <td>Renderer</td>
+                        <td>Cell value/context</td>
+                        <td>Cell content specification</td>
+                    </tr>
+
+                    <tr>
+                        <td>Theme</td>
+                        <td>Spec + Theme Spec</td>
+                        <td>Themed specification</td>
+                    </tr>
+
+                    <tr>
+                        <td>DOM Builder</td>
+                        <td>Final specification</td>
+                        <td>DOM</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <section>
+
+            <h2>89. The Complete Data Flow</h2>
+
+            <pre>
+Application
+    |
+    +-- columns
+    +-- rows
+    +-- theme
+    |
+    v
+Component Entry
+    |
+    v
+God Spec
+    |
+    v
+Pipeline
+    |
+    +-- columns
+    +-- header
+    +-- data
+    +-- renderers
+    +-- theme
+    |
+    v
+Final Spec
+    |
+    v
+Recursive DOM Builder
+    |
+    v
+DOM
+        </pre>
+
+        </section>
+
+        <section>
+
+            <h2>90. Final Mental Model</h2>
+
+            <pre>
+                 GOD JSON
+                    |
+                    |
+             "This is the tree."
+                    |
+                    v
+                  DATA
+                    |
+                    |
+             "These are the records."
+                    |
+                    v
+                COLUMNS
+                    |
+                    |
+             "These are the fields
+              and their mapping."
+                    |
+                    v
+               RENDERERS
+                    |
+                    |
+             "This is how values
+               become cells."
+                    |
+                    v
+                 THEME
+                    |
+                    |
+             "This is how the tree
+                should look."
+                    |
+                    v
+              PIPELINE
+                    |
+                    |
+             "Apply everything
+               in order."
+                    |
+                    v
+              FINAL JSON
+                    |
+                    |
+             "This is the complete
+              resolved specification."
+                    |
+                    v
+          RECURSIVE DOM BUILDER
+                    |
+                    |
+             "Materialize it."
+                    |
+                    v
+                   DOM
+                    |
+                    v
+                 BROWSER
+        </pre>
+
+            <div class="note">
+
+                <p>
+                    <strong>
+                        The Table lifecycle is therefore a transformation
+                        lifecycle.
+                    </strong>
+                </p>
+
+                <p>
+                    The God JSON provides the structural foundation. Columns,
+                    data, renderers, and Themes contribute additional information
+                    through middleware-style transformations. Each stage works
+                    with the same specification model. The final specification
+                    is then passed once to the generic recursive DOM builder.
+                </p>
+
+                <p>
+                    This keeps the responsibilities separate while allowing the
+                    complete Table to be assembled from a single evolving
+                    specification tree.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

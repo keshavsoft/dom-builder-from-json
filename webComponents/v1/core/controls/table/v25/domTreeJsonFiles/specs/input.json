@@ -1,0 +1,7 @@
+{
+  "tagName": "input",
+  "attributes": {
+    "type": "text",
+    "class": "w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-blue-100 focus:shadow-xl transition-all duration-150"
+  }
+}

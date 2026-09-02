@@ -1,5 +1,5 @@
 import startCompositeDefinition from "./start.json" with { type: "json" };
-import specTemplatesDictionary from "./spec.json" with { type: "json" };
+import specTemplatesDictionary from "../../../../../../../../specs/v1/spec.json" with { type: "json" };
 import stepsDefinition from "./steps.json" with { type: "json" };
 import columnsData from "./ui/columns.json" with { type: "json" };
 import rowData from "./ui/data.json" with { type: "json" };

@@ -3,7 +3,8 @@ import buildHeaderRowSpec from "./buildHeaderRowSpec.js";
 /**
  * Head Module: Pure function returning <thead> <tr> row specs array
  */
-export const buildHead = ({ inColumns, inTrSpec, inThSpec }) => {
+export const buildHead = ({ inHeaderConfig, inColumns, inTrSpec, inThSpec }) => {
+    const localHeaderConfig = inHeaderConfig;
     const localColumns = inColumns || [];
     const localTrSpec = inTrSpec;
     const localThSpec = inThSpec;
@@ -14,6 +15,7 @@ export const buildHead = ({ inColumns, inTrSpec, inThSpec }) => {
     // console.log("localColumns : ", localColumns);
 
     const headerRow = buildHeaderRowSpec({
+        inHeaderConfig: localHeaderConfig,
         inColumns: localColumns,
         inTrSpec: localTrSpec,
         inThSpec: localThSpec

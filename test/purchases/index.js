@@ -17,14 +17,37 @@ if (tableContainer) {
         },
         columnsConfig: [
             { key: "vchtype", label: "vchtype" },
-            { key: "vouchernumber", label: "vouchernumber" },
+            { key: "vouchernumber", label: "voucher number" },
             { key: "allinventoryentries.stockitemname", label: "stockitemname" },
-            { key: "Credit", label: "Credit" },
-            { key: "Debit", label: "Debit" }
+            { key: "allinventoryentries.batchallocations.godownname", label: "godownname" },
+            { key: "allinventoryentries.batchallocations.batchname", label: "batchname" },
+            { key: "allinventoryentries.batchallocations.amount", label: "amount" },
+            { key: "allinventoryentries.batchallocations.actualqty", label: "actual qty" },
+            { key: "allinventoryentries.batchallocations.billedqty", label: "billed qty" }
         ],
         renderers: {
             table: {
-                columns: ["vchtype", "vouchernumber", "allinventoryentries.stockitemname"],
+                header: {
+                    vouchernumber: {
+                        "attributes": {
+                            "style": "text-align: right; color: rgba(235, 37, 37, 1); text-transform: none;"
+                        },
+                        textContent: "Voucher Number"
+                    },
+                    "allinventoryentries.stockitemname": {
+                        "attributes": {
+                            "style": "text-transform: none;"
+                        },
+                        textContent: "Stock Item Name"
+                    }
+                },
+                columns: ["vchtype", "vouchernumber", "allinventoryentries.stockitemname",
+                    "allinventoryentries.batchallocations.batchname",
+                    "allinventoryentries.batchallocations.godownname",
+                    "allinventoryentries.batchallocations.amount",
+                    "allinventoryentries.batchallocations.actualqty",
+                    "allinventoryentries.batchallocations.billedqty"
+                ],
                 footer: {
                     summaryRow: {
                         vchtype: "count",
@@ -44,18 +67,4 @@ if (tableContainer) {
             }
         }
     });
-
-    // if (tableElement) {
-    //     tableContainer.appendChild(tableElement);
-
-    //     // Reconstruct JSON Spec from rendered DOM Element
-    //     const jsonSpec = buildSpecFromElement({ inElement: tableElement });
-    //     console.log("Reverted JSON Spec from DOM:", jsonSpec);
-
-    //     const report = compareSpecs({ inFromSpec: tableElement, inToSpec: jsonSpec });
-    //     console.log("Spec Comparison Report:", report);
-    // };
-
-    // tableContainer.appendChild(directJs());
-
-}
+};

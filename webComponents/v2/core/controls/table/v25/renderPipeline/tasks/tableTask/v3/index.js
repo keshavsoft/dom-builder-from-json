@@ -18,7 +18,7 @@ export const createTableTask = ({
     return () => {
         if (!localShowTable) {
             return null;
-        }
+        };
 
         const tableSpecInput = buildConfiguredTableSpecInput({
             inStore: localStore,
@@ -27,6 +27,7 @@ export const createTableTask = ({
 
         // Step 1: Build <thead> section element
         const headRows = getHeadRows({
+            inHeaderConfig: localTableConfig?.header,
             inDomTreeSpecs: localDomTreeSpecs,
             inColumns: tableSpecInput.inColumns
         });

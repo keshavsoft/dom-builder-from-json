@@ -5,11 +5,12 @@ import buildFooter from "./footer/v4/index.js";
 /**
  * Builds the complete <thead> spec node populated with head row/cell specs.
  */
-export const getHeadRows = ({ inDomTreeSpecs, inColumns }) => {
+export const getHeadRows = ({ inHeaderConfig, inDomTreeSpecs, inColumns }) => {
     const localDomTreeSpecs = inDomTreeSpecs;
     const localColumns = inColumns || [];
 
     const headRows = buildHead({
+        inHeaderConfig: inHeaderConfig,
         inColumns: localColumns,
         inTrSpec: localDomTreeSpecs.trSpec,
         inThSpec: localDomTreeSpecs.thSpec

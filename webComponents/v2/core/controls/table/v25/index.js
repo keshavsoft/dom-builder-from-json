@@ -3,7 +3,7 @@ import buildStory from "./story/index.js";
 import domCreationFuncs from "../../../../domCreation/index.js";
 import getActiveDomTreeSpecs from "./getActiveDomTreeSpecs.js";
 
-console.log("24");
+console.log("25");
 
 const filterData = ({ inData, inQuery }) => {
     const localData = Array.isArray(inData) ? inData : [];

@@ -69,13 +69,25 @@ const buildStepsFromDefinition = ({
     inColumns,
     inData
 }) => {
-    const localStepsDefinition = Array.isArray(inStepsDefinition)
-        ? inStepsDefinition
-        : [];
+    const localStepsDefinition = inStepsDefinition;
+    const localColumns = inColumns;
+    const localData = inData;
+
+    if (!localStepsDefinition || typeof localStepsDefinition !== "object") {
+        return [];
+    }
 
     const generatedSteps = [];
 
-    localStepsDefinition.forEach(stepDefinition => {
+    const stepEntries = Array.isArray(localStepsDefinition)
+        ? localStepsDefinition.map(step => [step.name, step])
+        : Object.entries(localStepsDefinition);
+
+    stepEntries.forEach(([stepKey, stepDefinition]) => {
+        if (!stepDefinition || !stepDefinition.builder) {
+            return;
+        }
+
         const localBuilder = builderMap[stepDefinition.builder];
 
         if (typeof localBuilder !== "function") {
@@ -83,8 +95,8 @@ const buildStepsFromDefinition = ({
         }
 
         const generatedValue = localBuilder({
-            inColumns,
-            inData
+            inColumns: localColumns,
+            inData: localData
         });
 
         generatedSteps.push({

@@ -1,6 +1,6 @@
 import startCompositeDefinition from "./start.json" with { type: "json" };
 import specTemplatesDictionary from "./spec.json" with { type: "json" };
-import stepsDefinitionList from "./steps.json" with { type: "json" };
+import stepsDefinition from "./steps.json" with { type: "json" };
 
 import buildBaseSpecTreeFromComposite, {
     applySequentialStepsToSpecTree
@@ -25,7 +25,7 @@ const buildTableSpecTreeFromColumnsAndData = ({
     );
 
     const generatedSteps = buildStepsFromDefinition({
-        inStepsDefinition: stepsDefinitionList,
+        inStepsDefinition: stepsDefinition,
         inColumns: localColumns,
         inData: localData
     });

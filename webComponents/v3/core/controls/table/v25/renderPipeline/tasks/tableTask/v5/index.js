@@ -1,9 +1,10 @@
 import startCompositeDefinition from "./start.json" with { type: "json" };
 import specTemplatesDictionary from "./spec.json" with { type: "json" };
-import stepsDefinitionList from "./steps.json" with { type: "json" };
+import stepsDefinition from "./steps.json" with { type: "json" };
 import columnsData from "./ui/columns.json" with { type: "json" };
 import rowData from "./ui/data.json" with { type: "json" };
 import buildBaseSpecTreeFromComposite, { applySequentialStepsToSpecTree } from "./buildFromComposite.js";
+import buildStepsFromDefinition from "./buildStepsFromDefinition.js";
 import { buildStepsFromColumnsAndData } from "./buildStepsFromColumnsAndData.js";
 
 const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
@@ -16,7 +17,8 @@ const buildTableSpecTreeFromColumnsAndData = ({ inColumns, inData }) => {
     const localData = inData;
 
     const baseTreeCopy = JSON.parse(JSON.stringify(initialBaseSpecTree));
-    const generatedSteps = buildStepsFromColumnsAndData({
+    const generatedSteps = buildStepsFromDefinition({
+        inStepsDefinition: stepsDefinition,
         inColumns: localColumns,
         inData: localData
     });
@@ -43,12 +45,13 @@ console.log("===================================================================
 export {
     startCompositeDefinition,
     specTemplatesDictionary,
-    stepsDefinitionList,
+    stepsDefinition,
     initialBaseSpecTree,
     finalHydratedSpecTree,
     buildBaseSpecTreeFromComposite,
     applySequentialStepsToSpecTree,
     buildStepsFromColumnsAndData,
+    buildStepsFromDefinition,
     buildTableSpecTreeFromColumnsAndData
 };
 

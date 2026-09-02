@@ -7,7 +7,11 @@
     {
         "find": "table.tbody.tr",
         "target": "attributes",
-        "value": "ppppppppp"
+        "value": {
+            "class": "bg-gray-100 border-b",
+            "id": "tbody-row-1",
+            "ssss": 9999
+        }
     },
     {
         "find": "table.tfoot.tr",

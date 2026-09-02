@@ -1,4 +1,4 @@
-import tableComposite from "./table.json" with { type: "json" };
+import tableComposite from "./start.json" with { type: "json" };
 import step1 from "./steps/1.json" with { type: "json" };
 import step2 from "./steps/2.json" with { type: "json" };
 import { defaultThemedSpec } from "../../../specs/v2/index.js";

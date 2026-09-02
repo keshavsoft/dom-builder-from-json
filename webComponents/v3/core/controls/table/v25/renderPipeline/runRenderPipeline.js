@@ -10,6 +10,7 @@ export const runRenderPipeline = ({ inPipeline = [] }) => {
 
         returnArray.push(res);
     };
+    // console.log("returnArray ----: ", returnArray);
 
     return returnArray;
 };

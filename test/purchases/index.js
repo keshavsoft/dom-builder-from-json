@@ -65,6 +65,32 @@ if (tableContainer) {
                     ]
 
                 }
+            },
+            form: {
+                fields: {
+                    vouchernumber: {
+                        attributes: {
+                            style: "text-align: right; color: rgba(235, 37, 37, 1); text-transform: none;"
+                        },
+                        label: "Voucher Number"
+                    },
+                    "allinventoryentries.stockitemname": {
+                        attributes: {
+                            style: "text-transform: none;"
+                        },
+                        label: "Stock Item Name"
+                    }
+                },
+                columns: [
+                    "vchtype",
+                    "vouchernumber",
+                    "allinventoryentries.stockitemname",
+                    "allinventoryentries.batchallocations.batchname",
+                    "allinventoryentries.batchallocations.godownname",
+                    "allinventoryentries.batchallocations.amount",
+                    "allinventoryentries.batchallocations.actualqty",
+                    "allinventoryentries.batchallocations.billedqty"
+                ]
             }
         }
     });

@@ -3,7 +3,7 @@ import buildStory from "./story/index.js";
 import domCreationFuncs from "../../../../domCreation/index.js";
 import getActiveDomTreeSpecs from "./getActiveDomTreeSpecs.js";
 
-console.log("3-25");
+console.log("3-25-");
 
 const filterData = ({ inData, inQuery }) => {
     const localData = Array.isArray(inData) ? inData : [];
@@ -111,18 +111,17 @@ export const renderTable = (inOptions = {}) => {
 
     console.log("childrenNodes: ", childrenNodes);
 
-    // const localRootSpec = { ...activeDomTreeSpecs.root };
-
-    // localRootSpec.children.push(...childrenNodes);
-
     const domElement = domCreationFuncs.versions[domCreationFuncs.maxVersion](childrenNodes);
 
-    console.log("domElement: ", domElement[0]);
+    console.log("domElement: ", domElement);
 
     const tableContainer = document.getElementById("tableContainer");
-    if (tableContainer) {
-        tableContainer.appendChild(domElement[0]);
-    }
+
+    for (let key of domElement) {
+        if (tableContainer) {
+            tableContainer.appendChild(key);
+        };
+    };
 
     // hookSearch({
     //     inStory: story,

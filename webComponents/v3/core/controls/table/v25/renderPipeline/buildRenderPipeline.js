@@ -1,5 +1,6 @@
 import createSearchTask from "./tasks/searchTask/v2/searchTask.js";
-import { createTableTask, buildTableSpecTreeFromColumnsAndData, createTableTaskV4 } from "./tasks/tableTask.js";
+import { createTableTaskV4 } from "./tasks/tableTask.js";
+import { createFormTask } from "./tasks/formTask.js";
 
 /**
  * Builds dynamic array of render component pipeline task functions
@@ -35,14 +36,13 @@ export const buildRenderPipeline = ({
     });
 
     pipeline.push(fromTable);
-    // console.log("pipeline ----: ", pipeline);
-    // Render Task 2: Table Component Task (Creates & appends <table> element shell, receives inStore)
-    // pipeline.push(createTableTask({
-    //     inShowTable: localShowTable,
-    //     inDomTreeSpecs: domTreeJsonFiles,
-    //     inStore: localStore,
-    //     inTableConfig: localRenderers?.table
-    // }));
+
+    const fromForm = createFormTask({
+        inColumns: columns,
+        inData: data
+    });
+
+    pipeline.push(fromForm);
 
     // External Custom Render Task Functions (e.g. searchNewTask, paginationTask)
     if (Array.isArray(localCustomTasks) && localCustomTasks.length > 0) {

@@ -10,7 +10,7 @@ export const getActiveDomTreeSpecs = ({ inThemeMap, inDomTreeJsonFiles }) => {
         inThemeMap: localThemeMap
     });
 
-    console.log("activeSpecs (clean v2 specs + flat theme applied) : ", activeSpecs);
+    // console.log("activeSpecs (clean v2 specs + flat theme applied) : ", activeSpecs);
 
     return activeSpecs;
 };

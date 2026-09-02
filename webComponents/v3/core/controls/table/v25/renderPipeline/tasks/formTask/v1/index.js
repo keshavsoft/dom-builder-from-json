@@ -2,25 +2,21 @@ import startCompositeDefinition from "./start.json" with { type: "json" };
 import specTemplatesDictionary from "./spec.json" with { type: "json" };
 import stepsDefinition from "./steps.json" with { type: "json" };
 import columnsData from "./ui/columns.json" with { type: "json" };
-import rowData from "./ui/data.json" with { type: "json" };
 import buildBaseSpecTreeFromComposite, { applySequentialStepsToSpecTree } from "./buildFromComposite.js";
 import buildStepsFromDefinition from "./buildStepsFromDefinition.js";
-import { buildStepsFromColumnsAndData } from "./buildStepsFromColumnsAndData.js";
 
 const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
     inCompositeDef: startCompositeDefinition,
     inTemplates: specTemplatesDictionary
 });
 
-const buildTableSpecTreeFromColumnsAndData = ({ inColumns, inData }) => {
+const buildFormSpecTreeFromColumns = ({ inColumns }) => {
     const localColumns = inColumns;
-    const localData = inData;
 
     const baseTreeCopy = JSON.parse(JSON.stringify(initialBaseSpecTree));
     const generatedSteps = buildStepsFromDefinition({
         inStepsDefinition: stepsDefinition,
-        inColumns: localColumns,
-        inData: localData
+        inColumns: localColumns
     });
 
     return applySequentialStepsToSpecTree({
@@ -31,16 +27,15 @@ const buildTableSpecTreeFromColumnsAndData = ({ inColumns, inData }) => {
     });
 };
 
-const finalHydratedSpecTree = buildTableSpecTreeFromColumnsAndData({
-    inColumns: columnsData,
-    inData: rowData
+const finalHydratedSpecTree = buildFormSpecTreeFromColumns({
+    inColumns: columnsData
 });
 
-const tbodyNode = finalHydratedSpecTree.children.find(child => child.tagName === "tbody");
+const formBodyNode = finalHydratedSpecTree.children?.find(child => child.tagName === "div");
 
-// console.log("\n=====================================================================");
-// console.log("[v13 Columns & Data Step Generation] Rows generated:", tbodyNode?.children?.length);
-// console.log("=====================================================================");
+console.log("\n=====================================================================");
+console.log("[Form Step Generation] Fields generated:", formBodyNode?.children?.length);
+console.log("=====================================================================");
 
 export {
     startCompositeDefinition,
@@ -50,9 +45,8 @@ export {
     finalHydratedSpecTree,
     buildBaseSpecTreeFromComposite,
     applySequentialStepsToSpecTree,
-    buildStepsFromColumnsAndData,
     buildStepsFromDefinition,
-    buildTableSpecTreeFromColumnsAndData
+    buildFormSpecTreeFromColumns
 };
 
 export default finalHydratedSpecTree;

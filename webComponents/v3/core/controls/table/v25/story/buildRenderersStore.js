@@ -9,6 +9,29 @@ export const buildRenderersStore = ({ inGlobalStore, inRenderers, inColumnsConfi
     const localColumnsConfig = inColumnsConfig || [];
     const localGlobalData = localGlobalStore?.dataStore?.getOriginalData() || [];
 
+    let storeObject = {};
+
+    for (const [key, value] of Object.entries(inRenderers)) {
+        console.log(`${key}: ${value}`);
+        storeObject[key] = {
+            store: {
+                dataStore: buildTableDataStore({ inData: localGlobalData }),
+                columnsStore: buildColumnsStoreModule({
+                    inAllColumnsConfig: localColumnsConfig,
+                    inConfig: value
+                })
+            }
+        }
+    };
+
+    return storeObject;
+};
+
+const buildRenderersStore1 = ({ inGlobalStore, inRenderers, inColumnsConfig }) => {
+    const localGlobalStore = inGlobalStore || {};
+    const localColumnsConfig = inColumnsConfig || [];
+    const localGlobalData = localGlobalStore?.dataStore?.getOriginalData() || [];
+
     return {
         table: {
             store: {

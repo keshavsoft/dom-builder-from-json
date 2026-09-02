@@ -106,7 +106,8 @@ export const renderTable = (inOptions = {}) => {
 
     // Step 2: Layer 1b - Execute Render Component Pipeline
     const childrenNodes = runRenderPipeline({
-        inPipeline: story.renderPipeline
+        inPipeline: story.renderPipeline,
+        inRenderersStore: story?.renderersStore
     });
 
     console.log("childrenNodes: ", childrenNodes);

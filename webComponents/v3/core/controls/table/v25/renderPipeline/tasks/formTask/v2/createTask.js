@@ -44,9 +44,14 @@ export const createFormTask = ({
 } = {}) => {
     const localColumns = inColumns;
 
-    return () => {
+    return ({ inRenderersStore }) => {
+        const localFormStore = inRenderersStore?.form?.store;
+
+        const formColumns = localFormStore?.columnsStore?.getColumnsConfig();
+        console.log("columns : ", formColumns, localColumns);
+
         return buildFormSpecTreeFromColumns({
-            inColumns: localColumns
+            inColumns: formColumns
         });
     };
 };

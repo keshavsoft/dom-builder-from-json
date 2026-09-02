@@ -89,7 +89,7 @@ if (tableContainer) {
                     "allinventoryentries.batchallocations.godownname",
                     "allinventoryentries.batchallocations.amount",
                     "allinventoryentries.batchallocations.actualqty",
-                    "allinventoryentries.batchallocations.billedqty"
+                    "allinventoryentries.batchallocations.billedqty1"
                 ]
             }
         }

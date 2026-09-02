@@ -49,7 +49,9 @@ export const createTableTask = ({
     const localColumns = inColumns;
     const localData = inData;
 
-    return () => {
+    return ({ inRenderersStore }) => {
+        console.log("inRenderersStore--task: ", inRenderersStore);
+
         return buildTableSpecTreeFromColumnsAndData({
             inColumns: localColumns,
             inData: localData

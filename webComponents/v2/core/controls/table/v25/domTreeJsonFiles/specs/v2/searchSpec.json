@@ -1,26 +1,26 @@
 {
   "tagName": "div",
   "attributes": {
-    "class": "flex justify-between items-center mb-4"
+    "class": ""
   },
   "children": [
     {
       "tagName": "h2",
       "attributes": {
-        "class": "text-xl font-bold text-gray-800"
+        "class": ""
       },
       "textContent": "Data Items"
     },
     {
       "tagName": "div",
       "attributes": {
-        "class": "relative w-72"
+        "class": ""
       },
       "children": [
         {
           "tagName": "svg",
           "attributes": {
-            "class": "w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400",
+            "class": "",
             "fill": "none",
             "stroke": "currentColor",
             "viewBox": "0 0 24 24"
@@ -42,7 +42,7 @@
           "attributes": {
             "type": "text",
             "placeholder": "Search items...",
-            "class": "w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            "class": ""
           }
         }
       ]

@@ -1,13 +1,28 @@
-import getThemeSpecs from "./domTreeJsonFiles/themes/index.js";
+import darkTheme from "./domTreeJsonFiles/themes/dark.json" with { type: "json" };
 
-const startFunc = ({ inSpec, inThemeName, inThemeSpec, inThemeSpecKey } = {}) => {
-    const localSpec = inSpec;
+const setByPath = ({ inObj, inPath, inValue }) => {
+    const localObj = inObj;
+    const localPath = inPath;
+    const localValue = inValue;
 
-    let localThemeSpec = inThemeSpec;
-    if (!localThemeSpec && inThemeName) {
-        const themeSpecs = getThemeSpecs({ inTheme: inThemeName });
-        localThemeSpec = inThemeSpecKey ? themeSpecs[inThemeSpecKey] : themeSpecs;
+    const parts = localPath.split(".");
+    let current = localObj;
+
+    for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!current[part] || typeof current[part] !== "object") {
+            current[part] = {};
+        }
+        current = current[part];
     }
+
+    const lastPart = parts[parts.length - 1];
+    current[lastPart] = localValue;
+};
+
+export const applyThemeToSpec = ({ inSpec, inThemeMap }) => {
+    const localSpec = inSpec;
+    const localThemeMap = inThemeMap || darkTheme;
 
     if (!localSpec || typeof localSpec !== "object") {
         return localSpec;
@@ -15,29 +30,17 @@ const startFunc = ({ inSpec, inThemeName, inThemeSpec, inThemeSpecKey } = {}) =>
 
     const clonedSpec = JSON.parse(JSON.stringify(localSpec));
 
-    if (!localThemeSpec || typeof localThemeSpec !== "object") {
-        return clonedSpec;
+    if (localThemeMap && typeof localThemeMap === "object") {
+        Object.entries(localThemeMap).forEach(([pathKey, classValue]) => {
+            setByPath({
+                inObj: clonedSpec,
+                inPath: pathKey,
+                inValue: classValue
+            });
+        });
     }
-
-    const mergeNodeClasses = (baseNode, themeNode) => {
-        if (!baseNode || !themeNode) return;
-
-        if (themeNode.attributes && themeNode.attributes.class !== undefined) {
-            baseNode.attributes = baseNode.attributes || {};
-            baseNode.attributes.class = themeNode.attributes.class;
-        }
-
-        if (Array.isArray(baseNode.children) && Array.isArray(themeNode.children)) {
-            const minLength = Math.min(baseNode.children.length, themeNode.children.length);
-            for (let i = 0; i < minLength; i++) {
-                mergeNodeClasses(baseNode.children[i], themeNode.children[i]);
-            }
-        }
-    };
-
-    mergeNodeClasses(clonedSpec, localThemeSpec);
 
     return clonedSpec;
 };
 
-export default startFunc;
+export default applyThemeToSpec;

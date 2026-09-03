@@ -6,7 +6,8 @@ import {
 
 import {
     buildBaseSpecTreeFromComposite,
-    applySequentialStepsToSpecTree
+    applySequentialStepsToSpecTree,
+    findTargetNodeByPathParts
 } from "./specTreeEngine.js";
 
 import {
@@ -19,5 +20,6 @@ export {
     applyBindings,
     buildBaseSpecTreeFromComposite,
     applySequentialStepsToSpecTree,
+    findTargetNodeByPathParts,
     buildStepsFromDefinition
 };

@@ -1,10 +1,12 @@
 import buildBaseSpecTreeFromComposite, {
-    applySequentialStepsToSpecTree
+    applySequentialStepsToSpecTree,
+    findTargetNodeByPathParts
 } from "../../../../../buildFromComposite/v2/index.js";
 
 export {
     buildBaseSpecTreeFromComposite,
-    applySequentialStepsToSpecTree
+    applySequentialStepsToSpecTree,
+    findTargetNodeByPathParts
 };
 
 export default buildBaseSpecTreeFromComposite;

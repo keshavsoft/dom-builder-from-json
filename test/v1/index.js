@@ -58,7 +58,7 @@ if (tableContainer) {
                         amount: "sum",
                         "allinventoryentries.batchallocations.actualqty": "sum"
                     },
-                    balanceRow1: {
+                    balanceRow: {
                         StockItemName: "111",
                         Credit: "Credit-Debit",
                         Debit: "Debit-Credit"

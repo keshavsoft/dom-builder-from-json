@@ -14,6 +14,15 @@ import {
     buildStepsFromDefinition
 } from "./stepRunnerEngine.js";
 
+import {
+    createBaseTree,
+    populateTree
+} from "./stepRunner.js";
+
+import {
+    buildSpecElement
+} from "./build/buildSpecElement.js";
+
 export {
     setPropertyByPath,
     findNodeByTagName,
@@ -21,5 +30,8 @@ export {
     buildBaseSpecTreeFromComposite,
     applySequentialStepsToSpecTree,
     findTargetNodeByPathParts,
-    buildStepsFromDefinition
+    buildStepsFromDefinition,
+    createBaseTree,
+    populateTree,
+    buildSpecElement
 };

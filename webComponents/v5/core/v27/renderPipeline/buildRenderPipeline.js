@@ -2,6 +2,38 @@ import createSearchTask from "./tasks/searchTask.js";
 import { createTableTask } from "./tasks/tableTask.js";
 import { createFormTask } from "./tasks/formTask.js";
 
+const taskFactoryMap = {
+    search: ({ inShowSearch, inDomTreeSpecs }) => {
+        const localShowSearch = inShowSearch;
+        const localDomTreeSpecs = inDomTreeSpecs;
+
+        return createSearchTask({
+            inShowSearch: localShowSearch,
+            domTreeJsonFiles: localDomTreeSpecs
+        });
+    },
+
+    table: ({ inColumns, inData }) => {
+        const localColumns = inColumns;
+        const localData = inData;
+
+        return createTableTask({
+            inColumns: localColumns,
+            inData: localData
+        });
+    },
+
+    form: ({ inColumns, inData }) => {
+        const localColumns = inColumns;
+        const localData = inData;
+
+        return createFormTask({
+            inColumns: localColumns,
+            inData: localData
+        });
+    }
+};
+
 /**
  * Builds dynamic array of render component pipeline task functions
  */
@@ -20,46 +52,29 @@ const buildRenderPipeline = ({
     const localStore = inStore;
     const localRenderers = inRenderers || {};
 
-    const pipeline = [];
-
-    const hasRenderersConfig = Object.keys(localRenderers).length > 0;
-    const shouldRenderSearch = hasRenderersConfig ? ("search" in localRenderers && localShowSearch) : localShowSearch;
-    const shouldRenderTable = hasRenderersConfig ? ("table" in localRenderers && localShowTable) : localShowTable;
-    const shouldRenderForm = "form" in localRenderers;
-
-    // Render Task 1: Search Component Task (Creates & returns search toolbar DOM element)
-    if (shouldRenderSearch) {
-        pipeline.push(createSearchTask({
-            inShowSearch: localShowSearch,
-            domTreeJsonFiles: localDomTreeSpecs
-        }));
-    }
-
     const data = localStore?.store?.dataStore?.getOriginalData();
+    const fallbackColumns = localStore?.store?.columnsConfig;
 
-    if (shouldRenderTable) {
-        const tableColumns = localStore?.renderersStore?.table?.store?.columnsStore?.getColumnsConfig() || localStore?.store?.columnsConfig;
+    const activeRendererKeys = Object.keys(localRenderers).length > 0
+        ? Object.keys(localRenderers)
+        : [
+            ...(localShowSearch ? ["search"] : []),
+            ...(localShowTable ? ["table"] : [])
+        ];
 
-        const fromTable = createTableTask({
-            inColumns: tableColumns,
-            inData: data
+    const pipeline = activeRendererKeys
+        .filter((key) => key in taskFactoryMap)
+        .map((key) => {
+            const columns = localStore?.renderersStore?.[key]?.store?.columnsStore?.getColumnsConfig() || fallbackColumns;
+
+            return taskFactoryMap[key]({
+                inColumns: columns,
+                inData: data,
+                inShowSearch: localShowSearch,
+                inDomTreeSpecs: localDomTreeSpecs
+            });
         });
 
-        pipeline.push(fromTable);
-    }
-
-    if (shouldRenderForm) {
-        const formColumns = localStore?.renderersStore?.form?.store?.columnsStore?.getColumnsConfig() || localStore?.renderersStore?.table?.store?.columnsStore?.getColumnsConfig();
-
-        const fromForm = createFormTask({
-            inColumns: formColumns,
-            inData: data
-        });
-
-        pipeline.push(fromForm);
-    }
-
-    // External Custom Render Task Functions (e.g. searchNewTask, paginationTask)
     if (Array.isArray(localCustomTasks) && localCustomTasks.length > 0) {
         pipeline.push(...localCustomTasks);
     }

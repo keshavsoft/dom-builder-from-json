@@ -12,7 +12,6 @@ export const buildRenderersStore = ({ inGlobalStore, inRenderers, inColumnsConfi
     let storeObject = {};
 
     for (const [key, value] of Object.entries(inRenderers)) {
-        console.log(`${key}: ${value}`);
         storeObject[key] = {
             store: {
                 dataStore: buildTableDataStore({ inData: localGlobalData }),
@@ -25,24 +24,6 @@ export const buildRenderersStore = ({ inGlobalStore, inRenderers, inColumnsConfi
     };
 
     return storeObject;
-};
-
-const buildRenderersStore1 = ({ inGlobalStore, inRenderers, inColumnsConfig }) => {
-    const localGlobalStore = inGlobalStore || {};
-    const localColumnsConfig = inColumnsConfig || [];
-    const localGlobalData = localGlobalStore?.dataStore?.getOriginalData() || [];
-
-    return {
-        table: {
-            store: {
-                dataStore: buildTableDataStore({ inData: localGlobalData }),
-                columnsStore: buildColumnsStoreModule({
-                    inAllColumnsConfig: localColumnsConfig,
-                    inConfig: inRenderers?.table
-                })
-            }
-        }
-    };
 };
 
 export default buildRenderersStore;

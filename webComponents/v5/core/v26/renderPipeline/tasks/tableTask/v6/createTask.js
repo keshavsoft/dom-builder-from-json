@@ -27,7 +27,8 @@ const buildTableSpecTreeFromColumnsAndData = ({
     const generatedSteps = buildStepsFromDefinition({
         inStepsDefinition: stepsDefinition,
         inColumns: localColumns,
-        inData: localData
+        inData: localData,
+        inTemplates: specTemplatesDictionary
     });
 
     return applySequentialStepsToSpecTree({

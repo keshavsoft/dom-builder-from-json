@@ -144,6 +144,148 @@
           "source": "placeholder"
         }
       ]
+    },
+    "tableHeaderCell": {
+      "template": {
+        "tagName": "th",
+        "attributes": {
+          "class": "px-4 py-2 border border-gray-300 bg-gray-100 text-left font-semibold text-gray-700"
+        },
+        "textContent": ""
+      },
+      "bindings": [
+        {
+          "property": "textContent",
+          "source": "label"
+        }
+      ]
+    },
+    "tableDataCell": {
+      "template": {
+        "tagName": "td",
+        "attributes": {
+          "class": "px-4 py-2 border border-gray-200 text-sm text-gray-800"
+        },
+        "textContent": ""
+      },
+      "bindings": [
+        {
+          "property": "textContent",
+          "source": "value"
+        }
+      ]
+    },
+    "tableRow": {
+      "template": {
+        "tagName": "tr",
+        "attributes": {
+          "class": "bg-white"
+        },
+        "children": []
+      },
+      "bindings": []
+    },
+    "search": {
+      "template": {
+        "tagName": "div",
+        "attributes": {
+          "class": "flex flex-col space-y-1 mb-4 max-w-xs"
+        },
+        "children": [
+          {
+            "tagName": "label",
+            "attributes": {
+              "for": "tableSearchInput",
+              "class": "text-sm font-medium text-gray-700 capitalize"
+            },
+            "textContent": "Search"
+          },
+          {
+            "tagName": "input",
+            "attributes": {
+              "type": "text",
+              "id": "tableSearchInput",
+              "name": "search",
+              "placeholder": "Search items...",
+              "class": "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800"
+            }
+          }
+        ]
+      }
+    },
+    "searchToolbar": {
+      "template": {
+        "tagName": "div",
+        "attributes": {
+          "class": "flex justify-between items-center mb-4"
+        },
+        "children": [
+          {
+            "tagName": "h2",
+            "attributes": {
+              "class": "text-xl font-bold text-gray-800"
+            },
+            "textContent": "Data Items"
+          },
+          {
+            "tagName": "div",
+            "attributes": {
+              "class": "relative w-72"
+            },
+            "children": [
+              {
+                "tagName": "svg",
+                "attributes": {
+                  "class": "w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400",
+                  "fill": "none",
+                  "stroke": "currentColor",
+                  "viewBox": "0 0 24 24"
+                },
+                "children": [
+                  {
+                    "tagName": "path",
+                    "attributes": {
+                      "stroke-linecap": "round",
+                      "stroke-linejoin": "round",
+                      "stroke-width": "2",
+                      "d": "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    }
+                  }
+                ]
+              },
+              {
+                "tagName": "input",
+                "attributes": {
+                  "type": "text",
+                  "id": "tableSearchInput",
+                  "placeholder": "Search items...",
+                  "class": "w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "bindings": [
+        {
+          "find": "h2",
+          "property": "textContent",
+          "source": "title",
+          "default": "Data Items"
+        },
+        {
+          "find": "input",
+          "property": "attributes.placeholder",
+          "source": "placeholder",
+          "default": "Search items..."
+        },
+        {
+          "find": "input",
+          "property": "attributes.id",
+          "source": "id",
+          "default": "tableSearchInput"
+        }
+      ]
     }
   }
 }

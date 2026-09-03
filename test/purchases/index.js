@@ -26,6 +26,7 @@ if (tableContainer) {
             { key: "allinventoryentries.batchallocations.billedqty", label: "billed qty" }
         ],
         renderers: {
+            search: {},
             table: {
                 header: {
                     vouchernumber: {

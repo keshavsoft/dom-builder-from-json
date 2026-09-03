@@ -8,12 +8,13 @@ import {
 import getDataModel from "./dataModel/index.js";
 
 /**
- * Table Task (v6) - Clean 3-Stage Story Orchestrator
+ * Table Task (v8) - Pure 2-Phase Clean Architecture
  *
  * Story:
- * Stage 1. Init: Initialize base spec tree skeleton from start.json
- * Stage 2. Transform: Sequentially apply pipeline steps (header -> body -> footer)
- * Stage 3. Finalize: Normalize & produce the final JSON spec tree via buildSpecElement
+ * Stage 1. DataModel: Prepares pure typed data model (tHead, tBody, tFoot) - ALL calculations done here
+ * Stage 2. Init: Initialize base table skeleton from start.json
+ * Stage 3. Transform: Sequentially stamp templates using dataModel ONLY (zero math, zero aggFuncs)
+ * Stage 4. Finalize: Normalize & produce the final JSON spec tree via buildSpecElement
  *
  * Follows in -> local parameter naming convention
  */
@@ -28,6 +29,7 @@ const buildTableSpecTreeFromColumnsAndData = ({
     const localTemplates = inTemplates;
     const localFooterConfig = inFooterConfig;
 
+    // Story Stage 1: Build the complete, pre-calculated Data Model
     const dataModel = getDataModel({
         inColumns: localColumns,
         inData: localData,
@@ -36,25 +38,19 @@ const buildTableSpecTreeFromColumnsAndData = ({
 
     console.log("dataModel : ", dataModel);
 
-    // Story Stage 1: Initialize base table skeleton
+    // Story Stage 2: Initialize base table skeleton
     const baseSpecTree = initBaseSpecTree({ inTemplates: localTemplates });
-    // debugger
 
-    // console.log("localColumns : ", localColumns);
-
-    // Story Stage 2: Transform through sequential steps pipeline
+    // Story Stage 3: Transform through sequential steps pipeline using dataModel ONLY
     const populatedSpecTree = transformSpecTreeThroughSteps({
         inSpecTree: baseSpecTree,
-        inColumns: localColumns,
-        inData: localData,
-        inTemplates: localTemplates,
-        inFooterConfig: localFooterConfig
+        inDataModel: dataModel,
+        inTemplates: localTemplates
     });
 
+    // Story Stage 4: Finalize and normalize output spec
     const finalJson = finalizeSpecTree({ inSpecTree: populatedSpecTree });
-    // console.log("finalJson : ", finalJson);
 
-    // Story Stage 3: Finalize and normalize output spec
     return finalJson;
 };
 

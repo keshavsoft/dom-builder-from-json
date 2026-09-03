@@ -1,7 +1,13 @@
 import { applyBindings } from "../../../common/index.js";
 
-const buildHeaderCells = ({ inColumns, inTemplates }) => {
-    const localColumns = inColumns;
+/**
+ * Builds table header cells from dataModel.tHead
+ * Pure template stamping - zero calculations
+ * Follows in -> local parameter naming convention
+ */
+const buildHeaderCells = ({ inDataModel, inColumns, inTemplates }) => {
+    const localDataModel = inDataModel;
+    const localColumns = localDataModel?.tHead || inColumns;
     const localTemplates = inTemplates;
 
     if (!Array.isArray(localColumns)) {

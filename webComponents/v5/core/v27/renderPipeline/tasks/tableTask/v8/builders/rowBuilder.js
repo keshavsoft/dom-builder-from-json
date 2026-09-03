@@ -1,8 +1,14 @@
 import { applyBindings } from "../../../common/index.js";
 
-const buildDataRows = ({ inColumns, inData, inTemplates }) => {
-    const localColumns = inColumns;
-    const localData = inData;
+/**
+ * Builds table body rows from dataModel.tBody and dataModel.tHead
+ * Pure template stamping - zero calculations
+ * Follows in -> local parameter naming convention
+ */
+const buildDataRows = ({ inDataModel, inColumns, inData, inTemplates }) => {
+    const localDataModel = inDataModel;
+    const localColumns = localDataModel?.tHead || inColumns;
+    const localData = localDataModel?.tBody || inData;
     const localTemplates = inTemplates;
 
     if (!Array.isArray(localColumns) || !Array.isArray(localData)) {

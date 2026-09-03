@@ -8,7 +8,7 @@ export const finalizeSpecTree = ({ inSpecTree }) => {
     const localSpecTree = inSpecTree;
 
     const finalSpecTree = buildSpecElement({ inSpec: localSpecTree });
-    console.log("=== [v6: Final Spec Tree after buildSpecElement] ===", JSON.parse(JSON.stringify(finalSpecTree)));
+    console.log("=== [v8: Final Spec Tree after buildSpecElement] ===", JSON.parse(JSON.stringify(finalSpecTree)));
 
     return finalSpecTree;
 };

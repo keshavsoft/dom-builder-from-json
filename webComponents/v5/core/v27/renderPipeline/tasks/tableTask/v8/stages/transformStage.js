@@ -29,26 +29,23 @@ const applyStepToSpecTree = ({ inSpecTree, inStep, inValue }) => {
 };
 
 /**
- * Stage 2: Transforms base spec tree sequentially through the steps pipeline
+ * Stage 2: Transforms base spec tree sequentially through the steps pipeline using dataModel ONLY
+ * Zero calculations, zero math - pure template stamping
  * Follows in -> local parameter naming convention
  */
 export const transformSpecTreeThroughSteps = ({
     inSpecTree,
-    inColumns,
-    inData,
-    inTemplates,
-    inFooterConfig
+    inDataModel,
+    inTemplates
 }) => {
     const localSpecTree = inSpecTree;
-    const localColumns = inColumns;
-    const localData = inData;
+    const localDataModel = inDataModel;
     const localTemplates = inTemplates;
-    const localFooterConfig = inFooterConfig;
 
     let currentTree = localSpecTree;
     const stepsList = Array.isArray(stepsDefinition) ? stepsDefinition : Object.values(stepsDefinition);
 
-    console.log("=== [v6: Start Spec Tree] ===", JSON.parse(JSON.stringify(currentTree)));
+    console.log("=== [v8: Start Spec Tree] ===", JSON.parse(JSON.stringify(currentTree)));
 
     let stepIndex = 0;
     for (const step of stepsList) {
@@ -59,17 +56,15 @@ export const transformSpecTreeThroughSteps = ({
             continue;
         }
 
-        // Conditionally skip footer builder if no footer config is present
-        if (step.name === "footer" && (!localFooterConfig || typeof localFooterConfig !== "object" || Object.keys(localFooterConfig).length === 0)) {
-            console.log(`=== [v6: Step ${stepIndex} (${step.name})] Skipped (No Footer Config) ===`);
+        // Skip footer if dataModel has no footer rows
+        if (step.name === "footer" && (!localDataModel?.tFoot || localDataModel.tFoot.length === 0)) {
+            console.log(`=== [v8: Step ${stepIndex} (${step.name})] Skipped (No Footer in dataModel) ===`);
             continue;
         }
 
         const generatedValue = localBuilder({
-            inColumns: localColumns,
-            inData: localData,
-            inTemplates: localTemplates,
-            inFooterConfig: localFooterConfig
+            inDataModel: localDataModel,
+            inTemplates: localTemplates
         });
 
         currentTree = applyStepToSpecTree({
@@ -78,7 +73,7 @@ export const transformSpecTreeThroughSteps = ({
             inValue: generatedValue
         });
 
-        console.log(`=== [v6: Step ${stepIndex} (${step.name})] Output Spec Tree ===`, JSON.parse(JSON.stringify(currentTree)));
+        console.log(`=== [v8: Step ${stepIndex} (${step.name})] Output Spec Tree ===`, JSON.parse(JSON.stringify(currentTree)));
     }
 
     return currentTree;

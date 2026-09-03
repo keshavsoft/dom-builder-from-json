@@ -1,6 +1,6 @@
 import { buildHeaderCells } from "./headerBuilder.js";
 import { buildDataRows } from "./rowBuilder.js";
-import { buildFooterRows, aggFuncs } from "./footer/index.js";
+import { buildFooterRows } from "./footer/index.js";
 
 const builderMap = {
     headerCells: buildHeaderCells,
@@ -12,8 +12,7 @@ export {
     builderMap,
     buildHeaderCells,
     buildDataRows,
-    buildFooterRows,
-    aggFuncs
+    buildFooterRows
 };
 
 export default builderMap;

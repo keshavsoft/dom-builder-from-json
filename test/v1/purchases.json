@@ -10,7 +10,7 @@
         "allinventoryentries.stockitemname": "Shading Net Kgs",
         "allinventoryentries.rate": "280.90/kgs",
         "allinventoryentries.amount": 1000,
-        "allinventoryentries.actualqty": " 3.560 kgs",
+        "allinventoryentries.actualqty": 3.56,
         "allinventoryentries.billedqty": " 3.560 kgs",
         "allinventoryentries.basicuserdescription": [
             {
@@ -23,7 +23,7 @@
         "allinventoryentries.batchallocations.batchname": "Rishi-Rs.205/-",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 1000,
-        "allinventoryentries.batchallocations.actualqty": " 3.560 kgs",
+        "allinventoryentries.batchallocations.actualqty": 3.56,
         "allinventoryentries.batchallocations.billedqty": " 3.560 kgs"
     },
     {
@@ -37,13 +37,13 @@
         "allinventoryentries.stockitemname": "ROPE",
         "allinventoryentries.rate": "312.50/kgs",
         "allinventoryentries.amount": 100,
-        "allinventoryentries.actualqty": " 0.320 kgs",
+        "allinventoryentries.actualqty": 0.32,
         "allinventoryentries.billedqty": " 0.320 kgs",
         "allinventoryentries.batchallocations.godownname": "Main Location",
         "allinventoryentries.batchallocations.batchname": "Tuf-Rs.170",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 100,
-        "allinventoryentries.batchallocations.actualqty": " 0.320 kgs",
+        "allinventoryentries.batchallocations.actualqty": 0.32,
         "allinventoryentries.batchallocations.billedqty": " 0.320 kgs"
     },
     {
@@ -57,13 +57,13 @@
         "allinventoryentries.stockitemname": "ROPE",
         "allinventoryentries.rate": "259.26/kgs",
         "allinventoryentries.amount": 420,
-        "allinventoryentries.actualqty": " 1.620 kgs",
+        "allinventoryentries.actualqty": 1.62,
         "allinventoryentries.billedqty": " 1.620 kgs",
         "allinventoryentries.batchallocations.godownname": "Main Location",
         "allinventoryentries.batchallocations.batchname": "Tuf-Rs.170",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 420,
-        "allinventoryentries.batchallocations.actualqty": " 1.620 kgs",
+        "allinventoryentries.batchallocations.actualqty": 1.62,
         "allinventoryentries.batchallocations.billedqty": " 1.620 kgs"
     },
     {
@@ -77,13 +77,13 @@
         "allinventoryentries.stockitemname": "ROPE",
         "allinventoryentries.rate": "250.00/kgs",
         "allinventoryentries.amount": 200,
-        "allinventoryentries.actualqty": " 0.800 kgs",
+        "allinventoryentries.actualqty": 0.8,
         "allinventoryentries.billedqty": " 0.800 kgs",
         "allinventoryentries.batchallocations.godownname": "Main Location",
         "allinventoryentries.batchallocations.batchname": "Tuf-Rs.170",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 200,
-        "allinventoryentries.batchallocations.actualqty": " 0.800 kgs",
+        "allinventoryentries.batchallocations.actualqty": 0.8,
         "allinventoryentries.batchallocations.billedqty": " 0.800 kgs"
     },
     {
@@ -97,13 +97,13 @@
         "allinventoryentries.stockitemname": "Nylon Cheeses",
         "allinventoryentries.rate": "180.00/Nos",
         "allinventoryentries.amount": 1440,
-        "allinventoryentries.actualqty": " 8 Nos",
+        "allinventoryentries.actualqty": 8,
         "allinventoryentries.billedqty": " 8 Nos",
         "allinventoryentries.batchallocations.godownname": "Main Location",
         "allinventoryentries.batchallocations.batchname": "Kumaran-250gms-Rs.126/-",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 1440,
-        "allinventoryentries.batchallocations.actualqty": " 8 Nos",
+        "allinventoryentries.batchallocations.actualqty": 8,
         "allinventoryentries.batchallocations.billedqty": " 8 Nos"
     },
     {
@@ -117,13 +117,13 @@
         "allinventoryentries.stockitemname": "0.75/90/50",
         "allinventoryentries.rate": "430.46/kgs",
         "allinventoryentries.amount": 1300,
-        "allinventoryentries.actualqty": " 3.020 kgs",
+        "allinventoryentries.actualqty": 3.02,
         "allinventoryentries.billedqty": " 3.020 kgs",
         "allinventoryentries.batchallocations.godownname": "Nalam Godown",
         "allinventoryentries.batchallocations.batchname": "Tri-Rs.273/-",
         "allinventoryentries.batchallocations.destinationgodownname": "Nalam Godown",
         "allinventoryentries.batchallocations.amount": 1300,
-        "allinventoryentries.batchallocations.actualqty": " 3.020 kgs",
+        "allinventoryentries.batchallocations.actualqty": 3.02,
         "allinventoryentries.batchallocations.billedqty": " 3.020 kgs"
     },
     {
@@ -137,13 +137,13 @@
         "allinventoryentries.stockitemname": "Export Surplus New",
         "allinventoryentries.rate": "576.92/kgs",
         "allinventoryentries.amount": 300,
-        "allinventoryentries.actualqty": " 0.520 kgs",
+        "allinventoryentries.actualqty": 0.52,
         "allinventoryentries.billedqty": " 0.520 kgs",
         "allinventoryentries.batchallocations.godownname": "Main Location",
         "allinventoryentries.batchallocations.batchname": "1.20-275/-",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 300,
-        "allinventoryentries.batchallocations.actualqty": " 0.520 kgs",
+        "allinventoryentries.batchallocations.actualqty": 0.52,
         "allinventoryentries.batchallocations.billedqty": " 0.520 kgs"
     },
     {
@@ -157,13 +157,13 @@
         "allinventoryentries.stockitemname": "Gloves",
         "allinventoryentries.rate": "10.00/Nos",
         "allinventoryentries.amount": 100,
-        "allinventoryentries.actualqty": " 10 Nos",
+        "allinventoryentries.actualqty": 10,
         "allinventoryentries.billedqty": " 10 Nos",
         "allinventoryentries.batchallocations.godownname": "Main Location",
         "allinventoryentries.batchallocations.batchname": "Blue-RRR-Rs.6/-",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 100,
-        "allinventoryentries.batchallocations.actualqty": " 10 Nos",
+        "allinventoryentries.batchallocations.actualqty": 10,
         "allinventoryentries.batchallocations.billedqty": " 10 Nos"
     },
     {
@@ -177,13 +177,13 @@
         "allinventoryentries.stockitemname": "Gloves",
         "allinventoryentries.rate": "12.00/Nos",
         "allinventoryentries.amount": 240,
-        "allinventoryentries.actualqty": " 20 Nos",
+        "allinventoryentries.actualqty": 20,
         "allinventoryentries.billedqty": " 20 Nos",
         "allinventoryentries.batchallocations.godownname": "Main Location",
         "allinventoryentries.batchallocations.batchname": "Blue-60gms-RR-Rs.8.50",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 240,
-        "allinventoryentries.batchallocations.actualqty": " 20 Nos",
+        "allinventoryentries.batchallocations.actualqty": 20,
         "allinventoryentries.batchallocations.billedqty": " 20 Nos"
     },
     {
@@ -197,13 +197,13 @@
         "allinventoryentries.stockitemname": "Anchor Gaff Hooks",
         "allinventoryentries.rate": "140.00/Nos",
         "allinventoryentries.amount": 840,
-        "allinventoryentries.actualqty": " 6 Nos",
+        "allinventoryentries.actualqty": 6,
         "allinventoryentries.billedqty": " 6 Nos",
         "allinventoryentries.batchallocations.godownname": "Main Location",
         "allinventoryentries.batchallocations.batchname": "8/0-8mm-Rs.85/-",
         "allinventoryentries.batchallocations.destinationgodownname": "Main Location",
         "allinventoryentries.batchallocations.amount": 840,
-        "allinventoryentries.batchallocations.actualqty": " 6 Nos",
+        "allinventoryentries.batchallocations.actualqty": 6,
         "allinventoryentries.batchallocations.billedqty": " 6 Nos"
     }
 ]

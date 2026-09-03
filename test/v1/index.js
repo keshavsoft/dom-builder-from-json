@@ -22,7 +22,7 @@ if (tableContainer) {
             { key: "allinventoryentries.batchallocations.godownname", label: "godownname", type: "text" },
             { key: "allinventoryentries.batchallocations.batchname", label: "batchname", type: "text" },
             { key: "allinventoryentries.batchallocations.amount", label: "amount", type: "number" },
-            { key: "allinventoryentries.batchallocations.actualqty", label: "actual qty", type: "text" },
+            { key: "allinventoryentries.batchallocations.actualqty", label: "actual qty", type: "number" },
             { key: "allinventoryentries.batchallocations.billedqty", label: "billed qty", type: "text" }
         ],
         columnsConfig1: [
@@ -57,23 +57,20 @@ if (tableContainer) {
                     "allinventoryentries.batchallocations.batchname",
                     "allinventoryentries.batchallocations.godownname",
                     "allinventoryentries.batchallocations.amount",
-                    "allinventoryentries.batchallocations.actualqty",
-                    "allinventoryentries.batchallocations.billedqty"
+                    "allinventoryentries.batchallocations.actualqty"
                 ],
                 footer: {
                     summaryRow: {
                         vchtype: "count",
-                        vouchernumber: "max",
+                        vouchernumber: "sum",
                         "allinventoryentries.stockitemname": "max",
-                        Credit: "sum",
-                        Debit: "sum",
-                        amount: "sum",
                         "allinventoryentries.batchallocations.actualqty": "sum"
                     },
                     balanceRow: {
-                        StockItemName: "111",
-                        Credit: "Credit-Debit",
-                        Debit: "Debit-Credit"
+                        vchtype: "---------",
+                        vouchernumber: 666666,
+                        "allinventoryentries.stockitemname": "min",
+                        "allinventoryentries.batchallocations.actualqty": "{allinventoryentries.batchallocations.actualqty}*{vouchernumber}"
                     },
                     inputsRow1: [
                         ["StockItemName", "Credit", "Debit", "amount"]

@@ -6,6 +6,7 @@ import v5 from "./v5/index.js";
 import v6 from "./v6/index.js";
 import v7 from "./v7/index.js";
 import v8 from "./v8/index.js";
+import v9 from "./v9/index.js";
 
 const versions = {
     v1,
@@ -15,10 +16,11 @@ const versions = {
     v5,
     v6,
     v7,
-    v8
+    v8,
+    v9
 };
 
-const defaultVersion = "v8";
+const defaultVersion = "v9";
 
 const maxVersion = `v${Math.max(
     ...Object.keys(versions).map(key => Number(key.slice(1)))
@@ -35,6 +37,7 @@ export {
     v6,
     v7,
     v8,
+    v9,
     versions,
     defaultVersion,
     maxVersion,

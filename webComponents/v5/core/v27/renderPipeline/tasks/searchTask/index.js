@@ -12,7 +12,7 @@ const createSearchTask = ({
             return null;
         }
 
-        const searchTemplate = localTemplates?.composite?.search?.template;
+        const searchTemplate = localTemplates?.composite?.searchToolbar?.template;
 
         if (searchTemplate) {
             return JSON.parse(JSON.stringify(searchTemplate));

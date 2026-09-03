@@ -1,0 +1,114 @@
+{
+  "table": {
+    "tagName": "table",
+    "attributes": {
+      "class": ""
+    },
+    "children": []
+  },
+  "thead": {
+    "tagName": "thead",
+    "attributes": {
+      "class": ""
+    },
+    "children": []
+  },
+  "tbody": {
+    "tagName": "tbody",
+    "attributes": {
+      "class": ""
+    },
+    "children": []
+  },
+  "tfoot": {
+    "tagName": "tfoot",
+    "attributes": {
+      "class": ""
+    },
+    "children": []
+  },
+  "tr": {
+    "tagName": "tr",
+    "attributes": {
+      "class": ""
+    },
+    "children": []
+  },
+  "th": {
+    "tagName": "th",
+    "attributes": {
+      "class": ""
+    },
+    "textContent": "KeshavSoft th"
+  },
+  "td": {
+    "tagName": "td",
+    "attributes": {
+      "class": ""
+    },
+    "textContent": "KeshavSoft td"
+  },
+  "form": {
+    "tagName": "form",
+    "attributes": {
+      "class": "max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200 space-y-4"
+    },
+    "children": []
+  },
+  "div": {
+    "tagName": "div",
+    "attributes": {
+      "class": "space-y-4"
+    },
+    "children": []
+  },
+  "fieldGroup": {
+    "tagName": "div",
+    "attributes": {
+      "class": "flex flex-col space-y-1"
+    },
+    "children": []
+  },
+  "label": {
+    "tagName": "label",
+    "attributes": {
+      "class": "text-sm font-semibold text-gray-700 capitalize"
+    },
+    "textContent": ""
+  },
+  "input": {
+    "tagName": "input",
+    "attributes": {
+      "type": "text",
+      "class": "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-800"
+    }
+  },
+  "composite": {
+    "formComposite": {
+      "tagName": "div",
+      "attributes": {
+        "class": "flex flex-col space-y-1 mb-4"
+      },
+      "children": [
+        {
+          "tagName": "label",
+          "attributes": {
+            "for": "fieldKey",
+            "class": "text-sm font-medium text-gray-700 capitalize"
+          },
+          "textContent": ""
+        },
+        {
+          "tagName": "input",
+          "attributes": {
+            "type": "fieldType",
+            "id": "",
+            "name": "",
+            "placeholder": "",
+            "class": "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800"
+          }
+        }
+      ]
+    }
+  }
+}

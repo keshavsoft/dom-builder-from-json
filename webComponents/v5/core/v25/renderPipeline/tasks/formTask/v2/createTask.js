@@ -1,5 +1,5 @@
 import startCompositeDefinition from "./start.json" with { type: "json" };
-import specTemplatesDictionary from "../../../../../../specs/v1/spec.json" with { type: "json" };
+import specTemplatesDictionary from "../../../../../../specs/v2/spec.json" with { type: "json" };
 import stepsDefinition from "./steps.json" with { type: "json" };
 
 import buildBaseSpecTreeFromComposite, {

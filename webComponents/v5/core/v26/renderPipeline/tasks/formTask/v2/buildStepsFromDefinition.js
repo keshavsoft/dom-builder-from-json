@@ -1,4 +1,4 @@
-const buildFormFields = ({ inColumns }) => {
+const buildFormFields = ({ inColumns, inTemplates }) => {
     const localColumns = inColumns;
 
     if (!Array.isArray(localColumns) || localColumns.length === 0) {
@@ -41,9 +41,11 @@ const buildFormFields = ({ inColumns }) => {
 };
 
 const builderMap = {
-    formFields: ({ inColumns }) => {
+    formFields: ({ inColumns, inTemplates }) => {
+        console.log("inColumns ---------:", inColumns, inTemplates);
+
         return buildFormFields({
-            inColumns
+            inColumns, inTemplates
         });
     }
 };
@@ -51,7 +53,7 @@ const builderMap = {
 const buildStepsFromDefinition = ({
     inStepsDefinition,
     inColumns,
-    inData
+    inData, inTemplates
 }) => {
     const localStepsDefinition = inStepsDefinition;
     const localColumns = inColumns;
@@ -80,7 +82,7 @@ const buildStepsFromDefinition = ({
 
         const generatedValue = localBuilder({
             inColumns: localColumns,
-            inData: localData
+            inData: localData, inTemplates
         });
 
         generatedSteps.push({

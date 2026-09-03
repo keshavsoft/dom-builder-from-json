@@ -84,29 +84,64 @@
     }
   },
   "composite": {
-    "formComposite": {
-      "tagName": "div",
-      "attributes": {
-        "class": "flex flex-col space-y-1 mb-4"
-      },
-      "children": [
-        {
-          "tagName": "label",
-          "attributes": {
-            "for": "fieldKey",
-            "class": "text-sm font-medium text-gray-700 capitalize"
+    "formField": {
+      "template": {
+        "tagName": "div",
+        "attributes": {
+          "class": "flex flex-col space-y-1 mb-4"
+        },
+        "children": [
+          {
+            "tagName": "label",
+            "attributes": {
+              "for": "",
+              "class": "text-sm font-medium text-gray-700 capitalize"
+            },
+            "textContent": ""
           },
-          "textContent": ""
+          {
+            "tagName": "input",
+            "attributes": {
+              "type": "text",
+              "id": "",
+              "name": "",
+              "placeholder": "",
+              "class": "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800"
+            }
+          }
+        ]
+      },
+      "bindings": [
+        {
+          "find": "label",
+          "property": "attributes.for",
+          "source": "key"
         },
         {
-          "tagName": "input",
-          "attributes": {
-            "type": "fieldType",
-            "id": "",
-            "name": "",
-            "placeholder": "",
-            "class": "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800"
-          }
+          "find": "label",
+          "property": "textContent",
+          "source": "label"
+        },
+        {
+          "find": "input",
+          "property": "attributes.type",
+          "source": "type",
+          "default": "text"
+        },
+        {
+          "find": "input",
+          "property": "attributes.id",
+          "source": "key"
+        },
+        {
+          "find": "input",
+          "property": "attributes.name",
+          "source": "key"
+        },
+        {
+          "find": "input",
+          "property": "attributes.placeholder",
+          "source": "placeholder"
         }
       ]
     }

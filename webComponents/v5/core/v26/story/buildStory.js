@@ -3,7 +3,7 @@ import buildRenderersStore from "./buildRenderersStore.js";
 import buildPipeline from "./buildPipeline.js";
 import { getBodyRows, getFooterRows, getBodyAndFooterRows } from "../renderPipeline/tasks/tableTask/v3/buildConfiguredTableSpec/index.js";
 import buildConfiguredTableSpecInput from "../renderPipeline/tasks/tableTask/v3/buildConfiguredTableSpecInput/index.js";
-import { buildRows } from "../renderPipeline/tasks/tableTask/v5/buildStepsFromColumnsAndData.js";
+import { buildRows } from "../renderPipeline/tasks/tableTask/v6/buildStepsFromColumnsAndData.js";
 /**
  * Story Orchestrator: Combines globalStore, renderersStore, and renderPipeline
  */

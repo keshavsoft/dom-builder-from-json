@@ -45,7 +45,8 @@ const processSummaryRow = ({ inRowConfig, inColumns, inData, inTemplates }) => {
             if (lowerConfig in aggFuncs) {
                 const aggResult = aggFuncs[lowerConfig]({
                     inData: localData,
-                    inKey: column.key
+                    inKey: column.key,
+                    inType: column.type
                 });
 
                 if (lowerConfig === "count") {
@@ -55,7 +56,7 @@ const processSummaryRow = ({ inRowConfig, inColumns, inData, inTemplates }) => {
                         ? aggResult.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                         : String(aggResult);
                 } else {
-                    cellContent = String(aggResult);
+                    cellContent = (aggResult !== null && aggResult !== undefined) ? String(aggResult) : "";
                 }
             } else {
                 cellContent = String(columnConfig);

@@ -74,42 +74,70 @@ const avg = ({ inData, inKey }) => {
     return Number((total / countVal).toFixed(2));
 };
 
-const min = ({ inData, inKey }) => {
+const min = ({ inData, inKey, inType }) => {
     const localData = inData;
     const localKey = inKey;
+    const localType = inType;
 
     if (!Array.isArray(localData) || localData.length === 0 || !localKey) {
-        return 0;
+        return "";
     }
 
-    const numbers = localData
-        .map(item => extractNumber({ inValue: item?.[localKey] }))
-        .filter(n => !isNaN(n));
+    const rawValues = localData
+        .map(item => item?.[localKey])
+        .filter(val => val !== null && val !== undefined && val !== "");
 
-    if (numbers.length === 0) {
-        return 0;
+    if (rawValues.length === 0) {
+        return "";
     }
 
-    return Math.min(...numbers);
+    const isNumberType = localType === "number" || (
+        !localType && rawValues.every(v => typeof v === "number" || (!isNaN(Number(v)) && typeof v !== "boolean"))
+    );
+
+    if (isNumberType) {
+        const numbers = rawValues.map(v => extractNumber({ inValue: v }));
+        return Math.min(...numbers);
+    }
+
+    const sorted = [...rawValues].sort((a, b) => {
+        return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+    });
+
+    return sorted[0];
 };
 
-const max = ({ inData, inKey }) => {
+const max = ({ inData, inKey, inType }) => {
     const localData = inData;
     const localKey = inKey;
+    const localType = inType;
 
     if (!Array.isArray(localData) || localData.length === 0 || !localKey) {
-        return 0;
+        return "";
     }
 
-    const numbers = localData
-        .map(item => extractNumber({ inValue: item?.[localKey] }))
-        .filter(n => !isNaN(n));
+    const rawValues = localData
+        .map(item => item?.[localKey])
+        .filter(val => val !== null && val !== undefined && val !== "");
 
-    if (numbers.length === 0) {
-        return 0;
+    if (rawValues.length === 0) {
+        return "";
     }
 
-    return Math.max(...numbers);
+    const isNumberType = localType === "number" || (
+        !localType && rawValues.every(v => typeof v === "number" || (!isNaN(Number(v)) && typeof v !== "boolean"))
+    );
+
+    if (isNumberType) {
+        const numbers = rawValues.map(v => extractNumber({ inValue: v }));
+        return Math.max(...numbers);
+    }
+
+    const sorted = [...rawValues].sort((a, b) => {
+        return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+    });
+
+    return sorted[sorted.length - 1];
 };
 
 const aggFuncs = {

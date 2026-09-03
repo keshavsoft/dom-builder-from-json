@@ -16,6 +16,16 @@ if (tableContainer) {
             showTable: true
         },
         columnsConfig: [
+            { key: "vchtype", label: "vchtype", type: "text" },
+            { key: "vouchernumber", label: "voucher number", type: "number" },
+            { key: "allinventoryentries.stockitemname", label: "stockitemname", type: "text" },
+            { key: "allinventoryentries.batchallocations.godownname", label: "godownname", type: "text" },
+            { key: "allinventoryentries.batchallocations.batchname", label: "batchname", type: "text" },
+            { key: "allinventoryentries.batchallocations.amount", label: "amount", type: "number" },
+            { key: "allinventoryentries.batchallocations.actualqty", label: "actual qty", type: "text" },
+            { key: "allinventoryentries.batchallocations.billedqty", label: "billed qty", type: "text" }
+        ],
+        columnsConfig1: [
             { key: "vchtype", label: "vchtype" },
             { key: "vouchernumber", label: "voucher number" },
             { key: "allinventoryentries.stockitemname", label: "stockitemname" },
@@ -53,6 +63,8 @@ if (tableContainer) {
                 footer: {
                     summaryRow: {
                         vchtype: "count",
+                        vouchernumber: "max",
+                        "allinventoryentries.stockitemname": "max",
                         Credit: "sum",
                         Debit: "sum",
                         amount: "sum",

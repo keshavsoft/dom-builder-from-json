@@ -28,6 +28,9 @@ const buildTableSpecTreeFromColumnsAndData = ({
 
     // Story Stage 1: Initialize base table skeleton
     const baseSpecTree = initBaseSpecTree({ inTemplates: localTemplates });
+    // debugger
+
+    console.log("localColumns : ", localColumns);
 
     // Story Stage 2: Transform through sequential steps pipeline
     const populatedSpecTree = transformSpecTreeThroughSteps({
@@ -38,8 +41,11 @@ const buildTableSpecTreeFromColumnsAndData = ({
         inFooterConfig: localFooterConfig
     });
 
+    const finalJson = finalizeSpecTree({ inSpecTree: populatedSpecTree });
+    // console.log("finalJson : ", finalJson);
+
     // Story Stage 3: Finalize and normalize output spec
-    return finalizeSpecTree({ inSpecTree: populatedSpecTree });
+    return finalJson;
 };
 
 const createTableTask = ({

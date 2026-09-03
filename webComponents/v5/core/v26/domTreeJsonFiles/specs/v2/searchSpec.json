@@ -1,0 +1,51 @@
+{
+  "tagName": "div",
+  "attributes": {
+    "class": ""
+  },
+  "children": [
+    {
+      "tagName": "h2",
+      "attributes": {
+        "class": ""
+      },
+      "textContent": "Data Items"
+    },
+    {
+      "tagName": "div",
+      "attributes": {
+        "class": ""
+      },
+      "children": [
+        {
+          "tagName": "svg",
+          "attributes": {
+            "class": "",
+            "fill": "none",
+            "stroke": "currentColor",
+            "viewBox": "0 0 24 24"
+          },
+          "children": [
+            {
+              "tagName": "path",
+              "attributes": {
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                "stroke-width": "2",
+                "d": "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              }
+            }
+          ]
+        },
+        {
+          "tagName": "input",
+          "attributes": {
+            "type": "text",
+            "placeholder": "Search items...",
+            "class": ""
+          }
+        }
+      ]
+    }
+  ]
+}

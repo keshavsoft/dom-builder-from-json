@@ -1,4 +1,4 @@
-import { applyBindings } from "../../../../common/index.js";
+import { applyBindings } from "../../../common/index.js";
 
 /**
  * Builds table footer rows directly from dataModel.tFoot and dataModel.tHead
@@ -38,26 +38,14 @@ const buildFooterRows = ({ inDataModel, inTemplates }) => {
         }
 
         const tdCells = tHead.map(column => {
-            const rawValue = footRow.data?.[column.key];
-            let cellContent = "";
-
-            if (rawValue !== null && rawValue !== undefined && rawValue !== "") {
-                if (typeof rawValue === "number") {
-                    cellContent = rawValue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                } else {
-                    cellContent = String(rawValue);
-                }
-            }
+            const value = footRow.data?.[column.key];
 
             return applyBindings({
                 inTemplate: cellTemplate,
                 inBindings: cellBindings,
                 inData: {
                     key: column.key,
-                    value: cellContent
+                    value: value ?? ""
                 }
             });
         });

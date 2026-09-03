@@ -1,6 +1,6 @@
 import { buildHeaderCells } from "./headerBuilder.js";
 import { buildDataRows } from "./rowBuilder.js";
-import { buildFooterRows } from "./footer/index.js";
+import { buildFooterRows } from "./footerBuilder.js";
 
 const builderMap = {
     headerCells: buildHeaderCells,

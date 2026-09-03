@@ -13,13 +13,15 @@ const taskFactoryMap = {
         });
     },
 
-    table: ({ inColumns, inData }) => {
+    table: ({ inColumns, inData, inFooterConfig }) => {
         const localColumns = inColumns;
         const localData = inData;
+        const localFooterConfig = inFooterConfig;
 
         return createTableTask({
             inColumns: localColumns,
-            inData: localData
+            inData: localData,
+            inFooterConfig: localFooterConfig
         });
     },
 
@@ -66,10 +68,12 @@ const buildRenderPipeline = ({
         .filter((key) => key in taskFactoryMap)
         .map((key) => {
             const columns = localStore?.renderersStore?.[key]?.store?.columnsStore?.getColumnsConfig() || fallbackColumns;
+            const rendererConfig = localRenderers?.[key];
 
             return taskFactoryMap[key]({
                 inColumns: columns,
                 inData: data,
+                inFooterConfig: rendererConfig?.footer,
                 inShowSearch: localShowSearch,
                 inDomTreeSpecs: localDomTreeSpecs
             });

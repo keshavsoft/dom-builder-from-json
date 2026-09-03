@@ -3,13 +3,15 @@ const buildStepsFromDefinition = ({
     inColumns,
     inData,
     inTemplates,
-    inBuilderMap
+    inBuilderMap,
+    inFooterConfig
 }) => {
     const localStepsDefinition = inStepsDefinition;
     const localColumns = inColumns;
     const localData = inData;
     const localTemplates = inTemplates;
     const localBuilderMap = inBuilderMap;
+    const localFooterConfig = inFooterConfig;
 
     if (!localStepsDefinition || typeof localStepsDefinition !== "object") {
         return [];
@@ -39,7 +41,8 @@ const buildStepsFromDefinition = ({
         const generatedValue = localBuilder({
             inColumns: localColumns,
             inData: localData,
-            inTemplates: localTemplates
+            inTemplates: localTemplates,
+            inFooterConfig: localFooterConfig
         });
 
         generatedSteps.push({

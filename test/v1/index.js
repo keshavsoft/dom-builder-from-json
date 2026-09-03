@@ -54,7 +54,9 @@ if (tableContainer) {
                     summaryRow: {
                         vchtype: "count",
                         Credit: "sum",
-                        Debit: "sum"
+                        Debit: "sum",
+                        amount: "sum",
+                        "allinventoryentries.batchallocations.actualqty": "sum"
                     },
                     balanceRow1: {
                         StockItemName: "111",

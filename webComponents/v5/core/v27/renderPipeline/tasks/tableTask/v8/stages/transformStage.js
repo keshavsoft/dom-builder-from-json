@@ -30,34 +30,64 @@ const applyStepToSpecTree = ({ inSpecTree, inStep, inValue }) => {
 
 /**
  * Stage 2: Transforms base spec tree sequentially through the steps pipeline using dataModel ONLY
- * Zero calculations, zero math - pure template stamping
+ * Contains guard: Only processes if the composite key exists in inTemplates.composite
  * Follows in -> local parameter naming convention
  */
 export const transformSpecTreeThroughSteps = ({
     inSpecTree,
     inDataModel,
-    inTemplates
+    inTemplates,
+    inLogUnfoundKeys = true
 }) => {
     const localSpecTree = inSpecTree;
     const localDataModel = inDataModel;
     const localTemplates = inTemplates;
+    const localLogUnfoundKeys = inLogUnfoundKeys;
 
     let currentTree = localSpecTree;
     const stepsList = Array.isArray(stepsDefinition) ? stepsDefinition : Object.values(stepsDefinition);
+    const availableCompositeKeys = localTemplates?.composite ? Object.keys(localTemplates.composite) : [];
 
     console.log("=== [v8: Start Spec Tree] ===", JSON.parse(JSON.stringify(currentTree)));
 
     let stepIndex = 0;
     for (const step of stepsList) {
         stepIndex++;
-        const localBuilder = builderMap[step.builder];
+
+        // Identify requested composite key (from composite or builder property)
+        const requestedCompositeKey = step.composite || step.builder;
+
+        // GUARD: Only present in templates.composite then only process
+        const isPresentInComposite = Boolean(
+            localTemplates?.composite &&
+            requestedCompositeKey &&
+            requestedCompositeKey in localTemplates.composite
+        );
+
+        if (!isPresentInComposite) {
+            if (localLogUnfoundKeys) {
+                console.warn(
+                    `[Composite Guard] Step ${stepIndex} ("${step.name}") requested composite key "${requestedCompositeKey}", which was NOT found in inTemplates.composite!`,
+                    `Available keys are:`,
+                    availableCompositeKeys
+                );
+            }
+            continue;
+        }
+
+        const localBuilder = builderMap[step.builder] || builderMap[requestedCompositeKey];
 
         if (typeof localBuilder !== "function") {
+            if (localLogUnfoundKeys) {
+                console.warn(
+                    `[Composite Guard] Step ${stepIndex} ("${step.name}") has no matching builder function for "${step.builder}".`
+                );
+            }
             continue;
         }
 
         // Skip footer if dataModel has no footer rows
-        if (step.name === "footer" && (!localDataModel?.tFoot || localDataModel.tFoot.length === 0)) {
+        if ((step.name === "footer" || step.name === "tFoot") && (!localDataModel?.tFoot || localDataModel.tFoot.length === 0)) {
             console.log(`=== [v8: Step ${stepIndex} (${step.name})] Skipped (No Footer in dataModel) ===`);
             continue;
         }

@@ -36,7 +36,7 @@ const buildTableSpecTreeFromColumnsAndData = ({
         inFooterConfig: localFooterConfig
     });
 
-    console.log("dataModel : ", dataModel);
+    // console.log("dataModel : ", dataModel);
 
     // Story Stage 2: Initialize base table skeleton
     const baseSpecTree = initBaseSpecTree({ inTemplates: localTemplates });
@@ -45,7 +45,8 @@ const buildTableSpecTreeFromColumnsAndData = ({
     const populatedSpecTree = transformSpecTreeThroughSteps({
         inSpecTree: baseSpecTree,
         inDataModel: dataModel,
-        inTemplates: localTemplates
+        inTemplates: localTemplates,
+        inLogUnfoundKeys: false
     });
 
     // Story Stage 4: Finalize and normalize output spec

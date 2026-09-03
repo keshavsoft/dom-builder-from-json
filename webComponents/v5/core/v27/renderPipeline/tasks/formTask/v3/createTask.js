@@ -1,0 +1,65 @@
+import startCompositeDefinition from "./start.json" with { type: "json" };
+import specTemplatesDictionary from "../../../../../../specs/v2/spec.json" with { type: "json" };
+import stepsDefinition from "./steps.json" with { type: "json" };
+
+import buildBaseSpecTreeFromComposite, {
+    applySequentialStepsToSpecTree
+} from "./buildFromComposite.js";
+
+import buildStepsFromDefinition from "./buildStepsFromDefinition.js";
+
+const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
+    inCompositeDef: startCompositeDefinition,
+    inTemplates: specTemplatesDictionary
+});
+
+const buildFormSpecTreeFromColumns = ({
+    inColumns
+}) => {
+    const localColumns = inColumns;
+
+    const baseTreeCopy = JSON.parse(
+        JSON.stringify(initialBaseSpecTree)
+    );
+
+    const generatedSteps = buildStepsFromDefinition({
+        inStepsDefinition: stepsDefinition,
+        inColumns: localColumns,
+        inTemplates: specTemplatesDictionary
+    });
+
+    return applySequentialStepsToSpecTree({
+        inSpecTree: baseTreeCopy,
+        inStepsDef: generatedSteps,
+        inTemplates: specTemplatesDictionary,
+        inEnableLog: false
+    });
+};
+
+/**
+ * Render Task Transformer:
+ * Creates the complete form specification tree from columns.
+ */
+export const createFormTask = ({
+    inColumns
+} = {}) => {
+    const localColumns = inColumns;
+
+    return ({ inRenderersStore }) => {
+        const localFormStore = inRenderersStore?.form?.store;
+
+        const formColumns = localFormStore?.columnsStore?.getColumnsConfig();
+        console.log("columns : ", formColumns, localColumns);
+
+        return buildFormSpecTreeFromColumns({
+            inColumns: formColumns
+        });
+    };
+};
+
+export {
+    buildFormSpecTreeFromColumns,
+    initialBaseSpecTree
+};
+
+export default createFormTask;

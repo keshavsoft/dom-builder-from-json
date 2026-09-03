@@ -1,0 +1,13 @@
+{
+    "table": {
+        "thead": {
+            "tr": "th"
+        },
+        "tbody": {
+            "tr": "td"
+        },
+        "tfoot": {
+            "tr": "th"
+        }
+    }
+}

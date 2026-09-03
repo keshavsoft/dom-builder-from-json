@@ -185,6 +185,66 @@
       },
       "bindings": []
     },
+    "tableFooterRow": {
+      "template": {
+        "tagName": "tr",
+        "attributes": {
+          "class": "bg-gray-100 font-bold border-t-2 border-gray-300 text-gray-900"
+        },
+        "children": []
+      },
+      "bindings": []
+    },
+    "tableFooterCell": {
+      "template": {
+        "tagName": "td",
+        "attributes": {
+          "class": "px-6 py-3 whitespace-nowrap text-sm font-semibold text-gray-900"
+        },
+        "textContent": ""
+      },
+      "bindings": [
+        {
+          "property": "textContent",
+          "source": "value"
+        }
+      ]
+    },
+    "tableFooterInputCell": {
+      "template": {
+        "tagName": "td",
+        "attributes": {
+          "class": "px-3 py-2 whitespace-nowrap text-sm text-gray-800"
+        },
+        "children": [
+          {
+            "tagName": "input",
+            "attributes": {
+              "type": "text",
+              "class": "w-full px-2 py-1 border border-gray-300 rounded text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500",
+              "placeholder": ""
+            }
+          }
+        ]
+      },
+      "bindings": [
+        {
+          "find": "input",
+          "property": "attributes.value",
+          "source": "value"
+        },
+        {
+          "find": "input",
+          "property": "attributes.placeholder",
+          "source": "placeholder"
+        },
+        {
+          "find": "input",
+          "property": "attributes.name",
+          "source": "key"
+        }
+      ]
+    },
     "search": {
       "template": {
         "tagName": "div",

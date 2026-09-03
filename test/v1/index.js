@@ -64,7 +64,7 @@ if (tableContainer) {
                         Debit: "Debit-Credit"
                     },
                     inputsRow1: [
-                        ["StockItemName", "Credit", "Debit"]
+                        ["StockItemName", "Credit", "Debit", "amount"]
                     ]
 
                 }

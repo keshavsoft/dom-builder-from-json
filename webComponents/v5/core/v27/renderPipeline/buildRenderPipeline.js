@@ -16,33 +16,48 @@ const buildRenderPipeline = ({
     const localShowSearch = inShowSearch !== false;
     const localShowTable = inShowTable !== false;
     const localCustomTasks = inCustomTasks;
+    const localDomTreeSpecs = domTreeJsonFiles;
     const localStore = inStore;
-    const localRenderers = inRenderers;
+    const localRenderers = inRenderers || {};
 
     const pipeline = [];
 
+    const hasRenderersConfig = Object.keys(localRenderers).length > 0;
+    const shouldRenderSearch = hasRenderersConfig ? ("search" in localRenderers && localShowSearch) : localShowSearch;
+    const shouldRenderTable = hasRenderersConfig ? ("table" in localRenderers && localShowTable) : localShowTable;
+    const shouldRenderForm = "form" in localRenderers;
+
     // Render Task 1: Search Component Task (Creates & returns search toolbar DOM element)
-    pipeline.push(createSearchTask({
-        inShowSearch: localShowSearch,
-        domTreeJsonFiles
-    }));
+    if (shouldRenderSearch) {
+        pipeline.push(createSearchTask({
+            inShowSearch: localShowSearch,
+            domTreeJsonFiles: localDomTreeSpecs
+        }));
+    }
 
     const data = localStore?.store?.dataStore?.getOriginalData();
-    const columns = localStore?.renderersStore?.table?.store?.columnsStore?.getColumnsConfig();
 
-    const fromTable = createTableTask({
-        inColumns: columns,
-        inData: data
-    });
+    if (shouldRenderTable) {
+        const tableColumns = localStore?.renderersStore?.table?.store?.columnsStore?.getColumnsConfig() || localStore?.store?.columnsConfig;
 
-    pipeline.push(fromTable);
+        const fromTable = createTableTask({
+            inColumns: tableColumns,
+            inData: data
+        });
 
-    const fromForm = createFormTask({
-        inColumns: columns,
-        inData: data
-    });
+        pipeline.push(fromTable);
+    }
 
-    pipeline.push(fromForm);
+    if (shouldRenderForm) {
+        const formColumns = localStore?.renderersStore?.form?.store?.columnsStore?.getColumnsConfig() || localStore?.renderersStore?.table?.store?.columnsStore?.getColumnsConfig();
+
+        const fromForm = createFormTask({
+            inColumns: formColumns,
+            inData: data
+        });
+
+        pipeline.push(fromForm);
+    }
 
     // External Custom Render Task Functions (e.g. searchNewTask, paginationTask)
     if (Array.isArray(localCustomTasks) && localCustomTasks.length > 0) {

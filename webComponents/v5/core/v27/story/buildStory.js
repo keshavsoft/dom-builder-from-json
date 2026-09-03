@@ -1,7 +1,7 @@
 import buildGlobalStore from "./buildGlobalStore.js";
 import buildRenderersStore from "./buildRenderersStore.js";
 import buildPipeline from "./buildPipeline.js";
-import { buildDataRows } from "../renderPipeline/tasks/tableTask/builders.js";
+import { buildDataRows } from "../renderPipeline/tasks/tableTask/v1/builders/index.js";
 
 const buildRows = buildDataRows;
 const getBodyRows = () => [];

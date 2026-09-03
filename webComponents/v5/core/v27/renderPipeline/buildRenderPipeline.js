@@ -1,5 +1,5 @@
 import createSearchTask from "./tasks/searchTask.js";
-import { createTableTask } from "./tasks/tableTask.js";
+import { createTableTask } from "./tasks/tableTask/index.js";
 import { createFormTask } from "./tasks/formTask.js";
 
 const taskFactoryMap = {

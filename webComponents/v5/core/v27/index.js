@@ -114,7 +114,7 @@ const renderTable = (inOptions = {}) => {
 
     const domElement = domCreationFuncs.versions[domCreationFuncs.maxVersion](childrenNodes);
 
-    console.log("domElement: ", domElement);
+    // console.log("domElement: ", domElement);
 
     const tableContainer = document.getElementById("tableContainer");
 

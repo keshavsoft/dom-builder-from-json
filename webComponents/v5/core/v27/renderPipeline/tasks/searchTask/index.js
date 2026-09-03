@@ -1,9 +1,6 @@
-import specTemplatesDictionary from "../../../../../../specs/v2/spec.json" with { type: "json" };
+import specTemplatesDictionary from "../../../../../specs/v2/spec.json" with { type: "json" };
 
-/**
- * Render Task Transformer: Returns the search row layout DOM element above the table
- */
-export const createSearchTask = ({
+const createSearchTask = ({
     inShowSearch = true,
     inTemplates = specTemplatesDictionary
 } = {}) => {
@@ -23,6 +20,10 @@ export const createSearchTask = ({
 
         return null;
     };
+};
+
+export {
+    createSearchTask
 };
 
 export default createSearchTask;

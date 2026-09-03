@@ -1,13 +1,18 @@
 import buildGlobalStore from "./buildGlobalStore.js";
 import buildRenderersStore from "./buildRenderersStore.js";
 import buildPipeline from "./buildPipeline.js";
-import { getBodyRows, getFooterRows, getBodyAndFooterRows } from "../renderPipeline/tasks/tableTask/v3/buildConfiguredTableSpec/index.js";
-import buildConfiguredTableSpecInput from "../renderPipeline/tasks/tableTask/v3/buildConfiguredTableSpecInput/index.js";
-import { buildRows } from "../renderPipeline/tasks/tableTask/v6/buildStepsFromColumnsAndData.js";
+import { buildDataRows } from "../renderPipeline/tasks/tableTask/builders.js";
+
+const buildRows = buildDataRows;
+const getBodyRows = () => [];
+const getFooterRows = () => [];
+const getBodyAndFooterRows = () => ({ bodyRows: [], footerRows: [] });
+const buildConfiguredTableSpecInput = () => ({});
+
 /**
  * Story Orchestrator: Combines globalStore, renderersStore, and renderPipeline
  */
-export const buildStory = ({
+const buildStory = ({
     domTreeJsonFiles,
     inVisibility = {},
     inPipeline = {},
@@ -21,7 +26,6 @@ export const buildStory = ({
     const localColumnsConfig = columnsConfig || [];
     const localData = data || [];
     const localRenderers = renderers || {};
-    // console.log("kkkkkkkkkkk : ", renderers.table);
 
     // 1. Build Root Global Store (Single Source of Truth: originalData & originalColumnsConfig)
     const globalStore = buildGlobalStore({
@@ -61,6 +65,10 @@ export const buildStory = ({
         },
         renderersFromInwardConfig: localRenderers
     };
+};
+
+export {
+    buildStory
 };
 
 export default buildStory;

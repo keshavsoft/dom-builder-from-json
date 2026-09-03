@@ -1,22 +1,32 @@
 import startCompositeDefinition from "./start.json" with { type: "json" };
-import specTemplatesDictionary from "../../../../../../specs/v2/spec.json" with { type: "json" };
+import specTemplatesDictionary from "../../../../../specs/v2/spec.json" with { type: "json" };
 import stepsDefinition from "./steps.json" with { type: "json" };
 
-import buildBaseSpecTreeFromComposite, {
-    applySequentialStepsToSpecTree
-} from "./buildFromComposite.js";
+import {
+    buildBaseSpecTreeFromComposite,
+    applySequentialStepsToSpecTree,
+    buildStepsFromDefinition
+} from "../common/index.js";
 
-import buildStepsFromDefinition from "./buildStepsFromDefinition.js";
+import {
+    buildFormFields
+} from "./builders.js";
 
 const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
     inCompositeDef: startCompositeDefinition,
     inTemplates: specTemplatesDictionary
 });
 
+const builderMap = {
+    formFields: buildFormFields
+};
+
 const buildFormSpecTreeFromColumns = ({
-    inColumns
+    inColumns,
+    inTemplates = specTemplatesDictionary
 }) => {
     const localColumns = inColumns;
+    const localTemplates = inTemplates;
 
     const baseTreeCopy = JSON.parse(
         JSON.stringify(initialBaseSpecTree)
@@ -25,39 +35,35 @@ const buildFormSpecTreeFromColumns = ({
     const generatedSteps = buildStepsFromDefinition({
         inStepsDefinition: stepsDefinition,
         inColumns: localColumns,
-        inTemplates: specTemplatesDictionary
+        inTemplates: localTemplates,
+        inBuilderMap: builderMap
     });
 
     return applySequentialStepsToSpecTree({
         inSpecTree: baseTreeCopy,
         inStepsDef: generatedSteps,
-        inTemplates: specTemplatesDictionary,
+        inTemplates: localTemplates,
         inEnableLog: false
     });
 };
 
-/**
- * Render Task Transformer:
- * Creates the complete form specification tree from columns.
- */
-export const createFormTask = ({
+const createFormTask = ({
     inColumns
 } = {}) => {
     const localColumns = inColumns;
 
     return ({ inRenderersStore }) => {
         const localFormStore = inRenderersStore?.form?.store;
-
         const formColumns = localFormStore?.columnsStore?.getColumnsConfig();
-        console.log("columns : ", formColumns, localColumns);
 
         return buildFormSpecTreeFromColumns({
-            inColumns: formColumns
+            inColumns: formColumns || localColumns
         });
     };
 };
 
 export {
+    createFormTask,
     buildFormSpecTreeFromColumns,
     initialBaseSpecTree
 };

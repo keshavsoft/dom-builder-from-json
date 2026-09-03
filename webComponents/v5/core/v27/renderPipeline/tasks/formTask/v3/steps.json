@@ -1,7 +1,0 @@
-{
-    "fields": {
-        "find": "form.div",
-        "target": "children",
-        "builder": "formFields"
-    }
-}

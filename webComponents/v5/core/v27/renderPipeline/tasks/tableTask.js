@@ -1,5 +1,16 @@
-import { createTableTask } from "./tableTask/v3/index.js";
-import { buildTableSpecTreeFromColumnsAndData, createTableTask as createTableTaskV4 } from "./tableTask/v6/createTask.js";
+import {
+    createTableTask,
+    buildTableSpecTreeFromColumnsAndData,
+    initialBaseSpecTree
+} from "./tableTask/index.js";
 
-export { createTableTask, buildTableSpecTreeFromColumnsAndData, createTableTaskV4 };
+const createTableTaskV4 = createTableTask;
+
+export {
+    createTableTask,
+    createTableTaskV4,
+    buildTableSpecTreeFromColumnsAndData,
+    initialBaseSpecTree
+};
+
 export default createTableTask;

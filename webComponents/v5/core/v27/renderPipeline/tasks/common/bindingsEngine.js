@@ -76,89 +76,10 @@ const applyBindings = ({ inTemplate, inBindings, inData }) => {
     return clonedNode;
 };
 
-const buildFormFields = ({ inColumns, inTemplates }) => {
-    const localColumns = inColumns;
-    const localTemplates = inTemplates;
-
-    if (!Array.isArray(localColumns) || localColumns.length === 0) {
-        return [];
-    }
-
-    const formFieldComposite = localTemplates?.composite?.formField;
-    const template = formFieldComposite?.template;
-    const bindings = formFieldComposite?.bindings;
-
-    if (!template) {
-        return [];
-    }
-
-    return localColumns.map(column => {
-        return applyBindings({
-            inTemplate: template,
-            inBindings: bindings,
-            inData: column
-        });
-    });
-};
-
-const builderMap = {
-    formFields: ({ inColumns, inTemplates }) => {
-        console.log("inColumns ---------:", inColumns, inTemplates);
-
-        return buildFormFields({
-            inColumns, inTemplates
-        });
-    }
-};
-
-const buildStepsFromDefinition = ({
-    inStepsDefinition,
-    inColumns,
-    inData, inTemplates
-}) => {
-    const localStepsDefinition = inStepsDefinition;
-    const localColumns = inColumns;
-    const localData = inData;
-
-    if (!localStepsDefinition || typeof localStepsDefinition !== "object") {
-        return [];
-    }
-
-    const generatedSteps = [];
-
-    const stepEntries = Array.isArray(localStepsDefinition)
-        ? localStepsDefinition.map(step => [step.name, step])
-        : Object.entries(localStepsDefinition);
-
-    stepEntries.forEach(([stepKey, stepDefinition]) => {
-        if (!stepDefinition || !stepDefinition.builder) {
-            return;
-        }
-
-        const localBuilder = builderMap[stepDefinition.builder];
-
-        if (typeof localBuilder !== "function") {
-            return;
-        }
-
-        const generatedValue = localBuilder({
-            inColumns: localColumns,
-            inData: localData, inTemplates
-        });
-
-        generatedSteps.push({
-            find: stepDefinition.find,
-            target: stepDefinition.target,
-            value: generatedValue
-        });
-    });
-
-    return generatedSteps;
-};
-
 export {
-    buildStepsFromDefinition,
-    buildFormFields
+    setPropertyByPath,
+    findNodeByTagName,
+    applyBindings
 };
 
-export default buildStepsFromDefinition;
+export default applyBindings;

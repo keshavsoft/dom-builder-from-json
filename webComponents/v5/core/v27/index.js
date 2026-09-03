@@ -86,7 +86,7 @@ const hookSearch = ({ inStory, inDomTreeSpecs, inOptions }) => {
     });
 };
 
-export const renderTable = (inOptions = {}) => {
+const renderTable = (inOptions = {}) => {
     const localOptions = inOptions;
     // console.log("localOptions-----------", localOptions);
 
@@ -131,6 +131,10 @@ export const renderTable = (inOptions = {}) => {
     // });
 
     return domElement;
+};
+
+export {
+    renderTable
 };
 
 export default renderTable;

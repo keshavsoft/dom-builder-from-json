@@ -1,6 +1,6 @@
 import runRenderPipeline from "./runRenderPipeline.js";
 import buildRenderPipeline from "./buildRenderPipeline.js";
-import createSearchTask from "./tasks/searchTask/v2/searchTask.js";
+import createSearchTask from "./tasks/searchTask.js";
 import createTableTask from "./tasks/tableTask.js";
 
 export {
@@ -11,4 +11,3 @@ export {
 };
 
 export default runRenderPipeline;
-

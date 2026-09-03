@@ -1,24 +1,36 @@
 import startCompositeDefinition from "./start.json" with { type: "json" };
-import specTemplatesDictionary from "../../../../../../specs/v2/spec.json" with { type: "json" };
+import specTemplatesDictionary from "../../../../../specs/v2/spec.json" with { type: "json" };
 import stepsDefinition from "./steps.json" with { type: "json" };
 
-import buildBaseSpecTreeFromComposite, {
-    applySequentialStepsToSpecTree
-} from "./buildFromComposite.js";
+import {
+    buildBaseSpecTreeFromComposite,
+    applySequentialStepsToSpecTree,
+    buildStepsFromDefinition
+} from "../common/index.js";
 
-import buildStepsFromDefinition from "./buildStepsFromDefinition.js";
+import {
+    buildHeaderCells,
+    buildDataRows
+} from "./builders.js";
 
 const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
     inCompositeDef: startCompositeDefinition,
     inTemplates: specTemplatesDictionary
 });
 
+const builderMap = {
+    headerCells: buildHeaderCells,
+    dataRows: buildDataRows
+};
+
 const buildTableSpecTreeFromColumnsAndData = ({
     inColumns,
-    inData
+    inData,
+    inTemplates = specTemplatesDictionary
 }) => {
     const localColumns = inColumns;
     const localData = inData;
+    const localTemplates = inTemplates;
 
     const baseTreeCopy = JSON.parse(
         JSON.stringify(initialBaseSpecTree)
@@ -28,22 +40,19 @@ const buildTableSpecTreeFromColumnsAndData = ({
         inStepsDefinition: stepsDefinition,
         inColumns: localColumns,
         inData: localData,
-        inTemplates: specTemplatesDictionary
+        inTemplates: localTemplates,
+        inBuilderMap: builderMap
     });
 
     return applySequentialStepsToSpecTree({
         inSpecTree: baseTreeCopy,
         inStepsDef: generatedSteps,
-        inTemplates: specTemplatesDictionary,
+        inTemplates: localTemplates,
         inEnableLog: false
     });
 };
 
-/**
- * Render Task Transformer:
- * Creates the complete table specification tree.
- */
-export const createTableTask = ({
+const createTableTask = ({
     inColumns,
     inData
 } = {}) => {
@@ -51,8 +60,6 @@ export const createTableTask = ({
     const localData = inData;
 
     return ({ inRenderersStore }) => {
-        console.log("inRenderersStore--task: ", inRenderersStore);
-
         return buildTableSpecTreeFromColumnsAndData({
             inColumns: localColumns,
             inData: localData
@@ -61,6 +68,7 @@ export const createTableTask = ({
 };
 
 export {
+    createTableTask,
     buildTableSpecTreeFromColumnsAndData,
     initialBaseSpecTree
 };

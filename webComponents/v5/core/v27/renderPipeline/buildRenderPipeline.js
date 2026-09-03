@@ -1,11 +1,11 @@
-import createSearchTask from "./tasks/searchTask/v2/searchTask.js";
-import { createTableTaskV4 } from "./tasks/tableTask.js";
+import createSearchTask from "./tasks/searchTask.js";
+import { createTableTask } from "./tasks/tableTask.js";
 import { createFormTask } from "./tasks/formTask.js";
 
 /**
  * Builds dynamic array of render component pipeline task functions
  */
-export const buildRenderPipeline = ({
+const buildRenderPipeline = ({
     inShowSearch = true,
     inShowTable = true,
     inCustomTasks = [],
@@ -27,10 +27,10 @@ export const buildRenderPipeline = ({
         domTreeJsonFiles
     }));
 
-    const data = localStore.store.dataStore.getOriginalData();
-    const columns = localStore.renderersStore.table.store.columnsStore.getColumnsConfig();
+    const data = localStore?.store?.dataStore?.getOriginalData();
+    const columns = localStore?.renderersStore?.table?.store?.columnsStore?.getColumnsConfig();
 
-    const fromTable = createTableTaskV4({
+    const fromTable = createTableTask({
         inColumns: columns,
         inData: data
     });
@@ -50,6 +50,10 @@ export const buildRenderPipeline = ({
     }
 
     return pipeline;
+};
+
+export {
+    buildRenderPipeline
 };
 
 export default buildRenderPipeline;

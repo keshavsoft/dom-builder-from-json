@@ -1,68 +1,28 @@
-import startCompositeDefinition from "./start.json" with { type: "json" };
-import specTemplatesDictionary from "../../../../../specs/v2/spec.json" with { type: "json" };
-import stepsDefinition from "./steps.json" with { type: "json" };
+import v1, { buildFormSpecTreeFromColumns } from "./v1/index.js";
+import { createBaseTree } from "./v1/stepRunner.js";
 
-import {
-    buildBaseSpecTreeFromComposite,
-    applySequentialStepsToSpecTree,
-    buildStepsFromDefinition
-} from "../common/index.js";
+const initialBaseSpecTree = createBaseTree();
 
-import {
-    buildFormFields
-} from "./builders.js";
-
-const initialBaseSpecTree = buildBaseSpecTreeFromComposite({
-    inCompositeDef: startCompositeDefinition,
-    inTemplates: specTemplatesDictionary
-});
-
-const builderMap = {
-    formFields: buildFormFields
+const versions = {
+    v1
 };
 
-const buildFormSpecTreeFromColumns = ({
-    inColumns,
-    inTemplates = specTemplatesDictionary
-}) => {
-    const localColumns = inColumns;
-    const localTemplates = inTemplates;
+const defaultVersion = "v1";
 
-    const baseTreeCopy = JSON.parse(
-        JSON.stringify(initialBaseSpecTree)
-    );
+const maxVersion = `v${Math.max(
+    ...Object.keys(versions).map(key => Number(key.slice(1)))
+)}`;
 
-    const generatedSteps = buildStepsFromDefinition({
-        inStepsDefinition: stepsDefinition,
-        inColumns: localColumns,
-        inTemplates: localTemplates,
-        inBuilderMap: builderMap
-    });
-
-    return applySequentialStepsToSpecTree({
-        inSpecTree: baseTreeCopy,
-        inStepsDef: generatedSteps,
-        inTemplates: localTemplates,
-        inEnableLog: false
-    });
-};
-
-const createFormTask = ({
-    inColumns
-} = {}) => {
-    const localColumns = inColumns;
-
-    return ({ inRenderersStore }) => {
-        const localFormStore = inRenderersStore?.form?.store;
-        const formColumns = localFormStore?.columnsStore?.getColumnsConfig();
-
-        return buildFormSpecTreeFromColumns({
-            inColumns: formColumns || localColumns
-        });
-    };
+const createFormTask = (args) => {
+    const selectedVersion = versions[defaultVersion] || v1;
+    return selectedVersion(args);
 };
 
 export {
+    v1,
+    versions,
+    defaultVersion,
+    maxVersion,
     createFormTask,
     buildFormSpecTreeFromColumns,
     initialBaseSpecTree

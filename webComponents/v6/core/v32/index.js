@@ -3,7 +3,7 @@ import buildStory from "./story/index.js";
 // import domCreationFuncs from "../../domCreation/index.js";
 import getActiveDomTreeSpecs from "./getActiveDomTreeSpecs.js";
 
-console.log("6-31");
+console.log("6-32");
 
 const renderTable = (inOptions = {}) => {
     const localOptions = inOptions;

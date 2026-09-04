@@ -1,14 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildStory } from "../webComponents/v6/core/v27/story/buildStory.js";
+import { buildStory as buildStoryV27 } from "../webComponents/v6/core/v27/story/buildStory.js";
+import { buildStory as buildStoryV28 } from "../webComponents/v6/core/v28/story/buildStory.js";
 import {
     versions,
     defaultVersion,
     maxVersion,
     buildDataModels
-} from "../webComponents/v6/core/v27/story/buildDataModels/index.js";
-import { runRenderPipeline } from "../webComponents/v6/core/v27/renderPipeline/index.js";
+} from "../webComponents/v6/core/v28/story/buildDataModels/index.js";
+import { runRenderPipeline as runPipelineV28 } from "../webComponents/v6/core/v28/renderPipeline/index.js";
 import purchasesJson from "./v1/purchases.json" with { type: "json" };
 
 test("buildDataModels versioning exports", () => {
@@ -43,7 +44,7 @@ test("buildStory constructs dataModels as 3rd layer and passes to pipeline", () 
         }
     };
 
-    const story = buildStory({
+    const story = buildStoryV28({
         data: purchasesJson,
         columnsConfig,
         renderers
@@ -54,6 +55,7 @@ test("buildStory constructs dataModels as 3rd layer and passes to pipeline", () 
     assert.ok(story.renderersStore, "renderersStore should exist");
     assert.ok(story.dataModels, "dataModels layer should exist");
     assert.ok(story.renderPipeline, "renderPipeline should exist");
+    assert.equal(story.refreshTable, undefined, "refreshTable stub should be removed in v28");
 
     // Verify dataModels content
     assert.ok(story.dataModels.table, "table dataModel should exist");
@@ -73,7 +75,7 @@ test("buildStory constructs dataModels as 3rd layer and passes to pipeline", () 
     assert.equal(story.dataModels.form.fields[1].key, "vouchernumber");
 
     // Verify pipeline runs with dataModels
-    const renderedNodes = runRenderPipeline({
+    const renderedNodes = runPipelineV28({
         inPipeline: story.renderPipeline,
         inRenderersStore: story.renderersStore,
         inDataModels: story.dataModels

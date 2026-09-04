@@ -13,28 +13,18 @@ const taskFactoryMap = {
         });
     },
 
-    table: ({ inColumns, inData, inFooterConfig, inDataModel }) => {
-        const localColumns = inColumns;
-        const localData = inData;
-        const localFooterConfig = inFooterConfig;
+    table: ({ inDataModel }) => {
         const localDataModel = inDataModel;
 
         return createTableTask({
-            inColumns: localColumns,
-            inData: localData,
-            inFooterConfig: localFooterConfig,
             inDataModel: localDataModel
         });
     },
 
-    form: ({ inColumns, inData, inDataModel }) => {
-        const localColumns = inColumns;
-        const localData = inData;
+    form: ({ inDataModel }) => {
         const localDataModel = inDataModel;
 
         return createFormTask({
-            inColumns: localColumns,
-            inData: localData,
             inDataModel: localDataModel
         });
     }
@@ -48,7 +38,6 @@ const buildRenderPipeline = ({
     inShowTable = true,
     inCustomTasks = [],
     domTreeJsonFiles,
-    inStore,
     inDataModels,
     inRenderers
 } = {}) => {
@@ -56,12 +45,8 @@ const buildRenderPipeline = ({
     const localShowTable = inShowTable !== false;
     const localCustomTasks = inCustomTasks;
     const localDomTreeSpecs = domTreeJsonFiles;
-    const localStore = inStore;
-    const localDataModels = inDataModels || localStore?.dataModels;
+    const localDataModels = inDataModels || {};
     const localRenderers = inRenderers || {};
-
-    const data = localStore?.store?.dataStore?.getOriginalData();
-    const fallbackColumns = localStore?.store?.columnsConfig;
 
     const activeRendererKeys = Object.keys(localRenderers).length > 0
         ? Object.keys(localRenderers)
@@ -73,14 +58,9 @@ const buildRenderPipeline = ({
     const pipeline = activeRendererKeys
         .filter((key) => key in taskFactoryMap)
         .map((key) => {
-            const columns = localStore?.renderersStore?.[key]?.store?.columnsStore?.getColumnsConfig() || fallbackColumns;
-            const rendererConfig = localRenderers?.[key];
             const dataModel = localDataModels?.[key];
 
             return taskFactoryMap[key]({
-                inColumns: columns,
-                inData: data,
-                inFooterConfig: rendererConfig?.footer,
                 inDataModel: dataModel,
                 inShowSearch: localShowSearch,
                 inDomTreeSpecs: localDomTreeSpecs

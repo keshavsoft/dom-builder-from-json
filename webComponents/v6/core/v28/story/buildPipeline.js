@@ -7,7 +7,6 @@ export const buildPipeline = ({
     domTreeJsonFiles,
     inVisibility = {},
     inPipeline = {},
-    inStore,
     inDataModels,
     inRenderers
 }) => {
@@ -15,7 +14,6 @@ export const buildPipeline = ({
     const localVisibility = inVisibility;
     const localPipelineObj = typeof inPipeline === "object" && inPipeline !== null ? inPipeline : {};
     const rawRenderPipeline = localPipelineObj.inRenderPipeline || localPipelineObj.renderPipeline || inPipeline;
-    const localStore = inStore;
     const localDataModels = inDataModels;
     const localRenderers = inRenderers;
 
@@ -27,7 +25,6 @@ export const buildPipeline = ({
         domTreeJsonFiles: localDomTreeSpecs,
         inShowSearch: localVisibility?.showSearch,
         inShowTable: localVisibility?.showTable,
-        inStore: localStore,
         inDataModels: localDataModels,
         inRenderers: localRenderers
     });

@@ -2,14 +2,6 @@ import buildGlobalStore from "./buildGlobalStore.js";
 import buildRenderersStore from "./buildRenderersStore.js";
 import buildDataModels from "./buildDataModels/index.js";
 import buildPipeline from "./buildPipeline.js";
-import { buildDataRows } from "../renderPipeline/tasks/tableTask/v1/builders/index.js";
-
-const buildRows = buildDataRows;
-const getBodyRows = () => [];
-const getFooterRows = () => [];
-const getBodyAndFooterRows = () => ({ bodyRows: [], footerRows: [] });
-const buildConfiguredTableSpecInput = () => ({});
-
 /**
  * Story Orchestrator: Combines globalStore, renderersStore, dataModels, and renderPipeline
  */
@@ -53,11 +45,6 @@ const buildStory = ({
         domTreeJsonFiles: localDomTreeSpecs,
         inVisibility: localVisibility,
         inPipeline: localPipeline,
-        inStore: {
-            store: globalStore,
-            renderersStore,
-            dataModels
-        },
         inDataModels: dataModels,
         inRenderers: localRenderers
     });
@@ -67,13 +54,6 @@ const buildStory = ({
         renderersStore,
         dataModels,
         renderPipeline,
-        refreshTable: {
-            getBodyRows,
-            getFooterRows,
-            getBodyAndFooterRows,
-            buildConfiguredTableSpecInput,
-            buildRows
-        },
         renderersFromInwardConfig: localRenderers
     };
 };

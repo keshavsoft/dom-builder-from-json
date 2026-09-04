@@ -1,0 +1,58 @@
+{
+    "searchTask": {
+        "start": {
+            "composite": "searchToolbar"
+        },
+        "steps": []
+    },
+    "tableTask": {
+        "start": {
+            "table": {
+                "thead": {
+                    "tr": ""
+                },
+                "tbody": "",
+                "tfoot": ""
+            }
+        },
+        "steps": [
+            {
+                "name": "header",
+                "find": "table.thead.tr",
+                "target": "children",
+                "composite": "tableHeaderCell",
+                "builder": "tableHeaderCell"
+            },
+            {
+                "name": "body",
+                "find": "table.tbody",
+                "target": "children",
+                "composite": "tableRow",
+                "builder": "tableRow"
+            },
+            {
+                "name": "footer",
+                "find": "table.tfoot",
+                "target": "children",
+                "composite": "tableFooterRow",
+                "builder": "tableFooterRow"
+            }
+        ]
+    },
+    "formTask": {
+        "start": {
+            "form": {
+                "div": ""
+            }
+        },
+        "steps": [
+            {
+                "name": "fields",
+                "find": "form.div",
+                "target": "children",
+                "composite": "formField",
+                "builder": "formField"
+            }
+        ]
+    }
+}

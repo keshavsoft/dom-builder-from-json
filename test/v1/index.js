@@ -1,4 +1,4 @@
-import { renderTable } from "../../webComponents/v6/core/v30/index.js";
+import { renderTable } from "../../webComponents/v6/core/v31/index.js";
 
 import purchasesJson from "./purchases.json" with { type: "json" };
 
@@ -36,7 +36,7 @@ if (tableContainer) {
             { key: "allinventoryentries.batchallocations.billedqty", label: "billed qty" }
         ],
         renderers: {
-            search: {},
+            search1: {},
             table: {
                 header: {
                     vouchernumber: {
@@ -78,7 +78,7 @@ if (tableContainer) {
 
                 }
             },
-            form: {
+            form1: {
                 fields: {
                     vouchernumber: {
                         attributes: {
@@ -103,7 +103,8 @@ if (tableContainer) {
                     "allinventoryentries.batchallocations.actualqty",
                     "allinventoryentries.batchallocations.billedqty1"
                 ]
-            }
+            },
+            card: {}
         },
         renderers1: {
             search: {},

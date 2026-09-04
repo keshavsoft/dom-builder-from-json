@@ -118,4 +118,16 @@ test("tasksV3 structure is clean with only JSON tasks and streamlined common eng
     assert.deepEqual(commonFiles.sort(), expectedCommonFiles);
 });
 
+test("tasksV4 has single tasks.json and builds dynamic tasks dictionary without folders", async () => {
+    const fs = await import("node:fs/promises");
+    const { tasks, buildTasks } = await import("../webComponents/v6/core/v28/renderPipeline/tasksV4/index.js");
 
+    const v4Entries = await fs.readdir("webComponents/v6/core/v28/renderPipeline/tasksV4");
+    assert.deepEqual(v4Entries.sort(), ["common", "index.js", "tasks.json"].sort());
+
+    assert.equal(typeof tasks, "object");
+    assert.equal(typeof tasks.searchTask, "function");
+    assert.equal(typeof tasks.tableTask, "function");
+    assert.equal(typeof tasks.formTask, "function");
+    assert.equal(typeof buildTasks, "function");
+});

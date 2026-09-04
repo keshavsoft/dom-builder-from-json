@@ -1,9 +1,0 @@
-[
-    {
-        "name": "fields",
-        "find": "form.div",
-        "target": "children",
-        "composite": "formField",
-        "builder": "formField"
-    }
-]

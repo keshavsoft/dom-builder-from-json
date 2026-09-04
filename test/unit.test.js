@@ -97,3 +97,25 @@ test("tasksV2 tableTask and formTask contain only JSON files", async () => {
     assert.deepEqual(formFiles.sort(), ["start.json", "steps.json"].sort());
 });
 
+test("tasksV3 structure is clean with only JSON tasks and streamlined common engines", async () => {
+    const fs = await import("node:fs/promises");
+
+    const tableFiles = await fs.readdir("webComponents/v6/core/v28/renderPipeline/tasksV3/tableTask");
+    assert.deepEqual(tableFiles.sort(), ["start.json", "steps.json"].sort());
+
+    const formFiles = await fs.readdir("webComponents/v6/core/v28/renderPipeline/tasksV3/formTask");
+    assert.deepEqual(formFiles.sort(), ["start.json", "steps.json"].sort());
+
+    const commonFiles = await fs.readdir("webComponents/v6/core/v28/renderPipeline/tasksV3/common");
+    const expectedCommonFiles = [
+        "bindingsEngine.js",
+        "index.js",
+        "runSpecTreeTask.js",
+        "specTreeEngine.js",
+        "stepRunner.js",
+        "universalBuilders.js"
+    ].sort();
+    assert.deepEqual(commonFiles.sort(), expectedCommonFiles);
+});
+
+

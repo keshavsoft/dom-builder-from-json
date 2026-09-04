@@ -4,7 +4,7 @@ import {
     createSearchTask,
     createTableTask,
     createFormTask
-} from "./tasksV3/index.js";
+} from "./tasksV4/index.js";
 
 export {
     runRenderPipeline,

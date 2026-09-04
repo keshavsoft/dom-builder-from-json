@@ -1,13 +1,17 @@
 import runRenderPipeline from "./runRenderPipeline.js";
 import buildRenderPipeline from "./buildRenderPipeline.js";
-import createSearchTask from "./tasks/searchTask.js";
-import createTableTask from "./tasks/tableTask/index.js";
+import {
+    createSearchTask,
+    createTableTask,
+    createFormTask
+} from "./tasksV3/index.js";
 
 export {
     runRenderPipeline,
     buildRenderPipeline,
     createSearchTask,
-    createTableTask
+    createTableTask,
+    createFormTask
 };
 
 export default runRenderPipeline;

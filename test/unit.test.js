@@ -86,3 +86,14 @@ test("buildStory constructs dataModels as 3rd layer and passes to pipeline", () 
     assert.ok(renderedNodes[1] !== null, "Table node should exist");
     assert.ok(renderedNodes[2] !== null, "Form node should exist");
 });
+
+test("tasksV2 tableTask and formTask contain only JSON files", async () => {
+    const fs = await import("node:fs/promises");
+
+    const tableFiles = await fs.readdir("webComponents/v6/core/v28/renderPipeline/tasksV2/tableTask");
+    assert.deepEqual(tableFiles.sort(), ["start.json", "steps.json"].sort());
+
+    const formFiles = await fs.readdir("webComponents/v6/core/v28/renderPipeline/tasksV2/formTask");
+    assert.deepEqual(formFiles.sort(), ["start.json", "steps.json"].sort());
+});
+

@@ -3,12 +3,13 @@ import buildFormDataModel from "./form/index.js";
 import buildCardDataModel from "./card/index.js";
 
 const modelBuildersMap = {
-    table: ({ inStore, inConfig, inFallbackData, inFallbackColumns, inCollections }) => {
+    table: ({ inStore, inConfig, inFallbackData, inFallbackColumns, inCollections, inCalculations }) => {
         const localStore = inStore;
         const localConfig = inConfig;
         const localFallbackData = inFallbackData;
         const localFallbackColumns = inFallbackColumns;
         const localCollections = inCollections || {};
+        const localCalculations = inCalculations || {};
 
         const storeColumns = localStore?.columnsStore?.getColumnsConfig?.();
         const columns = (Array.isArray(storeColumns) && storeColumns.length > 0)
@@ -21,10 +22,12 @@ const modelBuildersMap = {
             || localFallbackData
             || [];
         const footerConfig = localConfig?.footer;
+        const footer = localCalculations?.footer;
 
         return buildTableDataModel({
             inColumns: columns,
             inData: data,
+            inFooter: footer,
             inFooterConfig: footerConfig
         });
     },
@@ -68,11 +71,13 @@ const buildDataModels = ({
     inGlobalStore,
     inRenderersStore,
     inCollections,
+    inCalculations,
     inRenderers
 } = {}) => {
     const localGlobalStore = inGlobalStore || {};
     const localRenderersStore = inRenderersStore || {};
     const localCollections = inCollections || {};
+    const localCalculations = inCalculations || {};
     const localRenderers = inRenderers || {};
 
     const fallbackData = localGlobalStore?.dataStore?.getOriginalData?.() || [];
@@ -90,7 +95,8 @@ const buildDataModels = ({
                 inConfig: rendererConfig,
                 inFallbackData: fallbackData,
                 inFallbackColumns: fallbackColumns,
-                inCollections: localCollections
+                inCollections: localCollections,
+                inCalculations: localCalculations
             });
         }
     }

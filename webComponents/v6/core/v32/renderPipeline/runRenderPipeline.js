@@ -1,10 +1,11 @@
 /**
  * Executes a pipeline array of render-level DOM task functions sequentially
  */
-export const runRenderPipeline = ({ inPipeline = [], inRenderersStore, inCollections, inDataModels }) => {
+export const runRenderPipeline = ({ inPipeline = [], inRenderersStore, inCollections, inCalculations, inDataModels }) => {
     const localPipeline = inPipeline;
     const localRenderersStore = inRenderersStore;
     const localCollections = inCollections;
+    const localCalculations = inCalculations;
     const localDataModels = inDataModels;
     let returnArray = [];
 
@@ -12,6 +13,7 @@ export const runRenderPipeline = ({ inPipeline = [], inRenderersStore, inCollect
         const res = task({
             inRenderersStore: localRenderersStore,
             inCollections: localCollections,
+            inCalculations: localCalculations,
             inDataModels: localDataModels
         });
 

@@ -2,12 +2,12 @@ import { aggFuncs } from "./helpers/aggFuncs.js";
 import { findConfigForColumn } from "./helpers/columnMatcher.js";
 
 /**
- * Stage: Prepares calculated tFoot row objects
- * Evaluates all math, counts, min/max text/numbers, and balance expressions
+ * Stage: Calculates pure footer row objects (summaryRow, balanceRow, inputsRow)
+ * Evaluates all math, counts, min/max text/numbers, and balance expressions.
  * Follows in -> local parameter naming convention
  */
 
-const calculateSummaryRow = ({ inRowConfig, inColumns, inData }) => {
+export const calculateSummaryRow = ({ inRowConfig, inColumns, inData }) => {
     const localRowConfig = inRowConfig;
     const localColumns = inColumns;
     const localData = inData;
@@ -65,31 +65,35 @@ const calculateSummaryRow = ({ inRowConfig, inColumns, inData }) => {
     return rowData;
 };
 
-const lookupSummaryValue = ({ inSummaryData, inColumns, inRefKey }) => {
-    if (!inSummaryData) return 0;
+export const lookupSummaryValue = ({ inSummaryData, inColumns, inRefKey }) => {
+    const localSummaryData = inSummaryData;
+    const localColumns = inColumns;
+    const localRefKey = inRefKey;
+
+    if (!localSummaryData) return 0;
 
     // 1. Direct match
-    if (inRefKey in inSummaryData) {
-        return inSummaryData[inRefKey];
+    if (localRefKey in localSummaryData) {
+        return localSummaryData[localRefKey];
     }
 
-    const lowerRef = inRefKey.toLowerCase().trim();
+    const lowerRef = localRefKey.toLowerCase().trim();
 
     // 2. Check against column keys or labels
-    if (Array.isArray(inColumns)) {
-        for (const col of inColumns) {
+    if (Array.isArray(localColumns)) {
+        for (const col of localColumns) {
             const colKey = (col.key || "").toLowerCase();
             const colLabel = (col.label || "").toLowerCase();
             if (colKey === lowerRef || colLabel === lowerRef || colKey.endsWith("." + lowerRef)) {
-                if (col.key in inSummaryData) {
-                    return inSummaryData[col.key];
+                if (col.key in localSummaryData) {
+                    return localSummaryData[col.key];
                 }
             }
         }
     }
 
     // 3. Fallback suffix / case-insensitive check
-    for (const [key, val] of Object.entries(inSummaryData)) {
+    for (const [key, val] of Object.entries(localSummaryData)) {
         const lowerKey = key.toLowerCase();
         if (lowerKey === lowerRef || lowerKey.endsWith("." + lowerRef)) {
             return val;
@@ -99,7 +103,7 @@ const lookupSummaryValue = ({ inSummaryData, inColumns, inRefKey }) => {
     return 0;
 };
 
-const evaluateSummaryExpression = ({ inExpression, inSummaryData, inColumns }) => {
+export const evaluateSummaryExpression = ({ inExpression, inSummaryData, inColumns }) => {
     const localExpression = inExpression;
     const localSummaryData = inSummaryData;
     const localColumns = inColumns;
@@ -132,7 +136,7 @@ const evaluateSummaryExpression = ({ inExpression, inSummaryData, inColumns }) =
     }
 };
 
-const calculateBalanceRow = ({ inRowConfig, inColumns, inData, inSummaryData }) => {
+export const calculateBalanceRow = ({ inRowConfig, inColumns, inData, inSummaryData }) => {
     const localRowConfig = inRowConfig;
     const localColumns = inColumns;
     const localData = inData;
@@ -197,8 +201,16 @@ const calculateBalanceRow = ({ inRowConfig, inColumns, inData, inSummaryData }) 
             const parts = columnConfig.split("-").map(p => p.trim());
             if (parts.length === 2) {
                 const [leftColName, rightColName] = parts;
-                const leftVal = lookupSummaryValue({ inSummaryData: localSummaryData, inColumns: localColumns, inRefKey: leftColName });
-                const rightVal = lookupSummaryValue({ inSummaryData: localSummaryData, inColumns: localColumns, inRefKey: rightColName });
+                const leftVal = lookupSummaryValue({
+                    inSummaryData: localSummaryData,
+                    inColumns: localColumns,
+                    inRefKey: leftColName
+                });
+                const rightVal = lookupSummaryValue({
+                    inSummaryData: localSummaryData,
+                    inColumns: localColumns,
+                    inRefKey: rightColName
+                });
                 const numA = typeof leftVal === "number" ? leftVal : parseFloat(String(leftVal).replace(/,/g, "")) || 0;
                 const numB = typeof rightVal === "number" ? rightVal : parseFloat(String(rightVal).replace(/,/g, "")) || 0;
                 const balance = Number((numA - numB).toFixed(2));
@@ -220,7 +232,7 @@ const calculateBalanceRow = ({ inRowConfig, inColumns, inData, inSummaryData }) 
     return rowData;
 };
 
-export const prepareFoot = ({ inFooterConfig, inColumns, inData }) => {
+export const buildFooterCalculation = ({ inFooterConfig, inColumns, inData }) => {
     const localFooterConfig = inFooterConfig;
     const localColumns = inColumns;
     const localData = inData;
@@ -271,4 +283,4 @@ export const prepareFoot = ({ inFooterConfig, inColumns, inData }) => {
     return footRows;
 };
 
-export default prepareFoot;
+export default buildFooterCalculation;

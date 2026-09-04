@@ -1,10 +1,11 @@
 import buildGlobalStore from "./buildGlobalStore.js";
 import buildRenderersStore from "./buildRenderersStore.js";
 import buildCollections from "./collections/index.js";
+import buildCalculations from "./calculations/index.js";
 import buildDataModels from "./buildDataModels/index.js";
 import buildPipeline from "./buildPipeline.js";
 /**
- * Story Orchestrator: Combines globalStore, renderersStore, collections, dataModels, and renderPipeline
+ * Story Orchestrator: Combines globalStore, renderersStore, collections, calculations, dataModels, and renderPipeline
  */
 const buildStory = ({
     domTreeJsonFiles,
@@ -41,15 +42,24 @@ const buildStory = ({
         inData: localData
     });
 
-    // 4. Build Pure Typed Data Models for Active Renderers
+    // 4. Build Pure Calculations (manipulated/derived rows: footer, summaries, metrics)
+    const calculations = buildCalculations({
+        inCollections: collections,
+        inRenderers: localRenderers,
+        inColumns: collections?.columns || localColumnsConfig,
+        inData: collections?.rows || localData
+    });
+
+    // 5. Build Pure Typed Data Models for Active Renderers
     const dataModels = buildDataModels({
         inGlobalStore: globalStore,
         inRenderersStore: renderersStore,
         inCollections: collections,
+        inCalculations: calculations,
         inRenderers: localRenderers
     });
 
-    // 5. Build Component Render Pipeline
+    // 6. Build Component Render Pipeline
     const renderPipeline = buildPipeline({
         domTreeJsonFiles: localDomTreeSpecs,
         inVisibility: localVisibility,
@@ -59,10 +69,13 @@ const buildStory = ({
         inRenderers: localRenderers
     });
 
+    console.log("renderPipeline : ", renderPipeline);
+
     return {
         store: globalStore,
         renderersStore,
         collections,
+        calculations,
         dataModels,
         renderPipeline,
         renderersFromInwardConfig: localRenderers

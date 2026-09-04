@@ -64,6 +64,7 @@ export const populateTree = ({
     const localBuilderMap = inBuilderMap;
     const localTemplates = inTemplates;
     const localLogUnfoundKeys = inLogUnfoundKeys;
+    console.log("localDataModel : ", localDataModel);
 
     let currentTree = localSpecTree;
     const stepsList = Array.isArray(localSteps) ? localSteps : Object.values(localSteps || {});
@@ -91,22 +92,23 @@ export const populateTree = ({
                 );
             }
             continue;
-        }
+        };
 
         const localBuilder = localBuilderMap?.[step.builder] || localBuilderMap?.[requestedCompositeKey];
         if (typeof localBuilder !== "function") {
             continue;
-        }
+        };
 
         // Optional skip check for empty collections (e.g. footer with no rows)
         if ((step.name === "footer" || step.name === "tFoot") && (!localDataModel?.tFoot || localDataModel.tFoot.length === 0)) {
             continue;
-        }
+        };
 
         const generatedValue = localBuilder({
             inDataModel: localDataModel,
             inTemplates: localTemplates
         });
+        console.log("generatedValue : ", generatedValue);
 
         currentTree = applyStepToSpecTree({
             inSpecTree: currentTree,

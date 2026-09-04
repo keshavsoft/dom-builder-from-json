@@ -26,6 +26,7 @@ const renderTable = (inOptions = {}) => {
         inPipeline: story.renderPipeline,
         inRenderersStore: story?.renderersStore,
         inCollections: story?.collections,
+        inCalculations: story?.calculations,
         inDataModels: story?.dataModels
     });
 

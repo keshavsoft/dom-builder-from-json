@@ -104,7 +104,7 @@ if (tableContainer) {
                     "allinventoryentries.batchallocations.billedqty1"
                 ]
             },
-            card: {}
+            card1: {}
         },
         renderers1: {
             search: {},
